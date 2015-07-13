@@ -1,0 +1,21 @@
+
+- Cadastrar-se
+- Criar grupo
+- Editar grupo
+- Excluir grupo
+- Adicionar jogador a grupo
+- Remover jogador de grupo
+- Criar encontro
+- Editar encontro
+- Excluir encontro
+- Cadastrar partida
+- Editar partida
+- Excluir partida
+- Cadastrar jogador na partida
+- Remover jogador da partida
+- Alterar jogador da partida
+
+- Cadastrar jogo
+- Editar jogo
+- Excluir jogo
+
