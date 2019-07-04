@@ -13,13 +13,13 @@
 
   <link rel="stylesheet" href="app.css">
 
-  <title>Hello, world!</title>
+  <title>{{ config('app.name') }}</title>
 </head>
 <body>
 
 <div class="container">
 
-  <header id="header">
+  <header id="header" class="mb-4">
     <h1 class="app-name text-center">{{ config('app.name') }}</h1>
 
     <nav class="main-nav">
@@ -43,13 +43,70 @@
   <main id="main">
 
     <div id="lista-jogos">
-      <button class="btn btn-primary" @click="atualizaJogos" v-bind:disabled="atualizando">Atualizar jogos</button>
+
+      <div class="toolbar border rounded mb-3 px-4 pt-4 pb-2 bg-light">
+        <div class="row">
+
+          <div class="col-md-4 form-group">
+            <label>Tipos</label>
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary dropdown-toggle w-100 text-left" type="button" data-toggle="dropdown">
+                @{{ tiposSelecionados }}
+              </button>
+              <div class="dropdown-menu">
+                <div class="form-check dropdown-item" v-for="tipo of tipos">
+                  <label><input type="checkbox" name="tipos[]" :value="tipo.key" v-model="tipo.checked"> @{{ tipo.nome }}</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4 form-group">
+            <label>Nº de Jogadores</label>
+            <input type="number" name="num" class="form-control" v-model="num" min="1">
+          </div>
+
+          <div class="col-md-4 form-group">
+            <label>Ordenação</label>
+            <div class="input-group">
+              <select name="sort" class="form-control" v-model="sort">
+                <option value="alfa">Ordem alfabética</option>
+                <option value="min">Min. jogadores</option>
+                <option value="max">Max. jogadores</option>
+                <option value="last">Última partida</option>
+                <option value="qtd">Qtd. partidas</option>
+              </select>
+              <select name="sort_dir" class="form-control" v-model="sort_dir">
+                <option value="asc">ASC</option>
+                <option value="desc">DESC</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="text-center mb-4">
+        @{{ jogosFiltrados.length }} jogo(s).
+      </div>
+
       <ul class="grid">
-        <li v-for="jogo in jogos">
+        <li v-for="jogo in jogosFiltrados">
           <img v-bind:src="jogo.img_ludo">
           <h3>@{{ jogo.nome }}</h3>
+          <div class="text-muted small">
+            @{{ nomeTipo(jogo.tipo) }}
+          </div>
+          <div class="text-muted small">
+            @{{ numJogadores(jogo) }}
+          </div>
         </li>
       </ul>
+
+      <div class="text-center my-4">
+        <button class="btn btn-primary" @click="atualizaJogos" v-bind:disabled="atualizando">Atualizar acervo</button>
+      </div>
+
     </div>
 
   </main>

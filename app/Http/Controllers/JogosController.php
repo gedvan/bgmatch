@@ -18,6 +18,14 @@ class JogosController extends Controller
     const TIPO_MEDIO    = 'M';
     const TIPO_EXPERT   = 'E';
 
+    protected static $_tiposValidos = [
+        self::TIPO_INFANTIL,
+        self::TIPO_COOP,
+        self::TIPO_PARTY,
+        self::TIPO_MEDIO,
+        self::TIPO_EXPERT
+    ];
+
     /**
      * Create a new controller instance.
      *
@@ -25,12 +33,12 @@ class JogosController extends Controller
      */
     public function __construct()
     {
-        //
     }
 
-    public function lista()
+    public function lista(Request $request)
     {
         $jogos = DB::table('jogos')->get();
+
         return $this->sendJson($jogos);
     }
 
@@ -82,7 +90,6 @@ class JogosController extends Controller
             'nome'      => $dom->find('#nm_jogo', 0)->getAttribute('value'),
             'img_ludo'  => $dom->find('#img-capa', 0)->getAttribute('src'),
             'link_ludo' => $urlJogo,
-            'tipo'      => self::TIPO_EXPERT,
         ];
 
         $jogadores = $dom->find('#page-content .jogo-top-main ul.list-inline li', 2)->text;
@@ -96,11 +103,33 @@ class JogosController extends Controller
             $jogo['max'] = $m[1];
         }
 
+        $boxInfo = $dom->find('#bloco-descricao-sm .col-sm-3 .bg-gray-light', 0);
+
+        if ($boxInfo->find('a[href$="mecanica/20"]', 0)) { // Mecânica: Cooperativo
+            $jogo['tipo'] = self::TIPO_COOP;
+        }
+        elseif ($boxInfo->find('a[href$="dominio/6"]', 0)) { // Domínio: Jogos Infantis
+            $jogo['tipo'] = self::TIPO_INFANTIL;
+        }
+        elseif ($boxInfo->find('a[href$="categoria/113"]', 0)) { // Categoria: Jogos Festivos
+            $jogo['tipo'] = self::TIPO_PARTY;
+        }
+        elseif ($boxInfo->find('a[href$="dominio/9"]', 0)) { // Domínio: Jogos Expert
+            $jogo['tipo'] = self::TIPO_EXPERT;
+        }
+        else {
+            $jogo['tipo'] = self::TIPO_MEDIO;
+        }
+
         DB::table('jogos')->updateOrInsert(['id_ludo' => $id_ludo], $jogo);
 
         $jogo['id_ludo'] = $id_ludo;
 
         return $jogo;
+    }
+
+    protected function mapDominioLudopediaParaTipo($idDominio) {
+
     }
 
     public function atualizar()
