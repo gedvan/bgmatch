@@ -25,16 +25,16 @@
     <nav class="main-nav">
       <ul class="nav nav-pills justify-content-center">
         <li class="nav-item">
-          <a class="nav-link active" href="jogos">Jogos</a>
+          <a class="nav-link active" href="/">Jogos</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="jogos">Partidas</a>
+          <a class="nav-link" href="/">Partidas</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="jogos">Ranking</a>
+          <a class="nav-link" href="/">Ranking</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="jogos">Jogadores</a>
+          <a class="nav-link" href="/">Jogadores</a>
         </li>
       </ul>
     </nav>
