@@ -7,9 +7,9 @@
 
   <base href="/">
 
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <!-- Bootstrap and BootstrapVue CSS -->
+  <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+  <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css" />
 
   <link rel="stylesheet" href="app.css">
 
@@ -25,16 +25,16 @@
     <nav class="main-nav">
       <ul class="nav nav-pills justify-content-center">
         <li class="nav-item">
-          <a class="nav-link" href="jogos">Jogos</a>
+          <a class="nav-link active" href="jogos">Jogos</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="jogos">Partidas</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="jogos">Jogadores</a>
+          <a class="nav-link" href="jogos">Ranking</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="jogos">Ranking</a>
+          <a class="nav-link" href="jogos">Jogadores</a>
         </li>
       </ul>
     </nav>
@@ -47,39 +47,25 @@
       <div class="toolbar border rounded mb-3 px-4 pt-4 pb-2 bg-light">
         <div class="row">
 
-          <div class="col-md-4 form-group">
+          <div class="col-md-5 form-group">
             <label>Tipos</label>
-            <div class="dropdown">
-              <button class="btn btn-outline-secondary dropdown-toggle w-100 text-left" type="button" data-toggle="dropdown">
-                @{{ tiposSelecionados }}
-              </button>
-              <div class="dropdown-menu">
-                <div class="form-check dropdown-item" v-for="tipo of tipos">
-                  <label><input type="checkbox" name="tipos[]" :value="tipo.key" v-model="tipo.checked"> @{{ tipo.nome }}</label>
-                </div>
-              </div>
-            </div>
+            <b-dropdown id="dd-tipos" :text="tiposSelecionados" ref="dropdown" variant="outline-secondary" class="d-flex">
+              <b-dropdown-form>
+                <b-form-checkbox-group id="check-tipos" v-model="tipos" :options="tiposOptions" name="tipos" stacked></b-form-checkbox-group>
+              </b-dropdown-form>
+            </b-dropdown>
           </div>
 
-          <div class="col-md-4 form-group">
-            <label>Nº de Jogadores</label>
-            <input type="number" name="num" class="form-control" v-model="num" min="1">
+          <div class="col-md-2 form-group">
+            <label for="num-jogadores">Nº de Jogadores</label>
+            <b-form-input type="number" v-model="num" id="num-jogadores" min="1"></b-form-input>
           </div>
 
-          <div class="col-md-4 form-group">
+          <div class="col-md-5 form-group">
             <label>Ordenação</label>
             <div class="input-group">
-              <select name="sort" class="form-control" v-model="sort">
-                <option value="alfa">Ordem alfabética</option>
-                <option value="min">Min. jogadores</option>
-                <option value="max">Max. jogadores</option>
-                <option value="last">Última partida</option>
-                <option value="qtd">Qtd. partidas</option>
-              </select>
-              <select name="sort_dir" class="form-control" v-model="sort_dir">
-                <option value="asc">ASC</option>
-                <option value="desc">DESC</option>
-              </select>
+              <b-form-select v-model="sort" :options="sortOptions"></b-form-select>
+              <b-form-checkbox v-model="sortInv" switch id="sort-inv">Inverter</b-form-checkbox>
             </div>
           </div>
 
@@ -114,20 +100,9 @@
 </div>
 
 
-<!-- Optional JavaScript -->
-<!-- jQuery first, then Popper.js, then Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-        crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-        crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
-
 <!-- Vue.js -->
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
 <script src="app.js"></script>
 
 </body>

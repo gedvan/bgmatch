@@ -10,68 +10,75 @@ var listaJogos = new Vue({
 
     atualizando: false,
 
-    tipos: [{
-        key: "I",
-        nome: "Infantil",
-        checked: true
-      }, {
-        key: "C",
-        nome: "Cooperativo",
-        checked: true
-      }, {
-        key: "P",
-        nome: "Party game",
-        checked: true
-      }, {
-        key: "M",
-        nome: "Médio",
-        checked: true
-      }, {
-        key: "E",
-        nome: "Expert",
-        checked: true
-      }
+    tipos: ['C', 'E', 'I', 'M', 'P'],
+    tiposOptions: [
+      { value: 'C', text: 'Cooperativo'},
+      { value: 'E', text: 'Expert'},
+      { value: 'I', text: 'Infantil'},
+      { value: 'M', text: 'Médio'},
+      { value: 'P', text: 'Party game'},
     ],
 
-    num: 4,
+    num: "",
 
-    sort: 'alfa',
-    sort_dir: 'asc'
+    sort: 'nome',
+    sortOptions: [
+      { text: 'Pelo nome', value: 'nome' },
+      { text: 'Min. jogadores', value: 'min' },
+      { text: 'Máx. jogadores', value: 'max' },
+      { text: 'Última partida (não funcionando)', value: 'ult' },
+      { text: 'Qtd. de partidas (não funcionando)', value: 'qtd' },
+    ],
+
+    sortInv: false
   },
 
   computed: {
 
     tiposSelecionados: function() {
-      const checked = this.tipos.filter(tipo => tipo.checked);
-      if (checked.length === this.tipos.length) {
+      if (this.tipos.length === this.tiposOptions.length) {
         return "Todos";
       }
-      if (checked.length === 0) {
+      if (this.tipos.length === 0) {
         return "Nenhum";
       }
-      return checked.map(tipo => tipo.nome).join(", ");
+      return this.tiposOptions.filter(option => this.tipos.indexOf(option.value) > -1).map(option => option.text).join(', ');
     },
 
     jogosFiltrados: function() {
-      const tipos = this.tipos.filter(tipo => tipo.checked).map(tipo => tipo.key);
       return this.jogos
-        .filter(jogo => tipos.indexOf(jogo.tipo) > -1)
-        .filter(jogo => this.num >= jogo.min && this.num <= jogo.max);
+        .filter(jogo => this.tipos.indexOf(jogo.tipo) > -1)
+        .filter(jogo => this.num === '' || (this.num >= jogo.min && this.num <= jogo.max))
+        .sort(this.sortFunction());
     }
   },
 
   methods: {
 
     nomeTipo: function(key) {
-      let tipo = this.tipos.filter(tipo => tipo.key === key);
-      return tipo.length ? tipo[0].nome : '';
+      const find = this.tiposOptions.findIndex(option => option.value === key);
+      return find > -1 ? this.tiposOptions[find].text : '';
     },
 
     numJogadores: function(jogo) {
       if (jogo.min === jogo.max) {
-        return jogo.min > 1 ? `${jogo.min} jogadores` : '1 jogador';
+        return jogo.min === 1 ? '1 jogador' : `${jogo.min} jogadores`;
       } else {
         return `${jogo.min} a ${jogo.max} jogadores`;
+      }
+    },
+
+    sortFunction: function() {
+      if (this.sort === 'nome') {
+        return (jogoA, jogoB) => this.sortInv ?
+          jogoB.nome.toLocaleLowerCase().localeCompare(jogoA.nome.toLocaleLowerCase()) :
+          jogoA.nome.toLocaleLowerCase().localeCompare(jogoB.nome.toLocaleLowerCase());
+      }
+      else if (this.sort === 'min') {
+        return (jogoA, jogoB) => this.sortInv ? jogoB.min - jogoA.min : jogoA.min - jogoB.min;
+      }
+      else if (this.sort === 'max') {
+        return (jogoA, jogoB) => this.sortInv ? jogoB.max - jogoA.max : jogoA.max - jogoB.max;
       }
     },
 
