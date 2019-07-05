@@ -1,5 +1,5 @@
 var BGMatch = {
-  apiUrl: 'http://localhost:8000/api'
+  apiUrl: window.location.protocol + '//' + window.location.host + '/api'
 };
 
 var listaJogos = new Vue({
