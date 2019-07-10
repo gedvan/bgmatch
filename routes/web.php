@@ -16,8 +16,10 @@ $router->get('/', function () use ($router) {
 });
 
 $router->group(['prefix' => 'api'], function () use ($router) {
-    $router->get('jogos', 'JogosController@lista');
-    $router->get('jogos/ludopedia', 'JogosController@ludopedia');
-    $router->post('jogos/atualiza/{nome}', 'JogosController@atualiza');
+    $router->get('jogos', 'JogosController@getLista');
+    $router->post('jogos/{id}/tipo', 'JogosController@postAtualizaTipo');
+
+    $router->get('jogos/ludopedia', 'JogosController@getJogosLudopedia2');
+    $router->post('jogos/atualiza/{slug}', 'JogosController@postAtualizaJogo');
 });
 

@@ -1,6 +1,11 @@
 var BGMatch = {
-  apiUrl: window.location.protocol + '//' + window.location.host + '/api'
+  apiUrl: window.location.protocol + '//' + window.location.host + '/api',
+  ludopediaUrl: 'https://www.ludopedia.com.br'
 };
+
+Vue.filter('plural', function(value, singular, plural) {
+  return value === 1 ? singular : plural;
+});
 
 var listaJogos = new Vue({
   el: '#lista-jogos',
@@ -30,7 +35,12 @@ var listaJogos = new Vue({
       { text: 'Qtd. de partidas (não funcionando)', value: 'qtd' },
     ],
 
-    sortInv: false
+    sortInv: false,
+
+    jogoModal: null,
+    editandoTipo: false,
+    tipoEdicao: '',
+
   },
 
   computed: {
@@ -51,6 +61,7 @@ var listaJogos = new Vue({
         .filter(jogo => this.num === '' || (this.num >= jogo.min && this.num <= jogo.max))
         .sort(this.sortFunction());
     }
+
   },
 
   methods: {
@@ -62,10 +73,14 @@ var listaJogos = new Vue({
 
     numJogadores: function(jogo) {
       if (jogo.min === jogo.max) {
-        return jogo.min === 1 ? '1 jogador' : `${jogo.min} jogadores`;
+        return jogo.min === 1 ? '1' : `${jogo.min}`;
       } else {
-        return `${jogo.min} a ${jogo.max} jogadores`;
+        return `${jogo.min} - ${jogo.max}`;
       }
+    },
+
+    urlJogoLudopedia: function(jogo) {
+      return BGMatch.ludopediaUrl + '/jogo/' + jogo.slug;
     },
 
     sortFunction: function() {
@@ -85,10 +100,41 @@ var listaJogos = new Vue({
     inicializaJogos: function() {
       window.fetch(BGMatch.apiUrl + '/jogos')
         .then(response => response.json())
-        .then(jogos => this.jogos = jogos);
+        .then(jogos => this.jogos = jogos)
+        .catch(error => console.error(error));
     },
 
-    atualizaLista: function() {
+    selecionaJogo: function(jogo) {
+      this.jogoModal = jogo;
+      this.tipoEdicao = jogo.tipo;
+    },
+
+    iniciaEdicaoTipo: function() {
+      this.editandoTipo = true;
+    },
+
+    cancelaEdicaoTipo: function() {
+      this.tipoEdicao = this.jogoModal.tipo;
+      this.editandoTipo = false;
+    },
+
+    salvaEdicaoTipo: function() {
+
+      const url = `${BGMatch.apiUrl}/jogos/${this.jogoModal.id_ludo}/tipo`;
+      window.fetch(url, {
+        method: "POST",
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({tipo: this.tipoEdicao})
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log('data', data);
+        })
+        .catch(error => console.error(error))
+        .finally(() => {
+          this.jogoModal.tipo = this.tipoEdicao;
+          this.editandoTipo = false;
+        });
 
     },
 
@@ -97,15 +143,14 @@ var listaJogos = new Vue({
         this.atualizando = true;
         window.fetch(BGMatch.apiUrl + '/jogos/ludopedia')
           .then(response => response.json())
-          .then(jogos => jogos.forEach(this.atualizaJogo));
+          .then(slugs => slugs.forEach(this.atualizaJogo));
       }
     },
 
-    atualizaJogo: function(nome, index, nomes) {
-      window.fetch(BGMatch.apiUrl + '/jogos/atualiza/' + nome, {method: "POST"})
+    atualizaJogo: function(slug, index, nomes) {
+      window.fetch(BGMatch.apiUrl + '/jogos/atualiza/' + slug, {method: "POST"})
         .then(response => response.json())
-        .then(jogo => console.log(jogo))
-        .then(() => {
+        .then(jogo => {
           if (index === nomes.length - 1) {
             this.atualizando = false;
           }

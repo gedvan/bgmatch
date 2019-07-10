@@ -20,10 +20,10 @@
 <div class="container">
 
   <header id="header" class="mb-4">
-    <h1 class="app-name text-center">{{ config('app.name') }}</h1>
+    <h1 class="app-name text-center m-4">{{ config('app.name') }}</h1>
 
     <nav class="main-nav">
-      <ul class="nav nav-pills justify-content-center">
+      <ul class="nav nav-tabs justify-content-center">
         <li class="nav-item">
           <a class="nav-link active" href="/">Jogos</a>
         </li>
@@ -73,21 +73,44 @@
       </div>
 
       <div class="text-center mb-4">
-        @{{ jogosFiltrados.length }} jogo(s).
+        @{{ jogosFiltrados.length }} @{{ jogosFiltrados.length | plural('jogo', 'jogos') }}.
       </div>
 
       <ul class="grid">
         <li v-for="jogo in jogosFiltrados">
-          <img v-bind:src="jogo.img_ludo">
+          <a href="#" v-b-modal.modal-jogo @click.prevent="selecionaJogo(jogo)">
+            <img :src="jogo.img_ludo">
+          </a>
           <h3>@{{ jogo.nome }}</h3>
           <div class="text-muted small">
-            @{{ nomeTipo(jogo.tipo) }}
-          </div>
-          <div class="text-muted small">
-            @{{ numJogadores(jogo) }}
+              <i class="fas fa-user-friends"></i> @{{ numJogadores(jogo) }}
+              / @{{ nomeTipo(jogo.tipo) }}
           </div>
         </li>
       </ul>
+
+      <b-modal id="modal-jogo" :title="jogoModal ? jogoModal.nome : ''" size="lg" hide-footer>
+        <div v-if="jogoModal" class="media">
+          <img :src="jogoModal.img_ludo" class="mr-3">
+          <div class="media-body">
+            <dl class="row">
+              <dt class="col-sm-4">Número de jogadores</dt>
+              <dd class="col-sm-8">@{{ numJogadores(jogoModal) }}</dd>
+              <dt class="col-sm-4">Categoria</dt>
+              <dd class="col-sm-8">
+                <span v-if="!editandoTipo">@{{ nomeTipo(jogoModal.tipo) }}</span>
+                <b-form-select v-if="editandoTipo" v-model="tipoEdicao" :options="tiposOptions" size="sm" class="w-auto"></b-form-select>
+                <b-button v-if="!editandoTipo" variant="link" size="sm" @click="iniciaEdicaoTipo"><i class="far fa-edit"></i></b-button>
+                <b-button-group v-if="editandoTipo" size="sm">
+                  <b-button variant="outline-success" @click="salvaEdicaoTipo"><i class="far fa-check-circle"></i></b-button>
+                  <b-button variant="outline-danger" @click="cancelaEdicaoTipo"><i class="far fa-times-circle"></i></b-button>
+                </b-button-group>
+              </dd>
+            </dl>
+            <b-link :href="urlJogoLudopedia(jogoModal)" target="_blank">Link Ludopedia</b-link>
+          </div>
+        </div>
+      </b-modal>
 
       <div class="text-center my-4">
         <button class="btn btn-primary" @click="atualizaJogos" v-bind:disabled="atualizando">Atualizar acervo</button>
@@ -103,6 +126,10 @@
 <!-- Vue.js -->
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+
+<!-- Font Awesome -->
+<script src="https://kit.fontawesome.com/b55aa8c7d6.js"></script>
+
 <script src="app.js"></script>
 
 </body>

@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use PHPHtmlParser\Dom;
-use Illuminate\Http\Response;
+use PHPHtmlParser\Exceptions\ParentNotFoundException;
 
 class JogosController extends Controller
 {
     const LUDOPEDIA_URL = 'https://www.ludopedia.com.br';
     const LUDOPEDIA_ID_GRUPO = '981';
+    const LUDOPEDIA_USUARIOS = ['gedvan', 'fechine', 'brunobrujah', 'rodrigor', 'matheuslaureano'];
 
     const TIPO_INFANTIL = 'I';
     const TIPO_COOP     = 'C';
@@ -27,29 +30,43 @@ class JogosController extends Controller
     ];
 
     /**
-     * Create a new controller instance.
+     * Endpoint que retorna a lista completa dos jogos salvos no banco próprio.
      *
-     * @return void
+     * @param  Request  $request
+     * @return JsonResponse
      */
-    public function __construct()
-    {
-    }
-
-    public function lista(Request $request)
+    public function getLista(Request $request): JsonResponse
     {
         $jogos = DB::table('jogos')->get();
 
-        return $this->sendJson($jogos);
+        return new JsonResponse($jogos);
     }
 
     /**
-     * Retorna a lista de jogos do acervo do grupo na Ludopedia.
+     * Endpoint para atualizar o tipo de um jogo específico.
      *
      * @param  Request  $request
-     * @return Response
-     * @throws \PHPHtmlParser\Exceptions\ParentNotFoundException
+     * @param  string   $id_ludo    ID do jogo a ser atualizado
+     * @return JsonResponse
      */
-    public function ludopedia(Request $request)
+    public function postAtualizaTipo(Request $request, $id_ludo): JsonResponse
+    {
+        // O novo tipo deve vir no corpo da requisição
+        $tipo = $request->input('tipo');
+
+        $upd = DB::table('jogos')->where('id_ludo', $id_ludo)->update(['tipo' => $tipo]);
+
+        return new JsonResponse(['updated' => $upd]);
+    }
+
+    /**
+     * Endpoint que retorna a lista de jogos do acervo do grupo na Ludopedia. A lista consiste em um array com apenas
+     * o identificador textual de cada jogo, utilizado na URL do mesmo (ex: ['7-wonders', 'black-stories', ...]).
+     *
+     * @param  Request  $request
+     * @return JsonResponse
+     */
+    public function getJogosLudopedia(Request $request): JsonResponse
     {
         $jogos = [];
         $dom = new Dom();
@@ -65,31 +82,82 @@ class JogosController extends Controller
                 $jogos[] = array_slice(explode('/', $urlJogo), -1)[0];
             }
 
-            $nextPageUrl = $dom->find('#page-content ul.pagination li.active', 0)
-                ->nextSibling()->find('a', 0)->getAttribute('href');
+            try {
+                $nextPageUrl = $dom->find('#page-content ul.pagination li.active', 0)
+                    ->nextSibling()->find('a', 0)->getAttribute('href');
 
-            if (preg_match('/pagina=(\d+)/', $nextPageUrl, $matches)) {
-                $pagina = (int) $matches[1];
-            } else {
+                if (preg_match('/pagina=(\d+)/', $nextPageUrl, $matches)) {
+                    $pagina = (int) $matches[1];
+                } else {
+                    $pagina = FALSE;
+                }
+            }
+            catch (ParentNotFoundException $exception) {
                 $pagina = FALSE;
             }
         }
 
-        return $this->sendJson($jogos);
+        return new JsonResponse($jogos);
     }
 
-    public function atualiza($nome)
+    public function getJogosLudopedia2(Request $request): JsonResponse
     {
-        $urlJogo = self::LUDOPEDIA_URL . '/jogo/' . $nome;
+        $jogos = [];
+        $dom = new Dom();
+
+        foreach (['base', 'expansao'] as $tipo) {
+            foreach (self::LUDOPEDIA_USUARIOS as $usuario) {
+                $pagina = 1;
+                while ($pagina) {
+                    $url = self::LUDOPEDIA_URL."/colecao?usuario=$usuario&tipo_jogo=$tipo";
+                    if ($pagina > 1) $url .= "&pagina=$pagina";
+
+                    $dom->loadFromUrl($url);
+
+                    $links = $dom->find('#page-content .panel-body .media .media-heading a');
+                    foreach ($links as $link) {
+                        $urlJogo = $link->getAttribute('href');
+                        $jogos[$tipo][] = array_slice(explode('/', $urlJogo), -1)[0];
+                    }
+
+                    $pagina = FALSE;
+                    if ($pagination = $dom->find('#page-content ul.pagination li.active', 0)) {
+                        try {
+                            $nextPageUrl = $pagination->nextSibling()->find('a', 0)->getAttribute('href');
+
+                            if (preg_match('/pagina=(\d+)/', $nextPageUrl, $matches)) {
+                                $pagina = (int) $matches[1];
+                            }
+                        }
+                        catch (ParentNotFoundException $exception) {}
+                    }
+                }
+            }
+            $jogos[$tipo] = array_unique($jogos[$tipo]);
+            sort($jogos[$tipo]);
+        }
+
+        return new JsonResponse($jogos);
+    }
+
+    /**
+     * Endpoint para atualizar os dados de um jogo no banco de dados local, com base nas informações da Ludopedia.
+     *
+     * @param  string  $slug    Identificador textual do jogo na ludopedia (utilizado nas URLs)
+     * @return JsonResponse
+     */
+    public function postAtualizaJogo(string $slug): JsonResponse
+    {
+        $urlJogo = self::LUDOPEDIA_URL . '/jogo/' . $slug;
 
         $dom = new Dom();
         $dom->loadFromUrl($urlJogo);
 
-        $id_ludo = $dom->find('#id_jogo', 0)->getAttribute('value');
         $jogo = [
+            'id_ludo'   => (int) $dom->find('#id_jogo', 0)->getAttribute('value'),
             'nome'      => $dom->find('#nm_jogo', 0)->getAttribute('value'),
             'img_ludo'  => $dom->find('#img-capa', 0)->getAttribute('src'),
-            'link_ludo' => $urlJogo,
+            'slug'      => $slug,
         ];
 
         $jogadores = $dom->find('#page-content .jogo-top-main ul.list-inline li', 2)->text;
@@ -121,57 +189,9 @@ class JogosController extends Controller
             $jogo['tipo'] = self::TIPO_MEDIO;
         }
 
-        DB::table('jogos')->updateOrInsert(['id_ludo' => $id_ludo], $jogo);
+        DB::table('jogos')->updateOrInsert(['id_ludo' => $jogo['id_ludo']], $jogo);
 
-        $jogo['id_ludo'] = $id_ludo;
-
-        return $jogo;
+        return new JsonResponse($jogo);
     }
 
-    protected function mapDominioLudopediaParaTipo($idDominio) {
-
-    }
-
-    public function atualizar()
-    {
-        ini_set('max_execution_time', 300);
-        $jogos = [];
-
-        $dom = new Dom();
-        $dom->loadFromUrl(self::LUDOPEDIA_URL . '/grupo/' . self::LUDOPEDIA_ID_GRUPO . '/acervo');
-        $links = $dom->find('#page-content .panel-body ul.row li a');
-
-        foreach ($links as $link) {
-            $url = $link->getAttribute('href');
-            $jogos[] = $this->consultaJogoLudopedia($url);
-        }
-
-        return $this->sendJson($jogos);
-    }
-
-    private function consultaJogoLudopedia($url)
-    {
-        $jogo = [];
-
-        $dom = new Dom();
-        $dom->loadFromUrl($url);
-
-        $jogo['id_ludo']   = $dom->find('#id_jogo', 0)->getAttribute('value');
-        $jogo['nome']      = $dom->find('#nm_jogo', 0)->getAttribute('value');
-        $jogo['img_ludo']  = $dom->find('#img-capa', 0)->getAttribute('src');
-        $jogo['link_ludo'] = $url;
-
-        $jogadores = $dom->find('#page-content .jogo-top-main ul.list-inline li', 2)->text;
-
-        if (preg_match('/(\d+) a (\d+) jogadores/', $jogadores, $m)) {
-            $jogo['min'] = $m[1];
-            $jogo['max'] = $m[2];
-        }
-        elseif (preg_match('/(\d+) jogador(es)?/', $jogadores, $m)) {
-            $jogo['min'] = $m[1];
-            $jogo['max'] = $m[1];
-        }
-
-        return $jogo;
-    }
 }
