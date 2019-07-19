@@ -20,13 +20,14 @@ class JogosController extends Controller
     const TIPO_PARTY    = 'P';
     const TIPO_MEDIO    = 'M';
     const TIPO_EXPERT   = 'E';
+    const TIPO_EXPANSAO = 'X';
 
-    protected static $_tiposValidos = [
-        self::TIPO_INFANTIL,
-        self::TIPO_COOP,
-        self::TIPO_PARTY,
-        self::TIPO_MEDIO,
-        self::TIPO_EXPERT
+    const TIPOS = [
+        self::TIPO_INFANTIL => 'Infantil',
+        self::TIPO_COOP     => 'Cooperativo',
+        self::TIPO_PARTY    => 'Party game',
+        self::TIPO_MEDIO    => 'Médio',
+        self::TIPO_EXPERT   => 'Expert'
     ];
 
     /**
@@ -37,7 +38,7 @@ class JogosController extends Controller
      */
     public function getLista(Request $request): JsonResponse
     {
-        $jogos = DB::table('jogos')->get();
+        $jogos = DB::table('jogos')->where('tipo', '<>', self::TIPO_EXPANSAO)->get();
 
         return new JsonResponse($jogos);
     }
@@ -106,6 +107,7 @@ class JogosController extends Controller
         $dom = new Dom();
 
         foreach (['base', 'expansao'] as $tipo) {
+            $jogos[$tipo] = [];
             foreach (self::LUDOPEDIA_USUARIOS as $usuario) {
                 $pagina = 1;
                 while ($pagina) {
@@ -153,12 +155,16 @@ class JogosController extends Controller
         $dom = new Dom();
         $dom->loadFromUrl($urlJogo);
 
+        // Informações básicas
+
         $jogo = [
             'id_ludo'   => (int) $dom->find('#id_jogo', 0)->getAttribute('value'),
             'nome'      => $dom->find('#nm_jogo', 0)->getAttribute('value'),
             'img_ludo'  => $dom->find('#img-capa', 0)->getAttribute('src'),
             'slug'      => $slug,
         ];
+
+        // Número de jogadores
 
         $jogadores = $dom->find('#page-content .jogo-top-main ul.list-inline li', 2)->text;
 
@@ -171,22 +177,34 @@ class JogosController extends Controller
             $jogo['max'] = $m[1];
         }
 
-        $boxInfo = $dom->find('#bloco-descricao-sm .col-sm-3 .bg-gray-light', 0);
+        // Tipo / Expansão
 
-        if ($boxInfo->find('a[href$="mecanica/20"]', 0)) { // Mecânica: Cooperativo
-            $jogo['tipo'] = self::TIPO_COOP;
-        }
-        elseif ($boxInfo->find('a[href$="dominio/6"]', 0)) { // Domínio: Jogos Infantis
-            $jogo['tipo'] = self::TIPO_INFANTIL;
-        }
-        elseif ($boxInfo->find('a[href$="categoria/113"]', 0)) { // Categoria: Jogos Festivos
-            $jogo['tipo'] = self::TIPO_PARTY;
-        }
-        elseif ($boxInfo->find('a[href$="dominio/9"]', 0)) { // Domínio: Jogos Expert
-            $jogo['tipo'] = self::TIPO_EXPERT;
+        $linkExpansao = $dom->find('#page-content .jogo-top-main > h5 a', 0);
+        if ($linkExpansao) {
+            $slugExpansao = array_slice(explode('/', $linkExpansao->getAttribute('href')), -1)[0];
+            $idJogoBase = DB::table('jogos')->where('slug', $slugExpansao)->value('id_ludo');
+
+            $jogo['tipo'] = self::TIPO_EXPANSAO;
+            $jogo['id_base'] = $idJogoBase;
         }
         else {
-            $jogo['tipo'] = self::TIPO_MEDIO;
+            $boxInfo = $dom->find('#bloco-descricao-sm .col-sm-3 .bg-gray-light', 0);
+
+            if ($boxInfo->find('a[href$="mecanica/20"]', 0)) { // Mecânica: Cooperativo
+                $jogo['tipo'] = self::TIPO_COOP;
+            }
+            elseif ($boxInfo->find('a[href$="dominio/6"]', 0)) { // Domínio: Jogos Infantis
+                $jogo['tipo'] = self::TIPO_INFANTIL;
+            }
+            elseif ($boxInfo->find('a[href$="categoria/113"]', 0)) { // Categoria: Jogos Festivos
+                $jogo['tipo'] = self::TIPO_PARTY;
+            }
+            elseif ($boxInfo->find('a[href$="dominio/9"]', 0)) { // Domínio: Jogos Expert
+                $jogo['tipo'] = self::TIPO_EXPERT;
+            }
+            else {
+                $jogo['tipo'] = self::TIPO_MEDIO;
+            }
         }
 
         DB::table('jogos')->updateOrInsert(['id_ludo' => $jogo['id_ludo']], $jogo);

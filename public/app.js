@@ -143,7 +143,10 @@ var listaJogos = new Vue({
         this.atualizando = true;
         window.fetch(BGMatch.apiUrl + '/jogos/ludopedia')
           .then(response => response.json())
-          .then(slugs => slugs.forEach(this.atualizaJogo));
+          .then(jogos => {
+            jogos.base.forEach(this.atualizaJogo);
+            jogos.expansao.forEach(this.atualizaJogo);
+          });
       }
     },
 
