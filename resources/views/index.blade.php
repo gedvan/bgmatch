@@ -89,15 +89,21 @@
         </li>
       </ul>
 
-      <b-modal id="modal-jogo" :title="jogoModal ? jogoModal.nome : ''" size="lg" hide-footer>
+      <b-modal id="modal-jogo" size="lg" hide-footer>
+        <template #modal-title>
+          @{{ jogoModal.nome }}
+          <b-link :href="urlJogoLudopedia(jogoModal)" target="_blank" class="small" title="Abrir na Ludopedia">
+            <i class="fas fa-external-link-alt"></i>
+          </b-link>
+        </template>
         <div v-if="jogoModal" class="media">
           <img :src="jogoModal.img_ludo" class="mr-3">
           <div class="media-body">
             <dl class="row">
-              <dt class="col-sm-4">Número de jogadores</dt>
-              <dd class="col-sm-8">@{{ numJogadores(jogoModal) }}</dd>
-              <dt class="col-sm-4">Categoria</dt>
-              <dd class="col-sm-8">
+              <dt class="col-sm-3">Nº de jogadores</dt>
+              <dd class="col-sm-9">@{{ numJogadores(jogoModal) }}</dd>
+              <dt class="col-sm-3">Categoria</dt>
+              <dd class="col-sm-9">
                 <span v-if="!editandoTipo">@{{ nomeTipo(jogoModal.tipo) }}</span>
                 <b-form-select v-if="editandoTipo" v-model="tipoEdicao" :options="tiposOptions" size="sm" class="w-auto"></b-form-select>
                 <b-button v-if="!editandoTipo" variant="link" size="sm" @click="iniciaEdicaoTipo"><i class="far fa-edit"></i></b-button>
@@ -106,8 +112,20 @@
                   <b-button variant="outline-danger" @click="cancelaEdicaoTipo"><i class="far fa-times-circle"></i></b-button>
                 </b-button-group>
               </dd>
+              <template v-if="jogoModal.expansoes.length">
+                <dt class="col-sm-3">Expansões</dt>
+                <dd class="col-sm-9" v-if="jogoModal.expansoes.length">
+                  <ul class="m-0 pl-3">
+                    <li v-for="exp in jogoModal.expansoes">
+                      @{{ exp.nome }}
+                      <b-link :href="urlJogoLudopedia(exp)" target="_blank" class="small" title="Abrir na Ludopedia">
+                        <i class="fas fa-external-link-alt"></i>
+                      </b-link>
+                    </li>
+                  </ul>
+                </dd>
+              </template>
             </dl>
-            <b-link :href="urlJogoLudopedia(jogoModal)" target="_blank">Link Ludopedia</b-link>
           </div>
         </div>
       </b-modal>

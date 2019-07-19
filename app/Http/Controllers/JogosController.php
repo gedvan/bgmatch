@@ -38,9 +38,20 @@ class JogosController extends Controller
      */
     public function getLista(Request $request): JsonResponse
     {
-        $jogos = DB::table('jogos')->where('tipo', '<>', self::TIPO_EXPANSAO)->get();
+        $rows = DB::table('jogos')->orderByRaw('id_base NULLS FIRST')->orderBy('nome')->get();
 
-        return new JsonResponse($jogos);
+        $jogos = [];
+        foreach ($rows as $row) {
+            if (empty($row->id_base)) {
+                $jogos[$row->id_ludo] = $row;
+                $jogos[$row->id_ludo]->expansoes = [];
+            }
+            elseif (isset($jogos[$row->id_base])) {
+                $jogos[$row->id_base]->expansoes[] = $row;
+            }
+        }
+
+        return new JsonResponse(array_values($jogos));
     }
 
     /**
@@ -60,48 +71,7 @@ class JogosController extends Controller
         return new JsonResponse(['updated' => $upd]);
     }
 
-    /**
-     * Endpoint que retorna a lista de jogos do acervo do grupo na Ludopedia. A lista consiste em um array com apenas
-     * o identificador textual de cada jogo, utilizado na URL do mesmo (ex: ['7-wonders', 'black-stories', ...]).
-     *
-     * @param  Request  $request
-     * @return JsonResponse
-     */
     public function getJogosLudopedia(Request $request): JsonResponse
-    {
-        $jogos = [];
-        $dom = new Dom();
-
-        $pagina = 1;
-        while ($pagina) {
-            $url = self::LUDOPEDIA_URL . '/grupo/' . self::LUDOPEDIA_ID_GRUPO . '/acervo' . ($pagina > 1 ? "?pagina=$pagina" : '');
-            $dom->loadFromUrl($url);
-
-            $links = $dom->find('#page-content .panel-body ul.row li a');
-            foreach ($links as $link) {
-                $urlJogo = $link->getAttribute('href');
-                $jogos[] = array_slice(explode('/', $urlJogo), -1)[0];
-            }
-
-            try {
-                $nextPageUrl = $dom->find('#page-content ul.pagination li.active', 0)
-                    ->nextSibling()->find('a', 0)->getAttribute('href');
-
-                if (preg_match('/pagina=(\d+)/', $nextPageUrl, $matches)) {
-                    $pagina = (int) $matches[1];
-                } else {
-                    $pagina = FALSE;
-                }
-            }
-            catch (ParentNotFoundException $exception) {
-                $pagina = FALSE;
-            }
-        }
-
-        return new JsonResponse($jogos);
-    }
-
-    public function getJogosLudopedia2(Request $request): JsonResponse
     {
         $jogos = [];
         $dom = new Dom();
