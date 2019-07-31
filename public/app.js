@@ -11,11 +11,10 @@ var listaJogos = new Vue({
   el: '#lista-jogos',
 
   data: {
+    // Lista de jogos carregados
     jogos: [],
 
-    atualizando: false,
-
-    tipos: ['C', 'E', 'I', 'M', 'P'],
+    // Opções dos selects de tipos de jogos
     tiposOptions: [
       { value: 'C', text: 'Cooperativo'},
       { value: 'E', text: 'Expert'},
@@ -24,9 +23,19 @@ var listaJogos = new Vue({
       { value: 'P', text: 'Party game'},
     ],
 
+    // Filtro para os tipos de jogos exibidos
+    tipos: ['C', 'E', 'I', 'M', 'P'],
+
+    // Filtro pelo número de jogadores
     num: "",
 
+    // Campo para ordenação
     sort: 'nome',
+
+    // Flag para ordenação invertida
+    sortInv: false,
+
+    // Opções de ordenação
     sortOptions: [
       { text: 'Pelo nome', value: 'nome' },
       { text: 'Min. jogadores', value: 'min' },
@@ -35,16 +44,22 @@ var listaJogos = new Vue({
       { text: 'Qtd. de partidas (não funcionando)', value: 'qtd' },
     ],
 
-    sortInv: false,
-
+    // Jogo que está sendo exibido no modal
     jogoModal: null,
+
+    // Flag que indica se o usuário está editando o tipo do jogo
     editandoTipo: false,
+
+    // Tipo escolhido na edição
     tipoEdicao: '',
 
+    // Flag que indica se os jogos estão sendo atualizados
+    atualizando: false,
   },
 
   computed: {
 
+    // Retorna o label para os tipos selecionados
     tiposSelecionados: function() {
       if (this.tipos.length === this.tiposOptions.length) {
         return "Todos";
@@ -55,6 +70,7 @@ var listaJogos = new Vue({
       return this.tiposOptions.filter(option => this.tipos.indexOf(option.value) > -1).map(option => option.text).join(', ');
     },
 
+    // Retorna a lista dos jogos depois de aplicados os filtros
     jogosFiltrados: function() {
       return this.jogos
         .filter(jogo => this.tipos.indexOf(jogo.tipo) > -1)

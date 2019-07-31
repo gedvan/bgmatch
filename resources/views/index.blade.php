@@ -17,7 +17,7 @@
 </head>
 <body>
 
-<div class="container">
+<div id="bgmatch-app" class="container">
 
   <header id="header" class="mb-4">
     <h1 class="app-name text-center m-4">{{ config('app.name') }}</h1>
@@ -49,7 +49,7 @@
 
           <div class="col-md-5 form-group">
             <label>Tipos</label>
-            <b-dropdown id="dd-tipos" :text="tiposSelecionados" ref="dropdown" variant="outline-secondary" class="d-flex">
+            <b-dropdown id="dd-tipos" :text="tiposSelecionados" ref="dropdown" variant="outline-secondary" class="d-flex align-items-start">
               <b-dropdown-form>
                 <b-form-checkbox-group id="check-tipos" v-model="tipos" :options="tiposOptions" name="tipos" stacked></b-form-checkbox-group>
               </b-dropdown-form>
