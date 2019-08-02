@@ -17,6 +17,9 @@
 </head>
 <body>
 
+<div id="app"></div>
+
+<!--
 <div id="bgmatch-app" class="container">
 
   <header id="header" class="mb-4">
@@ -139,16 +142,22 @@
   </main>
 
 </div>
+    -->
 
 
 <!-- Vue.js -->
+<!--
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+-->
 
 <!-- Font Awesome -->
 <script src="https://kit.fontawesome.com/b55aa8c7d6.js"></script>
 
+<!--
 <script src="app.js"></script>
+-->
+<script src="main.js"></script>
 
 </body>
 </html>
