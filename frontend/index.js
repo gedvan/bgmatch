@@ -1,20 +1,25 @@
 import Vue from 'vue';
-import BootstrapVue from 'bootstrap-vue'
+import VueRouter from "vue-router";
+import BootstrapVue from 'bootstrap-vue';
+import vSelect from 'vue-select';
 import App from './App.vue';
-import 'bootstrap/dist/css/bootstrap.css'
-import 'bootstrap-vue/dist/bootstrap-vue.css'
+import routes from './routes';
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-vue/dist/bootstrap-vue.css';
+import 'vue-select/dist/vue-select.css';
 
-var BGMatch = {
-  apiUrl: window.location.protocol + '//' + window.location.host + '/api',
-  ludopediaUrl: 'https://www.ludopedia.com.br'
-};
 
+Vue.config.productionTip = false;
 Vue.use(BootstrapVue);
+Vue.use(VueRouter);
+
+Vue.component('v-select', vSelect);
 
 Vue.filter('plural', function(value, singular, plural) {
   return value === 1 ? singular : plural;
 });
 
 new Vue({
-  render: h => h(App)
+  render: h => h(App),
+  router: new VueRouter({routes})
 }).$mount('#app');

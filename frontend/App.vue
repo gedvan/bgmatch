@@ -6,35 +6,48 @@
 
       <nav class="main-nav">
         <ul class="nav nav-tabs justify-content-center">
-          <li class="nav-item">
-            <a class="nav-link active" href="/">Jogos</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/">Partidas</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/">Ranking</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/">Jogadores</a>
+          <li v-for="menuItem in menuItems" class="nav-item">
+            <router-link :to="menuItem.path" class="nav-link" :class="{active: $route.path == menuItem.path}">
+              {{ menuItem.title }}
+            </router-link>
           </li>
         </ul>
       </nav>
     </header>
 
     <main id="main">
-      <lista-jogos></lista-jogos>
+      <router-view></router-view>
     </main>
 
   </div>
 </template>
 
 <script>
-  import ListaJogos from "./ListaJogos.vue";
+  import ListaJogos from "./views/ListaJogos.vue";
 
   export default {
     components: {
       ListaJogos
+    },
+
+    data() {
+      return {
+        menuItems: [
+          {
+            path: '/',
+            title: 'Jogos'
+          }, {
+            path: '/partidas',
+            title: 'Partidas'
+          }, {
+            path: '/ranking',
+            title: 'Ranking'
+          }, {
+            path: '/jogadores',
+            title: 'Jogadores'
+          }
+        ]
+      }
     }
   }
 </script>

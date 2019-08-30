@@ -30,5 +30,10 @@ module.exports = {
   },
   plugins: [
     new VueLoaderPlugin()
-  ]
+  ],
+  devServer: {
+    proxy: {
+      '/': 'http://localhost:8000'
+    }
+  }
 };

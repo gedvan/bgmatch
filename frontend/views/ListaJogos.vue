@@ -8,7 +8,7 @@
           <label>Tipos</label>
           <b-dropdown id="dd-tipos" :text="tiposSelecionados" ref="dropdown" variant="outline-secondary" class="d-flex align-items-start">
             <b-dropdown-form>
-              <b-form-checkbox-group id="check-tipos" v-model="tipos" :options="tiposOptions" name="tipos" stacked></b-form-checkbox-group>
+              <b-form-checkbox-group id="check-tipos" v-model="tipos" :options="BGMatch.tiposJogos" name="tipos" stacked></b-form-checkbox-group>
             </b-dropdown-form>
           </b-dropdown>
         </div>
@@ -35,57 +35,11 @@
 
     <ul class="grid">
       <li v-for="jogo in jogosFiltrados">
-        <a href="#" v-b-modal.modal-jogo @click.prevent="selecionaJogo(jogo)">
-          <img :src="jogo.img_ludo">
-        </a>
-        <h3>{{ jogo.nome }}</h3>
-        <div class="text-muted small">
-          <i class="fas fa-user-friends"></i> {{ numJogadores(jogo) }}
-          / {{ nomeTipo(jogo.tipo) }}
-        </div>
+        <item-jogo :jogo="jogo" @on-click="selecionaJogo" />
       </li>
     </ul>
 
-    <b-modal id="modal-jogo" size="lg" hide-footer>
-      <template #modal-title>
-        {{ jogoModal.nome }}
-        <b-link :href="urlJogoLudopedia(jogoModal)" target="_blank" class="small" title="Abrir na Ludopedia">
-          <i class="fas fa-external-link-alt"></i>
-        </b-link>
-      </template>
-      <div v-if="jogoModal" class="media">
-        <img :src="jogoModal.img_ludo" class="mr-3">
-        <div class="media-body">
-          <dl class="row">
-            <dt class="col-sm-3">Nº de jogadores</dt>
-            <dd class="col-sm-9">{{ numJogadores(jogoModal) }}</dd>
-            <dt class="col-sm-3">Categoria</dt>
-            <dd class="col-sm-9">
-              <span v-if="!editandoTipo">{{ nomeTipo(jogoModal.tipo) }}</span>
-              <b-form-select v-if="editandoTipo" v-model="tipoEdicao" :options="tiposOptions" size="sm" class="w-auto"></b-form-select>
-              <b-button v-if="!editandoTipo" variant="link" size="sm" @click="iniciaEdicaoTipo"><i class="far fa-edit"></i></b-button>
-              <b-button-group v-if="editandoTipo" size="sm">
-                <b-button variant="outline-success" @click="salvaEdicaoTipo"><i class="far fa-check-circle"></i></b-button>
-                <b-button variant="outline-danger" @click="cancelaEdicaoTipo"><i class="far fa-times-circle"></i></b-button>
-              </b-button-group>
-            </dd>
-            <template v-if="jogoModal.expansoes.length">
-              <dt class="col-sm-3">Expansões</dt>
-              <dd class="col-sm-9" v-if="jogoModal.expansoes.length">
-                <ul class="m-0 pl-3">
-                  <li v-for="exp in jogoModal.expansoes">
-                    {{ exp.nome }}
-                    <b-link :href="urlJogoLudopedia(exp)" target="_blank" class="small" title="Abrir na Ludopedia">
-                      <i class="fas fa-external-link-alt"></i>
-                    </b-link>
-                  </li>
-                </ul>
-              </dd>
-            </template>
-          </dl>
-        </div>
-      </div>
-    </b-modal>
+    <modal-jogo :jogo="jogoModal" />
 
     <div class="text-center my-4">
       <button class="btn btn-primary" @click="atualizaJogos" v-bind:disabled="atualizando">Atualizar acervo</button>
@@ -95,20 +49,21 @@
 </template>
 
 <script>
+  import BGMatch from "../BGMatch";
+  import ModalJogo from "../components/ModalJogo.vue";
+  import ItemJogo from "../components/ItemJogo.vue";
+
   export default {
+    components: {
+      ItemJogo,
+      ModalJogo
+    },
     data() {
       return {
+        BGMatch,
+
         // Lista de jogos carregados
         jogos: [],
-
-        // Opções dos selects de tipos de jogos
-        tiposOptions: [
-          {value: 'C', text: 'Cooperativo'},
-          {value: 'E', text: 'Expert'},
-          {value: 'I', text: 'Infantil'},
-          {value: 'M', text: 'Médio'},
-          {value: 'P', text: 'Party game'},
-        ],
 
         // Filtro para os tipos de jogos exibidos
         tipos: ['C', 'E', 'I', 'M', 'P'],
@@ -134,12 +89,6 @@
         // Jogo que está sendo exibido no modal
         jogoModal: null,
 
-        // Flag que indica se o usuário está editando o tipo do jogo
-        editandoTipo: false,
-
-        // Tipo escolhido na edição
-        tipoEdicao: '',
-
         // Flag que indica se os jogos estão sendo atualizados
         atualizando: false,
       }
@@ -149,13 +98,13 @@
 
       // Retorna o label para os tipos selecionados
       tiposSelecionados: function() {
-        if (this.tipos.length === this.tiposOptions.length) {
+        if (this.tipos.length === BGMatch.tiposJogos.length) {
           return "Todos";
         }
         if (this.tipos.length === 0) {
           return "Nenhum";
         }
-        return this.tiposOptions.filter(option => this.tipos.indexOf(option.value) > -1).map(option => option.text).join(', ');
+        return BGMatch.tiposJogos.filter(option => this.tipos.indexOf(option.value) > -1).map(option => option.text).join(', ');
       },
 
       // Retorna a lista dos jogos depois de aplicados os filtros
@@ -169,23 +118,6 @@
     },
 
     methods: {
-
-      nomeTipo: function (key) {
-        const find = this.tiposOptions.findIndex(option => option.value === key);
-        return find > -1 ? this.tiposOptions[find].text : '';
-      },
-
-      numJogadores: function (jogo) {
-        if (jogo.min === jogo.max) {
-          return jogo.min === 1 ? '1' : `${jogo.min}`;
-        } else {
-          return `${jogo.min} - ${jogo.max}`;
-        }
-      },
-
-      urlJogoLudopedia: function (jogo) {
-        return BGMatch.ludopediaUrl + '/jogo/' + jogo.slug;
-      },
 
       sortFunction: function () {
         if (this.sort === 'nome') {
@@ -208,36 +140,7 @@
 
       selecionaJogo: function (jogo) {
         this.jogoModal = jogo;
-        this.tipoEdicao = jogo.tipo;
-      },
-
-      iniciaEdicaoTipo: function () {
-        this.editandoTipo = true;
-      },
-
-      cancelaEdicaoTipo: function () {
-        this.tipoEdicao = this.jogoModal.tipo;
-        this.editandoTipo = false;
-      },
-
-      salvaEdicaoTipo: function () {
-
-        const url = `${BGMatch.apiUrl}/jogos/${this.jogoModal.id_ludo}/tipo`;
-        window.fetch(url, {
-          method: "POST",
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({tipo: this.tipoEdicao})
-        })
-          .then(response => response.json())
-          .then(data => {
-            console.log('data', data);
-          })
-          .catch(error => console.error(error))
-          .finally(() => {
-            this.jogoModal.tipo = this.tipoEdicao;
-            this.editandoTipo = false;
-          });
-
+        this.$bvModal.show('modal-jogo');
       },
 
       atualizaJogos: function () {

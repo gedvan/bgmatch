@@ -11,15 +11,23 @@
 |
 */
 
+use Illuminate\Support\Facades\DB;
+
 $router->get('/', function () use ($router) {
-    return view('index');
+  return view('index');
 });
 
 $router->group(['prefix' => 'api'], function () use ($router) {
-    $router->get('jogos', 'JogosController@getLista');
-    $router->post('jogos/{id}/tipo', 'JogosController@postAtualizaTipo');
+  $router->get('jogos', 'JogosController@getLista');
+  $router->post('jogos/{id}/tipo', 'JogosController@postAtualizaTipo');
 
-    $router->get('jogos/ludopedia', 'JogosController@getJogosLudopedia');
-    $router->post('jogos/atualiza/{slug}', 'JogosController@postAtualizaJogo');
+  $router->get('jogos/ludopedia', 'JogosController@getJogosLudopedia');
+  $router->post('jogos/atualiza/{slug}', 'JogosController@postAtualizaJogo');
+
+  $router->get('jogadores', 'JogadoresController@getJogadores');
+
+  $router->get('teste', function () {
+    return 'teste';
+  });
 });
 
