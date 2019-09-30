@@ -26,6 +26,10 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
   $router->get('jogadores', 'JogadoresController@getJogadores');
 
+  $router->get('partidas', 'PartidasController@getLista');
+  $router->get('partidas/locais', 'PartidasController@getLocais');
+  $router->post('partidas/nova', 'PartidasController@postNovaPartida');
+
   $router->get('teste', function () {
     return 'teste';
   });
