@@ -55,9 +55,13 @@
 
     data() {
       return {
+        // Lista de jogos para o select
         listaJogos: [],
+
+        // Lista de locais para o input
         listaLocais: [],
 
+        // Dados do formulário
         form: {
           data: '',
           jogo: '',
@@ -68,6 +72,7 @@
     },
 
     computed: {
+      // Indicador de quando todos os jogadores estão selecionados
       checkAll: {
         get() {
           return this.form.jogadores.length &&
@@ -85,6 +90,8 @@
           this.form.data = newVal.data;
           this.form.jogo = this.listaJogos.find(j => j.code == newVal.id_jogo);
           this.form.local = newVal.local;
+          console.log(newVal.jogadores);
+          console.log(this.form.jogadores);
           newVal.jogadores.forEach((j, i) => {
             // TODO
           });
@@ -93,6 +100,9 @@
     },
 
     methods: {
+      /**
+       * Responde ao envio do formulário.
+       */
       handleSubmit: function(evt) {
         evt.preventDefault();
 
@@ -110,8 +120,7 @@
           method: 'POST',
           headers: new Headers({"Content-Type": "application/json"}),
           body: JSON.stringify(data)
-        })
-          .then(response => response.json())
+        }).then(response => response.json())
           .then(response => {
             if (response.ok) {
               this.resetPartida();
@@ -127,15 +136,24 @@
           .catch(error => console.error(error));
       },
 
+      /**
+       * Responde ao click no checkbox select all
+       */
       handleCheckAll: function(checked) {
         this.form.jogadores.forEach(j => j.presente = checked);
       },
 
+      /**
+       * Adiciona uma opção no input de locais.
+       */
       createOption(opt) {
         this.listaLocais.push(opt);
         return opt;
       },
 
+      /**
+       * Zera as informações da partida.
+       */
       resetPartida: function() {
         this.form.data = '';
         this.form.jogo = '';
@@ -145,34 +163,51 @@
           this.form.jogadores[i].pontuacao = 0;
           this.form.jogadores[i].vencedor = false;
         });
+      },
+
+      /**
+       * Consulta a lista de jogos para o select.
+       */
+      fetchGames: function () {
+        window.fetch(BGMatch.apiUrl + '/jogos')
+          .then(response => response.json())
+          .then(jogos => this.listaJogos = jogos.map(jogo => ({code: jogo.id_ludo, label: jogo.nome})))
+          .catch(error => console.error(error));
+      },
+
+      /**
+       * Consulta a lista de locais existentes para o input.
+       */
+      fetchPlaces: function () {
+        window.fetch(BGMatch.apiUrl + '/partidas/locais')
+          .then(response => response.json())
+          .then(locais => this.listaLocais = locais)
+          .catch(error => console.error(error));
+      },
+
+      /**
+       * Consulta a lista de jogadores.
+       */
+      fetchPlayers: function () {
+        window.fetch(BGMatch.apiUrl + '/jogadores')
+          .then(response => response.json())
+          .then(jogadores => jogadores.map(jogador => ({
+            presente: false,
+            id: jogador.id,
+            nome: jogador.nome,
+            pontuacao: 0,
+            vencedor: false
+          })))
+          .then(jogadores => this.form.jogadores = jogadores)
+          .catch(error => console.error(error));
       }
     },
 
     created() {
-      // Inicializa a lista de jogos para o select de jogos
-      window.fetch(BGMatch.apiUrl + '/jogos')
-        .then(response => response.json())
-        .then(jogos => this.listaJogos = jogos.map(jogo => ({code: jogo.id_ludo, label: jogo.nome})))
-        .catch(error => console.error(error));
-
-      // Inicializa a lista de locais para o select
-      window.fetch(BGMatch.apiUrl + '/partidas/locais')
-        .then(response => response.json())
-        .then(locais => this.listaLocais = locais)
-        .catch(error => console.error(error));
-
-      // Inicializa a lista de jogadores
-      window.fetch(BGMatch.apiUrl + '/jogadores')
-        .then(response => response.json())
-        .then(jogadores => jogadores.map(jogador => ({
-          presente: false,
-          id: jogador.id,
-          nome: jogador.nome,
-          pontuacao: 0,
-          vencedor: false
-        })))
-        .then(jogadores => this.form.jogadores = jogadores)
-        .catch(error => console.error(error));
+      // Inicializa a lista de jogos, locais e jogadores
+      this.fetchGames();
+      this.fetchPlaces();
+      this.fetchPlayers();
     }
   }
 </script>

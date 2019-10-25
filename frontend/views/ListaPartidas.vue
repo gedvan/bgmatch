@@ -49,12 +49,20 @@
 
     data() {
       return {
+        // Lista de partidas exibidas na tabela
         partidas: [],
+
+        // Partida sendo editada
         edicaoPartida: null
       }
     },
 
     methods: {
+      /**
+       * Abre o modal com o formulário de cadastro/edição de uma partida.
+       *
+       * @param i
+       */
       abrirFormPartida: function (i) {
         if (typeof i == 'number') {
           this.edicaoPartida = this.partidas[i];
@@ -64,10 +72,19 @@
         this.$bvModal.show('modal-partida');
       },
 
+      /**
+       * Método auxiliar para exibir os nomes dos jogadores da partida.
+       *
+       * @param array jogadores
+       * @returns {string | *}
+       */
       nomesJogadores: function (jogadores) {
         return jogadores.map(j => j.vencedor ? `<u><font-awesome-icon icon="trophy" /> ${j.nome}</u>` : j.nome).join(', ');
       },
 
+      /**
+       * Atualiza a lista de partidas com base nos dados do servidor.
+       */
       atualizaPartidas: function () {
         window.fetch(BGMatch.apiUrl + '/partidas')
           .then(response => response.json())
