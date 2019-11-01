@@ -1,10 +1,10 @@
 <template>
   <div id="lista-jogos">
 
-    <div class="toolbar border rounded mb-3 px-4 pt-4 pb-2 bg-light">
-      <div class="row">
+    <div class="filter-form bg-light">
+      <div class="form-row">
 
-        <div class="col-md-5 form-group">
+        <div class="col-md-5 form-group form-group-tipo">
           <label>Tipos</label>
           <b-dropdown id="dd-tipos" :text="tiposSelecionados" ref="dropdown" variant="outline-secondary" class="d-flex align-items-start">
             <b-dropdown-form>
@@ -18,12 +18,10 @@
           <b-form-input type="number" v-model="num" id="num-jogadores" min="1"></b-form-input>
         </div>
 
-        <div class="col-md-5 form-group">
+        <div class="col-md-5 form-group form-group-order">
           <label>Ordenação</label>
-          <div class="input-group">
-            <b-form-select v-model="sort" :options="sortOptions"></b-form-select>
-            <b-form-checkbox v-model="sortInv" switch id="sort-inv">Inverter</b-form-checkbox>
-          </div>
+          <b-form-checkbox v-model="sortInv" switch id="sort-inv">Inverter</b-form-checkbox>
+          <b-form-select v-model="sort" :options="sortOptions"></b-form-select>
         </div>
 
       </div>
@@ -171,3 +169,78 @@
     }
   }
 </script>
+
+<style lang="scss">
+  @import "../scss/includes";
+
+  #lista-jogos {
+
+    .filter-form {
+      padding: 17px 20px 7px;
+
+      .form-group-tipo {
+        .dropdown {
+          .dropdown-toggle {
+            text-align: left;
+            background: white;
+            border-color: $input-border-color;
+
+            &::after {
+              float: right;
+              margin-top: .5rem;
+            }
+            &:hover, &:focus {
+              color: $body-color;
+            }
+          }
+          &.show > .dropdown-toggle {
+            color: $body-color;
+          }
+        }
+      }
+      .form-group-order {
+        position: relative;
+        .custom-switch {
+          float: right;
+          font-size: 90%;
+        }
+        select[name=sort] {
+          flex-grow: 2;
+        }
+      }
+    }
+
+    ul.grid {
+      display: grid;
+      margin: 0;
+      padding: 0;
+      grid-template-columns: repeat(2, 50%);
+      grid-template-rows: auto;
+      justify-content: space-between;
+
+      @media (min-width: 576px) {
+        grid-template-columns: repeat(3, 33.3%);
+      }
+      @media (min-width: 768px) {
+        grid-template-columns: repeat(4, 25%);
+      }
+      @media (min-width: 992px) {
+        grid-template-columns: repeat(5, 20%);
+      }
+      @media (min-width: 1200px) {
+        grid-template-columns: repeat(6, 16.66%);
+      }
+
+      li {
+        list-style: none;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        &:hover {
+          border-color: $border-color;
+        }
+      }
+    }
+
+  }
+
+</style>
