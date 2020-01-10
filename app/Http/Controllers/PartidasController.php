@@ -10,7 +10,7 @@ class PartidasController extends Controller {
 
   public function getLista() {
     $result = DB::table('partidas AS p')
-      ->join('jogos AS g', 'p.id_jogo', '=', 'g.id_ludo')
+      ->join('jogos AS g', 'p.id_jogo', '=', 'g.id')
       ->join('jogadores_partidas AS jp', 'jp.id_partida', '=', 'p.id')
       ->join('jogadores AS j', 'jp.id_jogador', '=', 'j.id')
       ->select('p.*', 'g.nome AS nome_jogo', 'j.nome AS jogador', 'jp.vencedor')

@@ -4,21 +4,21 @@ export default {
 
   ludopediaUrl: 'https://www.ludopedia.com.br',
 
-  tiposJogos: [
-    {value: 'C', text: 'Cooperativo'},
-    {value: 'E', text: 'Expert'},
-    {value: 'I', text: 'Infantil'},
+  categoriasJogos: [
+    {value: 'P', text: 'Pesado'},
     {value: 'M', text: 'Médio'},
-    {value: 'P', text: 'Party game'},
+    {value: 'L', text: 'Leve'},
+    {value: 'F', text: 'Party game'},
+    {value: 'I', text: 'Infantil'},
   ],
 
   urlJogoLudopedia: function (jogo) {
     return this.ludopediaUrl + '/jogo/' + jogo.slug;
   },
 
-  nomeTipo: function (key) {
-    const find = this.tiposJogos.findIndex(option => option.value === key);
-    return find > -1 ? this.tiposJogos[find].text : '';
+  nomeCategoria: function (key) {
+    const find = this.categoriasJogos.findIndex(option => option.value === key);
+    return find > -1 ? this.categoriasJogos[find].text : '';
   }
 
 }

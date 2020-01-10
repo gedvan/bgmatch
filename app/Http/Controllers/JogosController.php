@@ -13,19 +13,21 @@ class JogosController extends Controller {
 
   const LUDOPEDIA_URL = 'https://www.ludopedia.com.br';
 
-  const TIPO_INFANTIL = 'I';
-  const TIPO_COOP = 'C';
-  const TIPO_PARTY = 'P';
-  const TIPO_MEDIO = 'M';
-  const TIPO_EXPERT = 'E';
-  const TIPO_EXPANSAO = 'X';
+  const CATEGORIA_PESADO    = 'P';
+  const CATEGORIA_MEDIO     = 'M';
+  const CATEGORIA_LEVE      = 'L';
+  const CATEGORIA_PARTY     = 'F';
+  const CATEGORIA_INFANTIL  = 'I';
+  const CATEGORIA_COOP      = 'C';
+  const CATEGORIA_EXPANSAO  = 'X';
 
-  const TIPOS = [
-    self::TIPO_INFANTIL => 'Infantil',
-    self::TIPO_COOP => 'Cooperativo',
-    self::TIPO_PARTY => 'Party game',
-    self::TIPO_MEDIO => 'Médio',
-    self::TIPO_EXPERT => 'Expert'
+  const CATEGORIAS = [
+    self::CATEGORIA_PESADO    => 'Pesado',
+    self::CATEGORIA_MEDIO     => 'Médio',
+    self::CATEGORIA_LEVE      => 'Leve',
+    self::CATEGORIA_PARTY     => 'Party game',
+    self::CATEGORIA_INFANTIL  => 'Infantil',
+    self::CATEGORIA_COOP      => 'Cooperativo',
   ];
 
   /**
@@ -41,8 +43,8 @@ class JogosController extends Controller {
     $jogos = [];
     foreach ($rows as $row) {
       if (empty($row->id_base)) {
-        $jogos[$row->id_ludo] = $row;
-        $jogos[$row->id_ludo]->expansoes = [];
+        $jogos[$row->id] = $row;
+        $jogos[$row->id]->expansoes = [];
       } elseif (isset($jogos[$row->id_base])) {
         $jogos[$row->id_base]->expansoes[] = $row;
       }
@@ -52,18 +54,18 @@ class JogosController extends Controller {
   }
 
   /**
-   * Endpoint para atualizar o tipo de um jogo específico.
+   * Endpoint para atualizar a categoria de um jogo específico.
    *
    * @param  Request  $request
-   * @param  string  $id_ludo  ID do jogo a ser atualizado
+   * @param  string   $id  ID do jogo a ser atualizado
    * @return JsonResponse
    */
-  public function postAtualizaTipo(Request $request, $id_ludo): JsonResponse
+  public function postAtualizaCategoria(Request $request, $id): JsonResponse
   {
-    // O novo tipo deve vir no corpo da requisição
-    $tipo = $request->input('tipo');
+    // A nova categoria deve vir no corpo da requisição
+    $categoria = $request->input('categoria');
 
-    $upd = DB::table('jogos')->where('id_ludo', $id_ludo)->update(['tipo' => $tipo]);
+    $upd = DB::table('jogos')->where('id', $id)->update(['categoria' => $categoria]);
 
     return new JsonResponse(['updated' => $upd]);
   }
@@ -135,9 +137,9 @@ class JogosController extends Controller {
     // Informações básicas
 
     $jogo = [
-      'id_ludo' => (int) $dom->find('#id_jogo', 0)->getAttribute('value'),
+      'id' => (int) $dom->find('#id_jogo', 0)->getAttribute('value'),
       'nome' => $dom->find('#nm_jogo', 0)->getAttribute('value'),
-      'img_ludo' => $dom->find('#img-capa', 0)->getAttribute('src'),
+      'imagem' => $dom->find('#img-capa', 0)->getAttribute('src'),
       'slug' => $slug,
     ];
 
@@ -153,32 +155,32 @@ class JogosController extends Controller {
       $jogo['max'] = $m[1];
     }
 
-    // Tipo / Expansão
+    // Categoria / Expansão
 
     $linkExpansao = $dom->find('#page-content .jogo-top-main > h5 a', 0);
     if ($linkExpansao) {
       $slugExpansao = array_slice(explode('/', $linkExpansao->getAttribute('href')), -1)[0];
-      $idJogoBase = DB::table('jogos')->where('slug', $slugExpansao)->value('id_ludo');
+      $idJogoBase = DB::table('jogos')->where('slug', $slugExpansao)->value('id');
 
-      $jogo['tipo'] = self::TIPO_EXPANSAO;
+      $jogo['categoria'] = self::CATEGORIA_EXPANSAO;
       $jogo['id_base'] = $idJogoBase;
     } else {
       $boxInfo = $dom->find('#bloco-descricao-sm .col-sm-3 .bg-gray-light', 0);
 
       if ($boxInfo->find('a[href$="mecanica/20"]', 0)) { // Mecânica: Cooperativo
-        $jogo['tipo'] = self::TIPO_COOP;
+        $jogo['categoria'] = self::CATEGORIA_COOP;
       } elseif ($boxInfo->find('a[href$="dominio/6"]', 0)) { // Domínio: Jogos Infantis
-        $jogo['tipo'] = self::TIPO_INFANTIL;
+        $jogo['categoria'] = self::CATEGORIA_INFANTIL;
       } elseif ($boxInfo->find('a[href$="categoria/113"]', 0)) { // Categoria: Jogos Festivos
-        $jogo['tipo'] = self::TIPO_PARTY;
+        $jogo['categoria'] = self::CATEGORIA_PARTY;
       } elseif ($boxInfo->find('a[href$="dominio/9"]', 0)) { // Domínio: Jogos Expert
-        $jogo['tipo'] = self::TIPO_EXPERT;
+        $jogo['categoria'] = self::CATEGORIA_PESADO;
       } else {
-        $jogo['tipo'] = self::TIPO_MEDIO;
+        $jogo['categoria'] = self::CATEGORIA_MEDIO;
       }
     }
 
-    DB::table('jogos')->updateOrInsert(['id_ludo' => $jogo['id_ludo']], $jogo);
+    DB::table('jogos')->updateOrInsert(['id' => $jogo['id']], $jogo);
 
     return new JsonResponse($jogo);
   }

@@ -4,11 +4,11 @@
     <div class="filter-form bg-light">
       <div class="form-row">
 
-        <div class="col-md-5 form-group form-group-tipo">
-          <label>Tipos</label>
-          <b-dropdown id="dd-tipos" :text="tiposSelecionados" ref="dropdown" variant="outline-secondary" class="d-flex align-items-start">
+        <div class="col-md-5 form-group form-group-categoria">
+          <label>Categorias</label>
+          <b-dropdown id="dd-categorias" :text="categoriasSelecionadas" ref="dropdown" variant="outline-secondary" class="d-flex align-items-start">
             <b-dropdown-form>
-              <b-form-checkbox-group id="check-tipos" v-model="tipos" :options="BGMatch.tiposJogos" name="tipos" stacked></b-form-checkbox-group>
+              <b-form-checkbox-group id="check-categorias" v-model="categorias" :options="opcoesCategorias" name="categorias" stacked></b-form-checkbox-group>
             </b-dropdown-form>
           </b-dropdown>
         </div>
@@ -63,8 +63,18 @@
         // Lista de jogos carregados
         jogos: [],
 
-        // Filtro para os tipos de jogos exibidos
-        tipos: ['C', 'E', 'I', 'M', 'P'],
+        // Opções do filtro de categorias
+        opcoesCategorias: [
+          {value: 'P', text: 'Pesado'},
+          {value: 'M', text: 'Médio'},
+          {value: 'L', text: 'Leve'},
+          {value: 'F', text: 'Party game'},
+          {value: 'I', text: 'Infantil'},
+          {value: 'C', text: 'Coop./Grupo'},
+        ],
+
+        // Filtro para os categorias de jogos exibidos
+        categorias: ['P', 'M', 'L', 'F', 'I', 'C'],
 
         // Filtro pelo número de jogadores
         num: "",
@@ -94,21 +104,22 @@
 
     computed: {
 
-      // Retorna o label para os tipos selecionados
-      tiposSelecionados: function() {
-        if (this.tipos.length === BGMatch.tiposJogos.length) {
-          return "Todos";
+      // Retorna o label para as categorias selecionadas
+      categoriasSelecionadas: function() {
+        if (this.categorias.length === BGMatch.categoriasJogos.length) {
+          return "Todas";
         }
-        if (this.tipos.length === 0) {
+        if (this.categorias.length === 0) {
           return "Nenhum";
         }
-        return BGMatch.tiposJogos.filter(option => this.tipos.indexOf(option.value) > -1).map(option => option.text).join(', ');
+        return this.opcoesCategorias.filter(option => this.categorias.indexOf(option.value) > -1).map(option => option.text).join(', ');
       },
 
       // Retorna a lista dos jogos depois de aplicados os filtros
       jogosFiltrados: function() {
         return this.jogos
-          .filter(jogo => this.tipos.indexOf(jogo.tipo) > -1)
+          .filter(jogo => this.categorias.indexOf(jogo.categoria) > -1)
+          .filter(jogo => this.categorias.indexOf('C') > -1 || !jogo.coop)
           .filter(jogo => this.num === '' || (this.num >= jogo.min && this.num <= jogo.max))
           .sort(this.sortFunction());
       }
@@ -117,6 +128,9 @@
 
     methods: {
 
+      /**
+       * Função para ordenar os jogos de acordo com o critério escolhido.
+       */
       sortFunction: function () {
         if (this.sort === 'nome') {
           return (jogoA, jogoB) => this.sortInv ?
@@ -129,6 +143,9 @@
         }
       },
 
+      /**
+       * Faz a requisição inicial ao backend para obter a lista de jogos.
+       */
       inicializaJogos: function () {
         window.fetch(BGMatch.apiUrl + '/jogos')
           .then(response => response.json())
@@ -178,7 +195,7 @@
     .filter-form {
       padding: 17px 20px 7px;
 
-      .form-group-tipo {
+      .form-group-categoria {
         .dropdown {
           .dropdown-toggle {
             text-align: left;

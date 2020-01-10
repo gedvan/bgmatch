@@ -1,14 +1,13 @@
 <template>
   <div class="jogo">
     <a class="imagem" href="#" @click.prevent="$emit('on-click', jogo)">
-      <img :src="jogo.img_ludo" />
+      <img :src="jogo.imagem" />
     </a>
     <h3 class="titulo">
       <a href="#" @click.prevent="$emit('on-click', jogo)">{{ jogo.nome }}</a>
     </h3>
     <div class="info">
-      <font-awesome-icon icon="user-friends"/>
-      {{ numJogadores }} / {{ nomeTipo }}
+      {{ numJogadores }} | {{ nomeCategoria }} {{ jogo.coop ? '| Coop./Grupo' : '' }}
     </div>
   </div>
 </template>
@@ -36,11 +35,11 @@
       numJogadores: function() {
         return this.jogo.min === this.jogo.max
           ? this.jogo.min.toString()
-          : this.jogo.min + ' a ' + this.jogo.max;
+          : this.jogo.min + '-' + this.jogo.max;
       },
 
-      nomeTipo: function() {
-        return BGMatch.nomeTipo(this.jogo.tipo);
+      nomeCategoria: function() {
+        return BGMatch.nomeCategoria(this.jogo.categoria);
       }
 
     }

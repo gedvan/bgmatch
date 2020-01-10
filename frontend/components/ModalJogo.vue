@@ -14,8 +14,8 @@
           <dd class="col-sm-9">{{ numJogadores }}</dd>
           <dt class="col-sm-3">Categoria</dt>
           <dd class="col-sm-9">
-            <span v-if="!editandoTipo">{{ BGMatch.nomeTipo(jogo.tipo) }}</span>
-            <b-form-select v-if="editandoTipo" v-model="tipoEdicao" :options="BGMatch.tiposJogos" size="sm" class="w-auto"></b-form-select>
+            <span v-if="!editandoTipo">{{ BGMatch.nomeCategoria(jogo.tipo) }}</span>
+            <b-form-select v-if="editandoTipo" v-model="tipoEdicao" :options="BGMatch.categoriasJogos" size="sm" class="w-auto"></b-form-select>
             <b-button v-if="!editandoTipo" variant="link" size="sm" @click="iniciaEdicaoTipo"><font-awesome-icon icon="edit" /></b-button>
             <b-button-group v-if="editandoTipo" size="sm">
               <b-button variant="link" @click="salvaEdicaoTipo"><font-awesome-icon icon="check-circle" /></b-button>
