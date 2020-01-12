@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use PHPHtmlParser\Dom;
-use PHPHtmlParser\Exceptions\ParentNotFoundException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class JogosController extends Controller {
 
@@ -18,7 +17,6 @@ class JogosController extends Controller {
   const CATEGORIA_LEVE      = 'L';
   const CATEGORIA_PARTY     = 'F';
   const CATEGORIA_INFANTIL  = 'I';
-  const CATEGORIA_COOP      = 'C';
   const CATEGORIA_EXPANSAO  = 'X';
 
   const CATEGORIAS = [
@@ -27,7 +25,7 @@ class JogosController extends Controller {
     self::CATEGORIA_LEVE      => 'Leve',
     self::CATEGORIA_PARTY     => 'Party game',
     self::CATEGORIA_INFANTIL  => 'Infantil',
-    self::CATEGORIA_COOP      => 'Cooperativo',
+    self::CATEGORIA_EXPANSAO  => 'Expansão',
   ];
 
   /**
@@ -38,7 +36,11 @@ class JogosController extends Controller {
    */
   public function getLista(Request $request): JsonResponse
   {
-    $rows = DB::table('jogos')->orderByRaw('id_base NULLS FIRST')->orderBy('nome')->get();
+    $rows = DB::table('jogos')
+      ->where('excluido', false)
+      ->orderByRaw('id_base NULLS FIRST')
+      ->orderBy('nome')
+      ->get();
 
     $jogos = [];
     foreach ($rows as $row) {
@@ -56,9 +58,9 @@ class JogosController extends Controller {
   /**
    * Endpoint para atualizar a categoria de um jogo específico.
    *
-   * @param  Request  $request
+   * @param  \Illuminate\Http\Request  $request
    * @param  string   $id  ID do jogo a ser atualizado
-   * @return JsonResponse
+   * @return \Illuminate\Http\JsonResponse
    */
   public function postAtualizaCategoria(Request $request, $id): JsonResponse
   {
@@ -71,20 +73,75 @@ class JogosController extends Controller {
   }
 
   /**
-   * Endpoint que retorna a lista completa de jogos do grupo na Ludopedia.
+   * Endpoint para atualizar todos os jogos do banco com base nas informações da
+   * Ludopedia.
    *
-   * @param  Request  $request
-   * @return JsonResponse
+   * @param \Illuminate\Http\Request $request
+   *
+   * @return \Illuminate\Http\JsonResponse
    */
-  public function getJogosLudopedia(Request $request): JsonResponse
-  {
-    $jogos = [];
-    $dom = new Dom();
+  public function postAtualizaJogos(Request $request) {
 
+    $jogosLocal = DB::table('jogos')->orderBy('slug')->pluck('slug')->toArray();
+
+    try {
+      $jogosLudopedia = $this->getListaJogosLudopedia();
+    }
+    catch (\Exception $e) {
+      throw new HttpException(500, 'Ocorreu um erro ao consultar a Ludopedia.', $e);
+    }
+
+    $novos = array_diff($jogosLudopedia, $jogosLocal);
+    foreach ($novos as $slug) {
+      try {
+        $jogo = $this->getInfoJogoLudopedia($slug);
+        DB::table('jogos')->insert($jogo);
+      }
+      catch (\Exception $e) {
+        continue;
+      }
+    }
+
+    $excluidos  = array_diff($jogosLocal, $jogosLudopedia);
+    foreach ($excluidos as $slug) {
+      DB::table('jogos')->where('slug', $slug)->update(['excluido' => true]);
+    }
+
+    $existentes = array_intersect($jogosLocal, $jogosLudopedia);
+    $editados = DB::table('jogos')->where('editado', true)->pluck('slug')->toArray();
+    foreach ($existentes as $slug) {
+      if (!in_array($slug, $editados)) {
+        try {
+          $jogo = $this->getInfoJogoLudopedia($slug);
+          unset($jogo['id'], $jogo['slug']);
+          DB::table('jogos')->where('slug', $slug)->update($jogo);
+        }
+        catch (\Exception $e) {
+          continue;
+        }
+      }
+    }
+
+    return $this->getLista();
+  }
+
+  /**
+   * Consulta a lista completa dos jogos de cada usuário do grupo na Ludopedia.
+   *
+   * @return array  Array com os slugs dos jogos
+   *
+   * @throws \PHPHtmlParser\Exceptions\ChildNotFoundException
+   * @throws \PHPHtmlParser\Exceptions\CircularException
+   * @throws \PHPHtmlParser\Exceptions\CurlException
+   * @throws \PHPHtmlParser\Exceptions\NotLoadedException
+   * @throws \PHPHtmlParser\Exceptions\StrictException
+   */
+  protected function getListaJogosLudopedia() {
     $usuarios = DB::table('jogadores')->pluck('user_ludo');
+    $dom = new Dom();
+    $jogos = [];
 
     foreach (['base', 'expansao'] as $tipo) {
-      $jogos[$tipo] = [];
       foreach ($usuarios as $usuario) {
         $pagina = 1;
         while ($pagina) {
@@ -94,41 +151,43 @@ class JogosController extends Controller {
           }
 
           $dom->loadFromUrl($url);
-
           $links = $dom->find('#page-content .panel-body .media .media-heading a');
           foreach ($links as $link) {
             $urlJogo = $link->getAttribute('href');
-            $jogos[$tipo][] = array_slice(explode('/', $urlJogo), -1)[0];
+            $jogos[] = array_slice(explode('/', $urlJogo), -1)[0];
           }
 
           $pagina = false;
           if ($pagination = $dom->find('#page-content ul.pagination li.active', 0)) {
-            try {
-              $nextPageUrl = $pagination->nextSibling()->find('a', 0)->getAttribute('href');
+            $nextPageUrl = $pagination->nextSibling()->find('a', 0)->getAttribute('href');
 
-              if (preg_match('/pagina=(\d+)/', $nextPageUrl, $matches)) {
-                $pagina = (int) $matches[1];
-              }
-            } catch (ParentNotFoundException $exception) {
+            if (preg_match('/pagina=(\d+)/', $nextPageUrl, $matches)) {
+              $pagina = (int) $matches[1];
             }
           }
         }
       }
-      $jogos[$tipo] = array_unique($jogos[$tipo]);
-      sort($jogos[$tipo]);
     }
+    $jogos = array_unique($jogos);
+    sort($jogos);
 
-    return new JsonResponse($jogos);
+    return $jogos;
   }
 
   /**
-   * Endpoint para atualizar os dados de um jogo no banco de dados local, com base nas informações da Ludopedia.
+   * Consulta as informações de um jogo específico na Ludopedia.
    *
-   * @param  string  $slug  Identificador textual do jogo na ludopedia (utilizado nas URLs)
-   * @return JsonResponse
+   * @param string $slug
+   *
+   * @return array
+   *
+   * @throws \PHPHtmlParser\Exceptions\ChildNotFoundException
+   * @throws \PHPHtmlParser\Exceptions\CircularException
+   * @throws \PHPHtmlParser\Exceptions\CurlException
+   * @throws \PHPHtmlParser\Exceptions\NotLoadedException
+   * @throws \PHPHtmlParser\Exceptions\StrictException
    */
-  public function postAtualizaJogo(string $slug): JsonResponse
-  {
+  protected function getInfoJogoLudopedia($slug) {
     $urlJogo = self::LUDOPEDIA_URL.'/jogo/'.$slug;
 
     $dom = new Dom();
@@ -137,10 +196,10 @@ class JogosController extends Controller {
     // Informações básicas
 
     $jogo = [
-      'id' => (int) $dom->find('#id_jogo', 0)->getAttribute('value'),
-      'nome' => $dom->find('#nm_jogo', 0)->getAttribute('value'),
-      'imagem' => $dom->find('#img-capa', 0)->getAttribute('src'),
-      'slug' => $slug,
+      'id'      => (int) $dom->find('#id_jogo', 0)->getAttribute('value'),
+      'nome'    => $dom->find('#nm_jogo', 0)->getAttribute('value'),
+      'imagem'  => $dom->find('#img-capa', 0)->getAttribute('src'),
+      'slug'    => $slug,
     ];
 
     // Número de jogadores
@@ -167,22 +226,30 @@ class JogosController extends Controller {
     } else {
       $boxInfo = $dom->find('#bloco-descricao-sm .col-sm-3 .bg-gray-light', 0);
 
-      if ($boxInfo->find('a[href$="mecanica/20"]', 0)) { // Mecânica: Cooperativo
-        $jogo['categoria'] = self::CATEGORIA_COOP;
-      } elseif ($boxInfo->find('a[href$="dominio/6"]', 0)) { // Domínio: Jogos Infantis
+      // Mecânica: Cooperativo ou Jogo em Equipe
+      if ($boxInfo->find('a[href$="mecanica/20"]', 0) || $boxInfo->find('a[href$="mecanica/37"]', 0)) {
+        $jogo['coop'] = true;
+      }
+
+      if ($boxInfo->find('a[href$="dominio/6"]', 0)) { // Domínio: Jogos Infantis
         $jogo['categoria'] = self::CATEGORIA_INFANTIL;
-      } elseif ($boxInfo->find('a[href$="categoria/113"]', 0)) { // Categoria: Jogos Festivos
+      }
+      elseif ($boxInfo->find('a[href$="categoria/113"]', 0)) { // Categoria: Jogos Festivos
         $jogo['categoria'] = self::CATEGORIA_PARTY;
-      } elseif ($boxInfo->find('a[href$="dominio/9"]', 0)) { // Domínio: Jogos Expert
+      }
+      elseif ($boxInfo->find('a[href$="dominio/9"]', 0)) { // Domínio: Jogos Expert
         $jogo['categoria'] = self::CATEGORIA_PESADO;
-      } else {
+      }
+      else {
         $jogo['categoria'] = self::CATEGORIA_MEDIO;
+        $duracao = trim($dom->find('#page-content .jogo-top-main > ul.list-inline li', 1)->text);
+        if (preg_match('/^(\d+) min/', $duracao, $m) && $m[1] < 60) {
+          $jogo['categoria'] = self::CATEGORIA_LEVE;
+        }
       }
     }
 
-    DB::table('jogos')->updateOrInsert(['id' => $jogo['id']], $jogo);
-
-    return new JsonResponse($jogo);
+    return $jogo;
   }
 
 }

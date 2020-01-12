@@ -16,15 +16,23 @@ class RefactorJogos extends Migration
   {
     Schema::table('jogos', function (Blueprint $table) {
       $table->boolean('coop')->default(false);
+      $table->boolean('editado')->default(false);
+      $table->boolean('excluido')->default(false);
       $table->renameColumn('id_ludo', 'id');
       $table->renameColumn('img_ludo', 'imagem');
       $table->renameColumn('tipo', 'categoria');
     });
 
-    DB::table('jogos')->where('categoria', '<>', 'C')->update(['coop' => false]);
+    DB::table('jogos')->update(['coop' => false, 'editado' => false, 'excluido' => false]);
     DB::table('jogos')->where('categoria', 'C')->update(['coop' => true, 'categoria' => 'M']);
     DB::table('jogos')->where('categoria', 'P')->update(['categoria' => 'F']);
     DB::table('jogos')->where('categoria', 'E')->update(['categoria' => 'P']);
+
+    Schema::table('jogos', function (Blueprint $table) {
+      $table->boolean('coop')->nullable(false)->change();
+      $table->boolean('editado')->nullable(false)->change();
+      $table->boolean('excluido')->nullable(false)->change();
+    });
   }
 
   /**
@@ -43,6 +51,8 @@ class RefactorJogos extends Migration
       $table->renameColumn('categoria', 'tipo');
       $table->renameColumn('imagem', 'img_ludo');
       $table->renameColumn('id', 'id_ludo');
+      $table->dropColumn('excluido');
+      $table->dropColumn('editado');
       $table->dropColumn('coop');
     });
   }

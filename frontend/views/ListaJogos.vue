@@ -40,7 +40,10 @@
     <modal-jogo :jogo="jogoModal" />
 
     <div class="text-center my-4">
-      <button class="btn btn-primary" @click="atualizaJogos" v-bind:disabled="atualizando">Atualizar acervo</button>
+      <button class="btn btn-primary" @click="atualizaJogos" :disabled="atualizando">
+        <font-awesome-icon icon="sync-alt" :class="{'fa-spin': atualizando}" />&nbsp;
+        Atualizar acervo
+      </button>
     </div>
 
   </div>
@@ -50,11 +53,17 @@
   import BGMatch from "../BGMatch";
   import ModalJogo from "../components/ModalJogo.vue";
   import ItemJogo from "../components/ItemJogo.vue";
+  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import { library } from '@fortawesome/fontawesome-svg-core';
+  import { faSyncAlt } from '@fortawesome/free-solid-svg-icons';
+
+  library.add(faSyncAlt);
 
   export default {
     components: {
       ItemJogo,
-      ModalJogo
+      ModalJogo,
+      FontAwesomeIcon
     },
     data() {
       return {
@@ -106,7 +115,7 @@
 
       // Retorna o label para as categorias selecionadas
       categoriasSelecionadas: function() {
-        if (this.categorias.length === BGMatch.categoriasJogos.length) {
+        if (this.categorias.length === this.opcoesCategorias.length) {
           return "Todas";
         }
         if (this.categorias.length === 0) {
@@ -153,31 +162,28 @@
           .catch(error => console.error(error));
       },
 
+      /**
+       * Abre um modal com os detalhes do jogo clicado.
+       *
+       * @param jogo
+       */
       selecionaJogo: function (jogo) {
         this.jogoModal = jogo;
         this.$bvModal.show('modal-jogo');
       },
 
+      /**
+       * Atualiza a lista de jogos no banco de dados local, com base nos jogos do grupo na Ludopedia.
+       */
       atualizaJogos: function () {
         if (window.confirm("A atualização do acervo consultará todos os jogos do grupo na Ludopedia e pode demorar alguns minutos. Deseja continuar?")) {
           this.atualizando = true;
-          window.fetch(BGMatch.apiUrl + '/jogos/ludopedia')
+          window.fetch(BGMatch.apiUrl + '/jogos/atualiza', {method: "POST"})
             .then(response => response.json())
-            .then(jogos => {
-              jogos.base.forEach(this.atualizaJogo);
-              jogos.expansao.forEach(this.atualizaJogo);
-            });
+            .then(jogos => this.jogos = jogos)
+            .finally(() => this.atualizando = false)
+            .catch(error => console.error(error));
         }
-      },
-
-      atualizaJogo: function (slug, index, nomes) {
-        window.fetch(BGMatch.apiUrl + '/jogos/atualiza/' + slug, {method: "POST"})
-          .then(response => response.json())
-          .then(jogo => {
-            if (index === nomes.length - 1) {
-              this.atualizando = false;
-            }
-          });
       }
     },
 
