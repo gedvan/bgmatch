@@ -19,9 +19,8 @@ $router->get('/', function () use ($router) {
 
 $router->group(['prefix' => 'api'], function () use ($router) {
   $router->get('jogos', 'JogosController@getLista');
-  $router->post('jogos/{id}/tipo', 'JogosController@postAtualizaCategoria');
-
   $router->post('jogos/atualiza', 'JogosController@postAtualizaJogos');
+  $router->post('jogos/salva/{id}', 'JogosController@postSalvaJogo');
 
   $router->get('jogadores', 'JogadoresController@getJogadores');
 

@@ -15,7 +15,7 @@
 
         <div class="col-md-2 form-group">
           <label for="num-jogadores">Nº de Jogadores</label>
-          <b-form-input type="number" v-model="num" id="num-jogadores" min="1"></b-form-input>
+          <b-form-input type="number" v-model="num" id="num-jogadores" min="1" placeholder="Qualquer"></b-form-input>
         </div>
 
         <div class="col-md-5 form-group form-group-order">
@@ -33,7 +33,7 @@
 
     <ul class="grid">
       <li v-for="jogo in jogosFiltrados">
-        <item-jogo :jogo="jogo" @on-click="selecionaJogo" />
+        <item-jogo :jogo="jogo" @on-click="abreModalJogo" />
       </li>
     </ul>
 
@@ -67,7 +67,6 @@
     },
     data() {
       return {
-        BGMatch,
 
         // Lista de jogos carregados
         jogos: [],
@@ -167,7 +166,7 @@
        *
        * @param jogo
        */
-      selecionaJogo: function (jogo) {
+      abreModalJogo: function (jogo) {
         this.jogoModal = jogo;
         this.$bvModal.show('modal-jogo');
       },

@@ -56,18 +56,23 @@ class JogosController extends Controller {
   }
 
   /**
-   * Endpoint para atualizar a categoria de um jogo específico.
+   * Endpoint para atualizar os dados de um jogo específico.
    *
    * @param  \Illuminate\Http\Request  $request
    * @param  string   $id  ID do jogo a ser atualizado
    * @return \Illuminate\Http\JsonResponse
    */
-  public function postAtualizaCategoria(Request $request, $id): JsonResponse
+  public function postSalvaJogo(Request $request, $id): JsonResponse
   {
-    // A nova categoria deve vir no corpo da requisição
+    // Os novos dados devem vir no corpo da requisição
+    $coop = $request->input('coop');
     $categoria = $request->input('categoria');
 
-    $upd = DB::table('jogos')->where('id', $id)->update(['categoria' => $categoria]);
+    $upd = DB::table('jogos')->where('id', $id)->update([
+      'coop' => (bool) $coop,
+      'categoria' => $categoria,
+      'editado' => true,
+    ]);
 
     return new JsonResponse(['updated' => $upd]);
   }
@@ -107,6 +112,7 @@ class JogosController extends Controller {
       DB::table('jogos')->where('slug', $slug)->update(['excluido' => true]);
     }
 
+    /*
     $existentes = array_intersect($jogosLocal, $jogosLudopedia);
     $editados = DB::table('jogos')->where('editado', true)->pluck('slug')->toArray();
     foreach ($existentes as $slug) {
@@ -121,6 +127,7 @@ class JogosController extends Controller {
         }
       }
     }
+    */
 
     return $this->getLista();
   }
