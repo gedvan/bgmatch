@@ -1,8 +1,26 @@
 <template>
   <div id="view-lista-partidas">
-    <b-button @click="abrirFormPartida">Cadastrar partida</b-button>
 
-    <table v-if="partidas.length > 0" class="table table-striped table-sm">
+    <div class="bg-light p-3">
+      <div class="form-row">
+
+        <b-form-group label="Período" label-for="input-data" class="col-md-4 mb-0">
+          <b-input-group>
+            <b-form-input id="input-data" v-model="filtros.data_inicial" type="date" required placeholder="DD/MM/AAAA" />
+            <b-form-input id="input-data" v-model="filtros.data_final" type="date" required placeholder="DD/MM/AAAA" />
+          </b-input-group>
+        </b-form-group>
+
+      </div>
+    </div>
+
+    <div class="py-3 d-flex">
+      <b-button @click="abrirFormPartida" class="ml-auto">
+        <font-awesome-icon icon="plus" />&nbsp;Cadastrar partida
+      </b-button>
+    </div>
+
+    <table v-if="partidasFiltradas.length > 0" class="table table-striped table-sm">
       <thead>
       <tr>
         <th>Data</th><th>Jogo</th><th>Local</th><th>Jogadores</th><th>&nbsp;</th>
@@ -37,9 +55,9 @@
   import FormPartida from "../components/FormPartida.vue";
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import { library } from '@fortawesome/fontawesome-svg-core';
-  import { faMedal, faEdit } from '@fortawesome/free-solid-svg-icons';
+  import { faMedal, faEdit, faPlus } from '@fortawesome/free-solid-svg-icons';
 
-  library.add(faMedal, faEdit);
+  library.add(faMedal, faEdit, faPlus);
 
   export default {
     components: {
@@ -53,8 +71,22 @@
         partidas: [],
 
         // Partida sendo editada
-        edicaoPartida: null
+        edicaoPartida: null,
+
+        filtros: {
+          data_inicial: '',
+          data_final: '',
+        }
       }
+    },
+
+    computed: {
+
+      partidasFiltradas: function() {
+        return this.partidas
+          .filter(partida => this.filtros.data_inicial ? partida.data >= this.filtros.data_inicial : true);
+      }
+
     },
 
     methods: {

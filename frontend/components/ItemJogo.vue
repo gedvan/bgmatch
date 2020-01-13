@@ -7,7 +7,7 @@
       <a href="#" @click.prevent="$emit('on-click', jogo)">{{ jogo.nome }}</a>
     </h3>
     <div class="info">
-      {{ numJogadores }} | {{ nomeCategoria }} {{ jogo.coop ? '| Coop.' : '' }}
+      {{ numJogadores }} | {{ nomeCategoria }} {{ jogo.coop ? '| Coop/Grupo' : '' }}
     </div>
   </div>
 </template>
