@@ -26,7 +26,7 @@
         <th width="10%"><b-checkbox v-model="checkAll" @change="handleCheckAll" /></th>
         <th width="40%">Jogador</th>
         <th width="35%">Pontuação</th>
-        <th width="15%">Vencedor</th>
+        <th width="15%">Posição</th>
         </thead>
         <tbody>
         <tr v-for="jogador in form.jogadores">
@@ -35,7 +35,7 @@
           <td><b-input type="text" size="sm" style="width: 5em"
                        v-model="jogador.pontuacao" v-show="jogador.presente" /></td>
           <td class="text-center">
-            <b-checkbox v-model="jogador.vencedor" v-show="jogador.presente" />
+            <b-form-select size="sm" v-model="jogador.posicao" :options="posicoes" v-show="jogador.presente"></b-form-select>
           </td>
         </tr>
         </tbody>
@@ -67,7 +67,15 @@
           jogo: '',
           local: '',
           jogadores: []
-        }
+        },
+
+        posicoes: [
+          {text: '1º lugar', value: 1},
+          {text: '2º lugar', value: 2},
+          {text: '3º lugar', value: 3},
+          {text: '4º lugar', value: 4},
+          {text: '5º lugar', value: 5}
+        ]
       }
     },
 

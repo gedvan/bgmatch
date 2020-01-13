@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <div id="view-lista-partidas">
     <b-button @click="abrirFormPartida">Cadastrar partida</b-button>
 
-    <table v-if="partidas.length > 0" class="table table-striped">
+    <table v-if="partidas.length > 0" class="table table-striped table-sm">
       <thead>
       <tr>
         <th>Data</th><th>Jogo</th><th>Local</th><th>Jogadores</th><th>&nbsp;</th>
@@ -14,8 +14,8 @@
         <td>{{ partida.nome_jogo }}</td>
         <td>{{ partida.local }}</td>
         <td>
-          <span v-for="(jogador, i) in partida.jogadores" :class="{ 'font-weight-bold': jogador.vencedor }">
-            <font-awesome-icon icon="trophy" v-if="jogador.vencedor" />
+          <span v-for="(jogador, i) in partida.jogadores" :class="['jogador', 'posicao-' + jogador.posicao]">
+            <font-awesome-icon icon="medal" v-if="jogador.posicao <= 3" />
             {{ jogador.nome + (i < partida.jogadores.length - 1 ? ',' : '')}}
           </span>
         </td>
@@ -37,9 +37,9 @@
   import FormPartida from "../components/FormPartida.vue";
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import { library } from '@fortawesome/fontawesome-svg-core';
-  import { faTrophy, faEdit } from '@fortawesome/free-solid-svg-icons';
+  import { faMedal, faEdit } from '@fortawesome/free-solid-svg-icons';
 
-  library.add(faTrophy, faEdit);
+  library.add(faMedal, faEdit);
 
   export default {
     components: {
@@ -98,3 +98,24 @@
     }
   }
 </script>
+
+<style lang="scss">
+  @import "../scss/includes";
+
+  #view-lista-partidas {
+    .jogador {
+      &.posicao-1 {
+        font-weight: bold;
+        .fa-medal {
+          color: goldenrod;
+        }
+      }
+      &.posicao-2 .fa-medal {
+        color: silver;
+      }
+      &.posicao-3 .fa-medal {
+        color: chocolate;
+      }
+    }
+  }
+</style>
