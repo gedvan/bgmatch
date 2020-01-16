@@ -63,7 +63,7 @@ class PartidasController extends Controller {
           'id_partida'  => $partida['id'],
           'id_jogador'  => $jogador['id'],
           'pontuacao'   => $jogador['pontuacao'],
-          'vencedor'    => $jogador['vencedor']
+          'posicao'     => $jogador['posicao'],
         ];
         DB::table('jogadores_partidas')->insert($jogador_partida);
       }
@@ -78,5 +78,61 @@ class PartidasController extends Controller {
     }
 
     return new JsonResponse($response);
+  }
+
+  public function importa(Request $request) {
+    $json = json_decode(file_get_contents(__DIR__.'/../../../public/BGStatsExport.json'));
+
+    $mapJogadores = [
+      16 => 1, // Gedvan
+      30 => 2, // Fechine
+      9  => 3, // Bruno
+      2  => 4, // Rodrigo
+      46 => 5, // Matheus
+    ];
+
+    $mapLocais = [
+      3 => 'Casa de Rodrigo',
+      4 => 'Casa de Bruno',
+      7 => 'Casa de Fechine',
+      8 => 'Casa de Gedvan',
+    ];
+
+    $mapJogos = [];
+    foreach ($json->games as $game) {
+      $name = $game->name;
+      $row = DB::table('jogos')->where('nome', '=', $name)->select(['id', 'nome'])->first();
+      $mapJogos[$game->id . ':' . $name] = $row ? $row->id . ':' . $row->nome : null;
+    }
+    var_dump($mapJogos); exit();
+
+    $partidas = [];
+    foreach ($json->plays as $play) {
+
+      // Local da partida
+      if (empty($play->locationRefId) || !isset($mapLocais[$play->locationRefId])) {
+        // Se o jogo não foi em uma das casas dos jogadores do Grupo, ignora
+        continue;
+      }
+      $local = $mapLocais[$play->locationRefId];
+
+      // Data da partida
+      $data = explode(' ', $play->playDate)[0];
+
+      // Jogo
+
+
+      $partida = [
+        'id_jogo' => null,
+        'data' => $data,
+        'local' => $local,
+      ];
+
+      $partidas[] = $partida;
+    }
+
+    var_dump($partidas); exit();
+
+    return new JsonResponse($partidas);
   }
 }

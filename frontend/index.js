@@ -17,6 +17,13 @@ Vue.filter('plural', function(value, singular, plural) {
   return value === 1 ? singular : plural;
 });
 
+Vue.filter('data_br', function (value) {
+  var test = /^(\d\d\d\d)-(\d\d)-(\d\d)$/.exec(value);
+  if (test) {
+    return test[3] + '/' + test[2] + '/' + test[1];
+  }
+});
+
 new Vue({
   render: h => h(App),
   router: new VueRouter({routes})
