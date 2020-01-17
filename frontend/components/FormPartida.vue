@@ -50,7 +50,6 @@
   import BGMatch from "../BGMatch";
 
   export default {
-
     props: ['partida'],
 
     data() {
@@ -75,7 +74,9 @@
           {text: '3º lugar', value: 3},
           {text: '4º lugar', value: 4},
           {text: '5º lugar', value: 5}
-        ]
+        ],
+
+        partidaObj: null,
       }
     },
 
@@ -95,14 +96,7 @@
       partida: function (newVal, oldVal) {
         this.resetPartida();
         if (newVal) {
-          this.form.data = newVal.data;
-          this.form.jogo = this.listaJogos.find(j => j.code == newVal.id_jogo);
-          this.form.local = newVal.local;
-          console.log(newVal.jogadores);
-          console.log(this.form.jogadores);
-          newVal.jogadores.forEach((j, i) => {
-            // TODO
-          });
+          this.fetchPartida(newVal.id);
         }
       }
     },
@@ -122,7 +116,7 @@
         };
         data.jogadores = this.form.jogadores
           .filter(j => j.presente)
-          .map(j => ({id: j.id, pontuacao: j.pontuacao, vencedor: j.vencedor}));
+          .map(j => ({id: j.id, pontuacao: j.pontuacao, posicao: j.posicao}));
 
         window.fetch(BGMatch.apiUrl + '/partidas/nova', {
           method: 'POST',
@@ -130,18 +124,15 @@
           body: JSON.stringify(data)
         }).then(response => response.json())
           .then(response => {
-            if (response.ok) {
-              this.resetPartida();
-              this.$bvModal.hide('modal-partida');
-              this.$emit('updated', true);
-              // TODO: Show toast
-            }
-            else {
-              window.alert('Ocorreu um erro ao cadastrar a partida.');
-              console.error(response.msg);
-            }
+            this.resetPartida();
+            this.$bvModal.hide('modal-partida');
+            this.$emit('updated', true);
+            // TODO: Show toast
           })
-          .catch(error => console.error(error));
+          .catch(error => {
+            window.alert('Ocorreu um erro ao cadastrar a partida.');
+            console.error(error);
+          });
       },
 
       /**
@@ -169,7 +160,7 @@
         this.form.jogadores.forEach((j, i) => {
           this.form.jogadores[i].presente = false;
           this.form.jogadores[i].pontuacao = 0;
-          this.form.jogadores[i].vencedor = false;
+          this.form.jogadores[i].posicao = null;
         });
       },
 
@@ -179,7 +170,7 @@
       fetchGames: function () {
         window.fetch(BGMatch.apiUrl + '/jogos')
           .then(response => response.json())
-          .then(jogos => this.listaJogos = jogos.map(jogo => ({code: jogo.id_ludo, label: jogo.nome})))
+          .then(jogos => this.listaJogos = jogos.map(jogo => ({code: jogo.id, label: jogo.nome})))
           .catch(error => console.error(error));
       },
 
@@ -204,9 +195,28 @@
             id: jogador.id,
             nome: jogador.nome,
             pontuacao: 0,
-            vencedor: false
+            posicao: '',
           })))
           .then(jogadores => this.form.jogadores = jogadores)
+          .catch(error => console.error(error));
+      },
+
+      fetchPartida: function(id) {
+        window.fetch(BGMatch.apiUrl + '/partida/' + id)
+          .then(response => response.json())
+          .then(partida => {
+            this.form.data = partida.data;
+            this.form.jogo = this.listaJogos.find(j => j.code == partida.id_jogo);
+            this.form.local = partida.local;
+            //console.log(partida.jogadores);
+            //console.log(this.form.jogadores);
+            partida.jogadores.forEach(jogador => {
+              var jog = this.form.jogadores.find(j => j.id == jogador.id);
+              jog.presente = true;
+              jog.pontuacao = jogador.pontuacao;
+              jog.posicao = jogador.posicao;
+            });
+          })
           .catch(error => console.error(error));
       }
     },

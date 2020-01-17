@@ -25,6 +25,7 @@
     "css-loader": "^3.4.2",
     "node-sass": "^4.13.0",
     "sass-loader": "^8.0.1",
+    "vue-cli": "^2.9.6",
     "vue-loader": "^15.8.3",
     "vue-style-loader": "^4.1.2",
     "vue-svg-loader": "^0.12.0",

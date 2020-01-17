@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class PartidasController extends Controller {
 
@@ -40,6 +42,40 @@ class PartidasController extends Controller {
     return new JsonResponse(array_values($partidas));
   }
 
+  public function getPartida(Request $request, $id) {
+
+    $result = DB::table('partidas AS p')
+      ->join('jogadores_partidas AS jp', 'jp.id_partida', '=', 'p.id')
+      ->select('p.*', 'jp.id_jogador', 'jp.pontuacao', 'jp.posicao')
+      ->where('p.id', $id)
+      ->get();
+
+    if ($result->count() == 0) {
+      throw new NotFoundHttpException();
+    }
+
+    $partida = [];
+
+    foreach ($result as $row) {
+      if (!$partida) {
+        $partida = [
+          'id'      => $row->id,
+          'id_jogo' => $row->id_jogo,
+          'data'    => $row->data,
+          'local'   => $row->local,
+          'jogadores' => [],
+        ];
+      }
+      $partida['jogadores'][] = [
+        'id'        => $row->id_jogador,
+        'pontuacao' => $row->pontuacao,
+        'posicao'   => $row->posicao,
+      ];
+    }
+
+    return new JsonResponse($partida);
+  }
+
   public function getLocais() {
     $locais = DB::table('partidas')->distinct()->pluck('local');
     return new JsonResponse($locais);
@@ -63,7 +99,7 @@ class PartidasController extends Controller {
           'id_partida'  => $partida['id'],
           'id_jogador'  => $jogador['id'],
           'pontuacao'   => $jogador['pontuacao'],
-          'vencedor'    => $jogador['vencedor']
+          'posicao'     => $jogador['posicao']
         ];
         DB::table('jogadores_partidas')->insert($jogador_partida);
       }
@@ -73,8 +109,7 @@ class PartidasController extends Controller {
     }
     catch (\Exception $e) {
       DB::rollBack();
-      $response['ok'] = FALSE;
-      $response['msg'] = $e->getMessage();
+      throw new HttpException(500, $e->getMessage(), $e);
     }
 
     return new JsonResponse($response);
