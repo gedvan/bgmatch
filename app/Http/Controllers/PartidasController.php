@@ -116,6 +116,7 @@ class PartidasController extends Controller {
   }
 
   public function importa(Request $request) {
+
     $json = json_decode(file_get_contents(__DIR__.'/../../../public/BGStatsExport.json'));
 
     $mapJogadores = [
@@ -125,21 +126,13 @@ class PartidasController extends Controller {
       2  => 4, // Rodrigo
       46 => 5, // Matheus
     ];
-
     $mapLocais = [
       3 => 'Casa de Rodrigo',
       4 => 'Casa de Bruno',
       7 => 'Casa de Fechine',
       8 => 'Casa de Gedvan',
     ];
-
-    $mapJogos = [];
-    foreach ($json->games as $game) {
-      $name = $game->name;
-      $row = DB::table('jogos')->where('nome', '=', $name)->select(['id', 'nome'])->first();
-      $mapJogos[$game->id . ':' . $name] = $row ? $row->id . ':' . $row->nome : null;
-    }
-    var_dump($mapJogos); exit();
+    $mapJogos = require __DIR__ . '/../../../resources/map-jogos.php';
 
     $partidas = [];
     foreach ($json->plays as $play) {
@@ -155,18 +148,62 @@ class PartidasController extends Controller {
       $data = explode(' ', $play->playDate)[0];
 
       // Jogo
-
+      $jogo = $mapJogos[$play->gameRefId] ?? null;
+      if (!$jogo) {
+        // Não foi possível determinar o jogo
+        continue;
+      }
 
       $partida = [
-        'id_jogo' => null,
+        'id_jogo' => $jogo,
         'data' => $data,
         'local' => $local,
       ];
 
+      $jogadores = [];
+      $ok = TRUE;
+      foreach ($play->playerScores as $player) {
+        if (!isset($mapJogadores[$player->playerRefId])) {
+          $ok = FALSE;
+          break;
+        }
+        $id_jogador = $mapJogadores[$player->playerRefId];
+        if (preg_match_all('/[-+]?\d+/', $player->score, $m)) {
+          $pontuacao = array_sum(array_map('intval', $m[0]));
+        }
+        else {
+          $ok = FALSE;
+          break;
+        }
+        $jogadores[] = [
+          'id_jogador' => $id_jogador,
+          'pontuacao'  => $pontuacao,
+          'posicao'    => $player->rank,
+        ];
+      }
+      if (!$ok || count($jogadores) < 3) {
+        continue;
+      }
+
+      try {
+        DB::beginTransaction();
+
+        $id_partida = DB::table('partidas')->insertGetId($partida);
+
+        foreach ($jogadores as &$jogador) {
+          $jogador['id_partida'] = $id_partida;
+          DB::table('jogadores_partidas')->insert($jogador);
+        }
+
+        DB::commit();
+      }
+      catch (\Exception $e) {
+        DB::rollBack();
+        throw new HttpException(500, $e->getMessage(), $e);
+      }
+      $partida['jogadores'] = $jogadores;
       $partidas[] = $partida;
     }
-
-    var_dump($partidas); exit();
 
     return new JsonResponse($partidas);
   }
