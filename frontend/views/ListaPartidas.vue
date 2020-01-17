@@ -27,8 +27,8 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="(partida, index) in partidas">
-        <td>{{ partida.data }}</td>
+      <tr v-for="(partida, index) in partidasFiltradas">
+        <td>{{ partida.data | data_br }}</td>
         <td>{{ partida.nome_jogo }}</td>
         <td>{{ partida.local }}</td>
         <td>
@@ -74,6 +74,7 @@
         edicaoPartida: null,
 
         filtros: {
+          //data_inicial: '2020-01-01',
           data_inicial: '',
           data_final: '',
         }

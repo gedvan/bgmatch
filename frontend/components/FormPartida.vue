@@ -25,8 +25,8 @@
         <thead>
         <th width="10%"><b-checkbox v-model="checkAll" @change="handleCheckAll" /></th>
         <th width="40%">Jogador</th>
-        <th width="35%">Pontuação</th>
-        <th width="15%">Posição</th>
+        <th width="20%">Pontuação</th>
+        <th width="30%">Posição</th>
         </thead>
         <tbody>
         <tr v-for="jogador in form.jogadores">
