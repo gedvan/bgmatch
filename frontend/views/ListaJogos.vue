@@ -8,27 +8,46 @@
           <label>Categorias</label>
           <b-dropdown id="dd-categorias" :text="categoriasSelecionadas" ref="dropdown" variant="outline-secondary" class="d-flex align-items-start">
             <b-dropdown-form>
-              <b-form-checkbox-group id="check-categorias" v-model="categorias" :options="opcoesCategorias" name="categorias" stacked></b-form-checkbox-group>
+              <b-form-checkbox-group id="filtro-categorias" v-model="filtros.categorias" :options="opcoes.categorias" name="categorias" stacked></b-form-checkbox-group>
             </b-dropdown-form>
           </b-dropdown>
         </div>
 
         <div class="col-md-2 form-group">
-          <label for="num-jogadores">Nº de Jogadores</label>
-          <b-form-input type="number" v-model="num" id="num-jogadores" min="1" placeholder="Qualquer"></b-form-input>
+          <label for="filtro-num-jogadores">Nº de Jogadores</label>
+          <b-form-input type="number" v-model="filtros.num" id="filtro-num-jogadores" min="1" placeholder="Qualquer"></b-form-input>
         </div>
 
         <div class="col-md-5 form-group form-group-order">
           <label>Ordenação</label>
-          <b-form-checkbox v-model="sortInv" switch id="sort-inv">Inverter</b-form-checkbox>
-          <b-form-select v-model="sort" :options="sortOptions"></b-form-select>
+          <b-form-checkbox v-model="ordenacao.inverter" switch id="sort-inv">Inverter</b-form-checkbox>
+          <b-form-select v-model="ordenacao.campo" :options="opcoes.ordenacao"></b-form-select>
         </div>
 
       </div>
+      <div class="form-row">
+        <div class="col-md-4 form-group">
+          <b-form-checkbox v-model="filtros.coop_grupo" switch id="filtro-coop-grupo">Exibir jogos cooperativos ou em grupo</b-form-checkbox>
+        </div>
+        <div class="col-md-4 form-group">
+          <b-form-checkbox v-model="filtros.excluidos" switch id="filtro-excluidos">Exibir jogos excluídos da coleção</b-form-checkbox>
+        </div>
+      </div>
     </div>
 
-    <div class="text-center mb-4">
-      {{ jogosFiltrados.length }} {{ jogosFiltrados.length | plural('jogo', 'jogos') }}.
+    <div class="row my-4">
+      <div class="col">
+        Exibindo {{ jogosFiltrados.length }} {{ jogosFiltrados.length | plural('jogo', 'jogos') }}
+      </div>
+      <div class="col text-right">
+        <span class="mr-2">
+          Total de jogos na coleção: {{ qtdJogosColecao }}
+        </span>
+        <button class="btn btn-primary" @click="atualizaJogos" :disabled="atualizando">
+          <font-awesome-icon icon="sync-alt" :class="{'fa-spin': atualizando}" />&nbsp;
+          Atualizar acervo
+        </button>
+      </div>
     </div>
 
     <ul class="grid">
@@ -38,13 +57,6 @@
     </ul>
 
     <modal-jogo :jogo="jogoModal" />
-
-    <div class="text-center my-4">
-      <button class="btn btn-primary" @click="atualizaJogos" :disabled="atualizando">
-        <font-awesome-icon icon="sync-alt" :class="{'fa-spin': atualizando}" />&nbsp;
-        Atualizar acervo
-      </button>
-    </div>
 
   </div>
 </template>
@@ -71,36 +83,50 @@
         // Lista de jogos carregados
         jogos: [],
 
-        // Opções do filtro de categorias
-        opcoesCategorias: [
-          {value: 'P', text: 'Pesado'},
-          {value: 'M', text: 'Médio'},
-          {value: 'L', text: 'Leve'},
-          {value: 'F', text: 'Party game'},
-          {value: 'I', text: 'Infantil'},
-          {value: 'C', text: 'Coop./Grupo'},
-        ],
+        opcoes: {
+          // Lista de opções do filtro de categorias
+          categorias: [
+            {value: 'P', text: 'Pesado'},
+            {value: 'M', text: 'Médio'},
+            {value: 'L', text: 'Leve'},
+            {value: 'F', text: 'Party game'},
+            {value: 'I', text: 'Infantil'}
+          ],
+          // Lista de opções do critério de ordenação
+          ordenacao: [
+            {text: 'Pelo nome', value: 'nome'},
+            {text: 'Min. jogadores', value: 'min'},
+            {text: 'Máx. jogadores', value: 'max'},
+            {text: 'Última partida (não funcionando)', value: 'ult'},
+            {text: 'Qtd. de partidas (não funcionando)', value: 'qtd'},
+          ]
+        },
 
-        // Filtro para os categorias de jogos exibidos
-        categorias: ['P', 'M', 'L', 'F', 'I', 'C'],
+        // Conjunto de filtros da listagem de jogos
+        filtros: {
 
-        // Filtro pelo número de jogadores
-        num: "",
+          // Categorias de jogos exibidos
+          categorias: ['P', 'M', 'L', 'F', 'I'],
 
-        // Campo para ordenação
-        sort: 'nome',
+          // Filtro pelo número de jogadores
+          num: "",
 
-        // Flag para ordenação invertida
-        sortInv: false,
+          // Exibir ou não os jogos cooperativos ou em grupo
+          coop_grupo: true,
 
-        // Opções de ordenação
-        sortOptions: [
-          {text: 'Pelo nome', value: 'nome'},
-          {text: 'Min. jogadores', value: 'min'},
-          {text: 'Máx. jogadores', value: 'max'},
-          {text: 'Última partida (não funcionando)', value: 'ult'},
-          {text: 'Qtd. de partidas (não funcionando)', value: 'qtd'},
-        ],
+          // Exibir ou não os jogos excluídos da coleção
+          excluidos: false,
+        },
+
+        // Critérios de ordenação
+        ordenacao: {
+
+          // Campo para ordenação
+          campo: 'nome',
+
+          // Flag para ordenação invertida
+          inverter: false,
+        },
 
         // Jogo que está sendo exibido no modal
         jogoModal: null,
@@ -114,22 +140,27 @@
 
       // Retorna o label para as categorias selecionadas
       categoriasSelecionadas: function() {
-        if (this.categorias.length === this.opcoesCategorias.length) {
+        if (this.filtros.categorias.length === this.opcoes.categorias.length) {
           return "Todas";
         }
-        if (this.categorias.length === 0) {
+        if (this.filtros.categorias.length === 0) {
           return "Nenhum";
         }
-        return this.opcoesCategorias.filter(option => this.categorias.indexOf(option.value) > -1).map(option => option.text).join(', ');
+        return this.opcoes.categorias.filter(option => this.filtros.categorias.indexOf(option.value) > -1).map(option => option.text).join(', ');
       },
 
       // Retorna a lista dos jogos depois de aplicados os filtros
       jogosFiltrados: function() {
         return this.jogos
-          .filter(jogo => this.categorias.indexOf(jogo.categoria) > -1)
-          .filter(jogo => this.categorias.indexOf('C') > -1 || !jogo.coop)
-          .filter(jogo => this.num === '' || (this.num >= jogo.min && this.num <= jogo.max))
+          .filter(jogo => this.filtros.categorias.indexOf(jogo.categoria) > -1)
+          .filter(jogo => this.filtros.coop_grupo || !jogo.coop)
+          .filter(jogo => this.filtros.excluidos || !jogo.excluido)
+          .filter(jogo => this.filtros.num === '' || (this.filtros.num >= jogo.min && this.filtros.num <= jogo.max))
           .sort(this.sortFunction());
+      },
+
+      qtdJogosColecao: function () {
+        return this.jogos.filter(jogo => !jogo.excluido).length;
       }
 
     },
@@ -140,14 +171,14 @@
        * Função para ordenar os jogos de acordo com o critério escolhido.
        */
       sortFunction: function () {
-        if (this.sort === 'nome') {
-          return (jogoA, jogoB) => this.sortInv ?
+        if (this.ordenacao.campo === 'nome') {
+          return (jogoA, jogoB) => this.ordenacao.inverter ?
             jogoB.nome.toLocaleLowerCase().localeCompare(jogoA.nome.toLocaleLowerCase()) :
             jogoA.nome.toLocaleLowerCase().localeCompare(jogoB.nome.toLocaleLowerCase());
-        } else if (this.sort === 'min') {
-          return (jogoA, jogoB) => this.sortInv ? jogoB.min - jogoA.min : jogoA.min - jogoB.min;
-        } else if (this.sort === 'max') {
-          return (jogoA, jogoB) => this.sortInv ? jogoB.max - jogoA.max : jogoA.max - jogoB.max;
+        } else if (this.ordenacao.campo === 'min') {
+          return (jogoA, jogoB) => this.ordenacao.inverter ? jogoB.min - jogoA.min : jogoA.min - jogoB.min;
+        } else if (this.ordenacao.campo === 'max') {
+          return (jogoA, jogoB) => this.ordenacao.inverter ? jogoB.max - jogoA.max : jogoA.max - jogoB.max;
         }
       },
 
@@ -181,7 +212,10 @@
             .then(response => response.json())
             .then(jogos => this.jogos = jogos)
             .finally(() => this.atualizando = false)
-            .catch(error => console.error(error));
+            .catch(error => {
+              window.alert('Ocorreu um erro durante a atualização dos jogos.');
+              console.error(error);
+            });
         }
       }
     },

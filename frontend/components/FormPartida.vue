@@ -94,6 +94,7 @@
 
     watch: {
       partida: function (newVal, oldVal) {
+        console.log(newVal);
         this.resetPartida();
         if (newVal) {
           this.fetchPartida(newVal.id);

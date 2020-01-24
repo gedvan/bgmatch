@@ -15,7 +15,7 @@
     </div>
 
     <div class="py-3 d-flex">
-      <b-button @click="abrirFormPartida" class="ml-auto">
+      <b-button @click="abrirFormPartida(null)" class="ml-auto">
         <font-awesome-icon icon="plus" />&nbsp;Cadastrar partida
       </b-button>
     </div>
@@ -38,8 +38,11 @@
           </span>
         </td>
         <td class="text-right">
-          <b-button variant="link" size="sm" @click="abrirFormPartida(index)">
+          <b-button variant="link" size="sm" @click="abrirFormPartida(partida)">
             <font-awesome-icon icon="edit" />
+          </b-button>
+          <b-button variant="link" size="sm" @click="excluirPartida(partida)">
+            <font-awesome-icon icon="trash" />
           </b-button>
         </td>
       </tr>
@@ -55,9 +58,9 @@
   import FormPartida from "../components/FormPartida.vue";
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import { library } from '@fortawesome/fontawesome-svg-core';
-  import { faMedal, faEdit, faPlus } from '@fortawesome/free-solid-svg-icons';
+  import { faMedal, faEdit, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 
-  library.add(faMedal, faEdit, faPlus);
+  library.add(faMedal, faEdit, faPlus, faTrash);
 
   export default {
     components: {
@@ -94,14 +97,10 @@
       /**
        * Abre o modal com o formulário de cadastro/edição de uma partida.
        *
-       * @param i
+       * @param partida
        */
-      abrirFormPartida: function (i) {
-        if (typeof i == 'number') {
-          this.edicaoPartida = this.partidas[i];
-        } else {
-          this.edicaoPartida = null;
-        }
+      abrirFormPartida: function (partida) {
+        this.edicaoPartida = partida;
         this.$bvModal.show('modal-partida');
       },
 
@@ -113,6 +112,21 @@
        */
       nomesJogadores: function (jogadores) {
         return jogadores.map(j => j.vencedor ? `<u><font-awesome-icon icon="trophy" /> ${j.nome}</u>` : j.nome).join(', ');
+      },
+
+      excluirPartida: function (partida) {
+        if (window.confirm(`Deseja realmente excluir a partida de ${partida.nome_jogo} de ${partida.data}?`)) {
+          window.fetch(BGMatch.apiUrl + '/partida/' + partida.id + '/delete', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+              console.log(data);
+              this.atualizaPartidas();
+            })
+            .catch(error => {
+              window.alert('Ocorreu um erro ao excluir a partida.');
+              console.error(error);
+            });
+        }
       },
 
       /**

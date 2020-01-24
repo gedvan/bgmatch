@@ -11,27 +11,26 @@
 |
 */
 
-use Illuminate\Support\Facades\DB;
-
 $router->get('/', function () use ($router) {
   return view('index');
 });
 
 $router->group(['prefix' => 'api'], function () use ($router) {
   $router->get('jogos', 'JogosController@getLista');
+  $router->get('jogos/importa/{slug}', 'JogosController@importa');
   $router->post('jogos/atualiza', 'JogosController@postAtualizaJogos');
   $router->post('jogos/salva/{id}', 'JogosController@postSalvaJogo');
 
   $router->get('jogadores', 'JogadoresController@getJogadores');
 
-  $router->get('partida/{id}', 'PartidasController@getPartida');
   $router->get('partidas', 'PartidasController@getLista');
   $router->get('partidas/locais', 'PartidasController@getLocais');
   $router->get('partidas/importa', 'PartidasController@importa');
   $router->post('partidas/nova', 'PartidasController@postNovaPartida');
+  $router->get('partida/{id}', 'PartidasController@getPartida');
+  $router->post('partida/{id}/delete', 'PartidasController@postExcluirPartida');
 
-  $router->get('teste', function () {
-    return 'teste';
-  });
+  $router->get('bruno', 'PartidasController@bruno');
+  $router->get('rodrigo', 'PartidasController@rodrigo');
 });
 

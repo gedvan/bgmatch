@@ -34,10 +34,9 @@ class JogosController extends Controller {
    * @param  Request  $request
    * @return JsonResponse
    */
-  public function getLista(Request $request): JsonResponse
+  public function getLista(Request $request = null): JsonResponse
   {
     $rows = DB::table('jogos')
-      ->where('excluido', false)
       ->orderByRaw('id_base NULLS FIRST')
       ->orderBy('nome')
       ->get();
@@ -96,6 +95,7 @@ class JogosController extends Controller {
       throw new HttpException(500, 'Ocorreu um erro ao consultar a Ludopedia.', $e);
     }
 
+    // Insere novos jogos cadastrados na coleção na Ludopedia mas ainda não estão no banco local
     $novos = array_diff($jogosLudopedia, $jogosLocal);
     foreach ($novos as $slug) {
       try {
@@ -107,27 +107,21 @@ class JogosController extends Controller {
       }
     }
 
+    // Marca como excluídos os jogos que estão no banco local, mas não vieram na lista da Ludopedia
     $excluidos  = array_diff($jogosLocal, $jogosLudopedia);
     foreach ($excluidos as $slug) {
-      DB::table('jogos')->where('slug', $slug)->update(['excluido' => true]);
+      DB::table('jogos')
+        ->where(['slug' => $slug, 'excluido' => false])
+        ->update(['excluido' => true]);
     }
 
-    /*
+    // Certifica-se que os demais jogos que vieram não estão marcados como excluídos no banco local
     $existentes = array_intersect($jogosLocal, $jogosLudopedia);
-    $editados = DB::table('jogos')->where('editado', true)->pluck('slug')->toArray();
     foreach ($existentes as $slug) {
-      if (!in_array($slug, $editados)) {
-        try {
-          $jogo = $this->getInfoJogoLudopedia($slug);
-          unset($jogo['id'], $jogo['slug']);
-          DB::table('jogos')->where('slug', $slug)->update($jogo);
-        }
-        catch (\Exception $e) {
-          continue;
-        }
-      }
+      DB::table('jogos')
+        ->where(['slug' => $slug, 'excluido' => true])
+        ->update(['excluido' => false]);
     }
-    */
 
     return $this->getLista();
   }
@@ -236,6 +230,8 @@ class JogosController extends Controller {
       // Mecânica: Cooperativo ou Jogo em Equipe
       if ($boxInfo->find('a[href$="mecanica/20"]', 0) || $boxInfo->find('a[href$="mecanica/37"]', 0)) {
         $jogo['coop'] = true;
+      } else {
+        $jogo['coop'] = false;
       }
 
       if ($boxInfo->find('a[href$="dominio/6"]', 0)) { // Domínio: Jogos Infantis
@@ -257,6 +253,12 @@ class JogosController extends Controller {
     }
 
     return $jogo;
+  }
+
+  public function importa($slug) {
+    $jogo = $this->getInfoJogoLudopedia($slug);
+    $jogo['excluido'] = TRUE;
+    DB::table('jogos')->insert($jogo);
   }
 
 }

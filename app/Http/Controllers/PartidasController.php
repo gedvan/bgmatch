@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -115,96 +116,158 @@ class PartidasController extends Controller {
     return new JsonResponse($response);
   }
 
-  public function importa(Request $request) {
+  public function postExcluirPartida(Request $request, $id) {
+    try {
+      $delete = DB::table('partidas')->where('id', $id)->delete();
+    }
+    catch (\Exception $e) {
+      throw new HttpException(500, $e->getMessage(), $e);
+    }
+    return new JsonResponse($delete);
+  }
 
-    $json = json_decode(file_get_contents(__DIR__.'/../../../public/BGStatsExport.json'));
+  public function bruno() {
+    $json = json_decode(file_get_contents(__DIR__.'/../../../public/BGStatsExport_Bruno.json'));
 
-    $mapJogadores = [
-      16 => 1, // Gedvan
-      30 => 2, // Fechine
-      9  => 3, // Bruno
-      2  => 4, // Rodrigo
-      46 => 5, // Matheus
-    ];
-    $mapLocais = [
-      3 => 'Casa de Rodrigo',
-      4 => 'Casa de Bruno',
-      7 => 'Casa de Fechine',
-      8 => 'Casa de Gedvan',
-    ];
-    $mapJogos = require __DIR__ . '/../../../resources/map-jogos.php';
-
-    $partidas = [];
-    foreach ($json->plays as $play) {
-
-      // Local da partida
-      if (empty($play->locationRefId) || !isset($mapLocais[$play->locationRefId])) {
-        // Se o jogo não foi em uma das casas dos jogadores do Grupo, ignora
-        continue;
+    $refs = ['locations' => [], 'games' => [], 'players' => []];
+    foreach (array_keys($refs) as $refkey) {
+      foreach ($json->$refkey as $ref) {
+        $refs[$refkey][$ref->id] = $ref;
       }
-      $local = $mapLocais[$play->locationRefId];
-
-      // Data da partida
-      $data = explode(' ', $play->playDate)[0];
-
-      // Jogo
-      $jogo = $mapJogos[$play->gameRefId] ?? null;
-      if (!$jogo) {
-        // Não foi possível determinar o jogo
-        continue;
-      }
-
-      $partida = [
-        'id_jogo' => $jogo,
-        'data' => $data,
-        'local' => $local,
-      ];
-
-      $jogadores = [];
-      $ok = TRUE;
-      foreach ($play->playerScores as $player) {
-        if (!isset($mapJogadores[$player->playerRefId])) {
-          $ok = FALSE;
-          break;
-        }
-        $id_jogador = $mapJogadores[$player->playerRefId];
-        if (preg_match_all('/[-+]?\d+/', $player->score, $m)) {
-          $pontuacao = array_sum(array_map('intval', $m[0]));
-        }
-        else {
-          $ok = FALSE;
-          break;
-        }
-        $jogadores[] = [
-          'id_jogador' => $id_jogador,
-          'pontuacao'  => $pontuacao,
-          'posicao'    => $player->rank,
-        ];
-      }
-      if (!$ok || count($jogadores) < 3) {
-        continue;
-      }
-
-      try {
-        DB::beginTransaction();
-
-        $id_partida = DB::table('partidas')->insertGetId($partida);
-
-        foreach ($jogadores as &$jogador) {
-          $jogador['id_partida'] = $id_partida;
-          DB::table('jogadores_partidas')->insert($jogador);
-        }
-
-        DB::commit();
-      }
-      catch (\Exception $e) {
-        DB::rollBack();
-        throw new HttpException(500, $e->getMessage(), $e);
-      }
-      $partida['jogadores'] = $jogadores;
-      $partidas[] = $partida;
     }
 
-    return new JsonResponse($partidas);
+    $grupo = [2, 3, 4, 6, 23];
+
+    $plays = [];
+    foreach ($json->plays as $play) {
+      $data = explode(' ', $play->playDate)[0];
+      $jogo = $refs['games'][$play->gameRefId];
+      $local = !empty($play->locationRefId) ? $refs['locations'][$play->locationRefId]->name : '';
+      $jogadores = [];
+      foreach ($play->playerScores as $playerScore) {
+        if (!in_array($playerScore->playerRefId, $grupo)) {
+          continue 2;
+        }
+        $jogador = [
+          'nome' => $refs['players'][$playerScore->playerRefId]->name,
+          'pontuacao' => $playerScore->score,
+          'posicao' => $playerScore->rank,
+        ];
+        $jogadores[] = $jogador['nome'] . ':' . $jogador['pontuacao'];
+      }
+      sort($jogadores);
+      $plays[] = "$data,$jogo->name,$local," . implode(',', $jogadores);
+    }
+    sort($plays);
+
+    echo implode("\n", $plays);
+  }
+
+  public function rodrigo() {
+    $json = json_decode(file_get_contents(__DIR__.'/../../../public/BGStatsExport.json'));
+
+    $refs = ['locations' => [], 'games' => [], 'players' => []];
+    foreach (array_keys($refs) as $refkey) {
+      foreach ($json->$refkey as $ref) {
+        $refs[$refkey][$ref->id] = $ref;
+      }
+    }
+
+    $grupo = [2, 9, 16, 30, 46];
+
+    $plays = [];
+    foreach ($json->plays as $play) {
+      $data = explode(' ', $play->playDate)[0];
+      $jogo = $refs['games'][$play->gameRefId];
+      $local = !empty($play->locationRefId) ? $refs['locations'][$play->locationRefId]->name : '';
+      $jogadores = [];
+      foreach ($play->playerScores as $playerScore) {
+        if (!in_array($playerScore->playerRefId, $grupo)) {
+          continue 2;
+        }
+        $jogador = [
+          'nome' => $refs['players'][$playerScore->playerRefId]->name,
+          'pontuacao' => $playerScore->score,
+          'posicao' => $playerScore->rank,
+        ];
+        $jogadores[] = $jogador['nome'] . ':' . $jogador['pontuacao'];
+      }
+      sort($jogadores);
+      $plays[] = "$data,$jogo->name,$local," . implode(',', $jogadores);
+    }
+    sort($plays);
+
+    echo implode("\n", $plays);
+  }
+
+  public function importa() {
+    $file = new \SplFileObject(__DIR__ . '/../../../resources/jogos.csv');
+
+    $jogos_map = [];
+    $jogos_nao_encontrados = [];
+    while (!$file->eof()) {
+      $line = $file->fgetcsv();
+      if (!$line || empty($line[1])) continue;
+      $nome_jogo = $line[1];
+      if (!isset($jogos_map[$nome_jogo])) {
+        $id_jogo = DB::table('jogos')->where('nome', $nome_jogo)->value('id');
+        if ($id_jogo) {
+          $jogos_map[$nome_jogo] = $id_jogo;
+        }
+        else {
+          $jogos_nao_encontrados[] = $nome_jogo;
+        }
+      }
+    }
+
+    if (count($jogos_nao_encontrados)) {
+      var_dump($jogos_nao_encontrados);
+      throw new HttpException(500, 'Um ou mais jogos não foram encontrados');
+    }
+
+    $jogadores_map = [
+      'B' => 3,
+      'F' => 2,
+      'G' => 1,
+      'M' => 5,
+      'R' => 4,
+    ];
+
+    $file->rewind();
+    $count = 0;
+    while (!$file->eof()) {
+      $line = $file->fgetcsv();
+      if (empty($line) || empty($line[1])) continue;
+
+      $partida = [
+        'id_jogo' => $jogos_map[$line[1]],
+        'data' => $line[0],
+        'local' => $line[2],
+      ];
+      $id_partida = DB::table('partidas')->insertGetId($partida);
+      $count++;
+
+      $jogadores_partida = [];
+      for ($i = 3; $i < count($line); $i++) {
+        list($letra, $pontuacao) = explode(':', $line[$i]);
+        $id_jogador = $jogadores_map[$letra];
+        $jogadores_partida[] = [
+          'id_partida' => $id_partida,
+          'id_jogador' => $id_jogador,
+          'pontuacao' => $pontuacao,
+        ];
+      }
+
+      usort($jogadores_partida, function($a, $b) {
+        return $a['pontuacao'] < $b['pontuacao'];
+      });
+
+      foreach ($jogadores_partida as $i => $jogador_partida) {
+        $jogador_partida['posicao'] = $i + 1;
+        DB::table('jogadores_partidas')->insert($jogador_partida);
+      }
+    }
+
+    return new Response($count . ' partidas inseridas');
   }
 }

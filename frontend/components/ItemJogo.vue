@@ -1,5 +1,5 @@
 <template>
-  <div class="jogo">
+  <div class="jogo" :class="{'excluido': jogo.excluido}">
     <a class="imagem" href="#" @click.prevent="$emit('on-click', jogo)">
       <img :src="jogo.imagem" />
     </a>
@@ -8,6 +8,7 @@
     </h3>
     <div class="info">
       {{ numJogadores }} | {{ nomeCategoria }} {{ jogo.coop ? '| Coop/Grupo' : '' }}
+      <b-badge v-if="jogo.excluido">Excluído</b-badge>
     </div>
   </div>
 </template>
@@ -76,6 +77,10 @@
       color: $text-muted;
     }
 
+    &.excluido {
+      opacity: .5;
+      filter: grayscale(50%);
+    }
     &:hover {
       .titulo a {
         color: $primary;
