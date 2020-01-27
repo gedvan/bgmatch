@@ -94,7 +94,6 @@
 
     watch: {
       partida: function (newVal, oldVal) {
-        console.log(newVal);
         this.resetPartida();
         if (newVal) {
           this.fetchPartida(newVal.id);
@@ -119,7 +118,8 @@
           .filter(j => j.presente)
           .map(j => ({id: j.id, pontuacao: j.pontuacao, posicao: j.posicao}));
 
-        window.fetch(BGMatch.apiUrl + '/partidas/nova', {
+        var path = this.partida ? `/partida/${this.partida.id}/update` : '/partidas/nova';
+        window.fetch(BGMatch.apiUrl + path, {
           method: 'POST',
           headers: new Headers({"Content-Type": "application/json"}),
           body: JSON.stringify(data)
@@ -131,7 +131,7 @@
             // TODO: Show toast
           })
           .catch(error => {
-            window.alert('Ocorreu um erro ao cadastrar a partida.');
+            window.alert('Ocorreu um erro ao salvar a partida.');
             console.error(error);
           });
       },

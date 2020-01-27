@@ -35,7 +35,7 @@
       </div>
     </div>
 
-    <div class="row my-4">
+    <div class="row my-3">
       <div class="col">
         Exibindo {{ jogosFiltrados.length }} {{ jogosFiltrados.length | plural('jogo', 'jogos') }}
       </div>

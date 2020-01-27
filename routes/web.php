@@ -28,9 +28,11 @@ $router->group(['prefix' => 'api'], function () use ($router) {
   $router->get('partidas/importa', 'PartidasController@importa');
   $router->post('partidas/nova', 'PartidasController@postNovaPartida');
   $router->get('partida/{id}', 'PartidasController@getPartida');
+  $router->post('partida/{id}/update', 'PartidasController@postAtualizaPartida');
   $router->post('partida/{id}/delete', 'PartidasController@postExcluirPartida');
 
   $router->get('bruno', 'PartidasController@bruno');
   $router->get('rodrigo', 'PartidasController@rodrigo');
+  $router->get('teste', 'PartidasController@teste');
 });
 

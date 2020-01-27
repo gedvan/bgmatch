@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use PHPHtmlParser\Dom;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -257,8 +258,13 @@ class JogosController extends Controller {
 
   public function importa($slug) {
     $jogo = $this->getInfoJogoLudopedia($slug);
-    $jogo['excluido'] = TRUE;
-    DB::table('jogos')->insert($jogo);
+    if ($jogo) {
+      $jogo['excluido'] = TRUE;
+      DB::table('jogos')->insert($jogo);
+      return new Response('Jogo importado');
+    } else {
+      throw new HttpException(500, 'Jogo não encontrado');
+    }
   }
 
 }

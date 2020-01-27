@@ -18,6 +18,7 @@ class PartidasController extends Controller {
       ->join('jogadores AS j', 'jp.id_jogador', '=', 'j.id')
       ->select('p.*', 'g.nome AS nome_jogo', 'j.nome AS jogador', 'jp.posicao')
       ->orderBy('p.data', 'desc')
+      ->orderBy('g.nome', 'asc')
       ->orderBy('jp.posicao', 'asc')
       ->get();
 
@@ -98,6 +99,41 @@ class PartidasController extends Controller {
       foreach ($request->input('jogadores') as $jogador) {
         $jogador_partida = [
           'id_partida'  => $partida['id'],
+          'id_jogador'  => $jogador['id'],
+          'pontuacao'   => $jogador['pontuacao'],
+          'posicao'     => $jogador['posicao'],
+        ];
+        DB::table('jogadores_partidas')->insert($jogador_partida);
+      }
+
+      DB::commit();
+      $response['ok'] = TRUE;
+    }
+    catch (\Exception $e) {
+      DB::rollBack();
+      throw new HttpException(500, $e->getMessage(), $e);
+    }
+
+    return new JsonResponse($response);
+  }
+
+  public function postAtualizaPartida(Request $request, $id) {
+    $response = ['ok' => FALSE];
+
+    try {
+      DB::beginTransaction();
+
+      $partida = [
+        'id_jogo' => $request->input('id_jogo'),
+        'data'    => $request->input('data'),
+        'local'   => $request->input('local'),
+      ];
+      DB::table('partidas')->where('id', $id)->update($partida);
+      DB::table('jogadores_partidas')->where('id_partida', $id)->delete();
+
+      foreach ($request->input('jogadores') as $jogador) {
+        $jogador_partida = [
+          'id_partida'  => $id,
           'id_jogador'  => $jogador['id'],
           'pontuacao'   => $jogador['pontuacao'],
           'posicao'     => $jogador['posicao'],
@@ -200,6 +236,26 @@ class PartidasController extends Controller {
     echo implode("\n", $plays);
   }
 
+  public function teste() {
+    $file = new \SplFileObject(__DIR__ . '/../../../resources/jogos.csv');
+    $empates = [];
+    while (!$file->eof()) {
+      $line = $file->fgetcsv();
+      if (!$line || empty($line[1])) {
+        continue;
+      }
+      $pontuacoes = [];
+      for ($i = 3; $i < count($line); $i++) {
+        [$letra, $pontuacao] = explode(':', $line[$i]);
+        $pontuacoes[] = $pontuacao;
+      }
+      if (count($pontuacoes) != count(array_unique($pontuacoes))) {
+        $empates[] = implode(',', $line);
+      }
+    }
+    var_dump($empates);
+  }
+
   public function importa() {
     $file = new \SplFileObject(__DIR__ . '/../../../resources/jogos.csv');
 
@@ -207,7 +263,9 @@ class PartidasController extends Controller {
     $jogos_nao_encontrados = [];
     while (!$file->eof()) {
       $line = $file->fgetcsv();
-      if (!$line || empty($line[1])) continue;
+      if (!$line || empty($line[1])) {
+        continue;
+      }
       $nome_jogo = $line[1];
       if (!isset($jogos_map[$nome_jogo])) {
         $id_jogo = DB::table('jogos')->where('nome', $nome_jogo)->value('id');
@@ -237,8 +295,9 @@ class PartidasController extends Controller {
     $count = 0;
     while (!$file->eof()) {
       $line = $file->fgetcsv();
-      if (empty($line) || empty($line[1])) continue;
-
+      if (empty($line) || empty($line[1])) {
+        continue;
+      }
       $partida = [
         'id_jogo' => $jogos_map[$line[1]],
         'data' => $line[0],
@@ -249,7 +308,7 @@ class PartidasController extends Controller {
 
       $jogadores_partida = [];
       for ($i = 3; $i < count($line); $i++) {
-        list($letra, $pontuacao) = explode(':', $line[$i]);
+        [$letra, $pontuacao] = explode(':', $line[$i]);
         $id_jogador = $jogadores_map[$letra];
         $jogadores_partida[] = [
           'id_partida' => $id_partida,

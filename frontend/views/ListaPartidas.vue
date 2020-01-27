@@ -1,7 +1,7 @@
 <template>
   <div id="view-lista-partidas">
 
-    <div class="bg-light p-3">
+    <div class="bg-light p-3 filter-form">
       <div class="form-row">
 
         <b-form-group label="Período" label-for="input-data" class="col-md-4 mb-0">
@@ -11,13 +11,27 @@
           </b-input-group>
         </b-form-group>
 
+        <div class="col-md-2 form-group form-group-sorting">
+          <label>Ordenação</label>
+          <b-form-checkbox v-model="ordenacao.inverter" switch id="sort-inv">Inverter</b-form-checkbox>
+          <b-form-select v-model="ordenacao.campo" :options="opcoes.ordenacao"></b-form-select>
+        </div>
+
       </div>
     </div>
 
-    <div class="py-3 d-flex">
-      <b-button @click="abrirFormPartida(null)" class="ml-auto">
-        <font-awesome-icon icon="plus" />&nbsp;Cadastrar partida
-      </b-button>
+    <div class="row my-3">
+      <div class="col">
+        Exibindo {{ partidasFiltradas.length }} partida(s).
+      </div>
+      <div class="col text-right">
+        <span class="mr-2">
+          Total de partidas cadastradas: {{ partidas.length }}
+        </span>
+        <b-button @click="abrirFormPartida(null)" class="ml-auto">
+          <font-awesome-icon icon="plus" />&nbsp;Cadastrar partida
+        </b-button>
+      </div>
     </div>
 
     <table v-if="partidasFiltradas.length > 0" class="table table-striped table-sm">
@@ -77,9 +91,27 @@
         edicaoPartida: null,
 
         filtros: {
-          //data_inicial: '2020-01-01',
           data_inicial: '',
           data_final: '',
+        },
+
+        opcoes: {
+          // Lista de opções do critério de ordenação
+          ordenacao: [
+            {text: 'Data', value: 'data'},
+            {text: 'Jogo', value: 'nome_jogo'},
+            {text: 'Local', value: 'local'},
+          ]
+        },
+
+        // Critérios de ordenação
+        ordenacao: {
+
+          // Campo para ordenação
+          campo: 'data',
+
+          // Flag para ordenação invertida
+          inverter: false,
         }
       }
     },
@@ -88,7 +120,8 @@
 
       partidasFiltradas: function() {
         return this.partidas
-          .filter(partida => this.filtros.data_inicial ? partida.data >= this.filtros.data_inicial : true);
+          .filter(partida => this.filtros.data_inicial ? partida.data >= this.filtros.data_inicial : true)
+          .sort(this.sortFunction());
       }
 
     },
@@ -112,6 +145,14 @@
        */
       nomesJogadores: function (jogadores) {
         return jogadores.map(j => j.vencedor ? `<u><font-awesome-icon icon="trophy" /> ${j.nome}</u>` : j.nome).join(', ');
+      },
+
+      sortFunction: function () {
+        const campo = this.ordenacao.campo;
+        const inverter = campo === "data" ? !this.ordenacao.inverter : this.ordenacao.inverter;
+        return (a, b) => inverter ?
+          b[campo].toLocaleLowerCase().localeCompare(a[campo].toLocaleLowerCase()) :
+          a[campo].toLocaleLowerCase().localeCompare(b[campo].toLocaleLowerCase());
       },
 
       excluirPartida: function (partida) {
@@ -150,6 +191,18 @@
   @import "../scss/includes";
 
   #view-lista-partidas {
+    .filter-form {
+      .form-group-sorting {
+        position: relative;
+        .custom-switch {
+          float: right;
+          font-size: 90%;
+        }
+        select[name=sort] {
+          flex-grow: 2;
+        }
+      }
+    }
     .jogador {
       &.posicao-1 {
         font-weight: bold;
