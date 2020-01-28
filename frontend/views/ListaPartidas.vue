@@ -1,17 +1,17 @@
 <template>
   <div id="view-lista-partidas">
 
-    <div class="bg-light p-3 filter-form">
+    <div class="bg-light pt-3 px-3 pb-1 filter-form">
       <div class="form-row">
 
-        <b-form-group label="Período" label-for="input-data" class="col-md-4 mb-0">
+        <b-form-group label="Período" label-for="input-data" class="col-md-4">
           <b-input-group>
             <b-form-input id="input-data" v-model="filtros.data_inicial" type="date" required placeholder="DD/MM/AAAA" />
             <b-form-input id="input-data" v-model="filtros.data_final" type="date" required placeholder="DD/MM/AAAA" />
           </b-input-group>
         </b-form-group>
 
-        <b-form-group label="Jogo" label-for="input-jogo" class="col-md-4 mb-0">
+        <b-form-group label="Jogo" label-for="input-jogo" class="col-md-4">
           <v-select id="input-jogo" v-model="filtros.jogo" required :options="opcoes.jogos" />
         </b-form-group>
 
@@ -32,6 +32,7 @@
       </div>
     </div>
 
+    <div class="table-responsive">
     <table v-if="partidasFiltradas.length > 0" class="table table-striped table-sm">
       <thead>
       <tr>
@@ -60,10 +61,12 @@
         <td>{{ partida.nome_jogo }}</td>
         <td>{{ partida.local }}</td>
         <td>
-          <span v-for="(jogador, i) in partida.jogadores" :class="['jogador', 'posicao-' + jogador.posicao]">
-            <font-awesome-icon icon="medal" v-if="jogador.posicao <= 3" />
-            {{ jogador.nome + (i < partida.jogadores.length - 1 ? ',' : '')}}
-          </span>
+          <template v-for="(jogador, i) in partida.jogadores">
+            <span :class="['jogador', 'posicao-' + jogador.posicao]">
+              <font-awesome-icon icon="medal" v-if="jogador.posicao <= 3" />
+              {{ jogador.nome + (i < partida.jogadores.length - 1 ? ',' : '')}}
+            </span>{{ ' ' }}
+          </template>
         </td>
         <td class="text-center text-nowrap">
           <b-button variant="link" size="sm" @click="abrirFormPartida(partida)">
@@ -76,6 +79,7 @@
       </tr>
       </tbody>
     </table>
+    </div>
 
     <form-partida :partida="edicaoPartida" @updated="atualizaPartidas" />
   </div>
@@ -238,6 +242,7 @@
       }
     }
     .jogador {
+      white-space: nowrap;
       &.posicao-1 {
         font-weight: bold;
         .fa-medal {
