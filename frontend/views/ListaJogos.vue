@@ -37,12 +37,12 @@
 
     <div class="row my-3">
       <div class="col">
+        Total de jogos na coleção: {{ qtdJogosColecao }}
+      </div>
+      <div class="col text-center">
         Exibindo {{ jogosFiltrados.length }} {{ jogosFiltrados.length | plural('jogo', 'jogos') }}
       </div>
       <div class="col text-right">
-        <span class="mr-2">
-          Total de jogos na coleção: {{ qtdJogosColecao }}
-        </span>
         <button class="btn btn-primary" @click="atualizaJogos" :disabled="atualizando">
           <font-awesome-icon icon="sync-alt" :class="{'fa-spin': atualizando}" />&nbsp;
           Atualizar acervo

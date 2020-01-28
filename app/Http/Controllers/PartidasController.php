@@ -221,39 +221,15 @@ class PartidasController extends Controller {
         if (!in_array($playerScore->playerRefId, $grupo)) {
           continue 2;
         }
-        $jogador = [
-          'nome' => $refs['players'][$playerScore->playerRefId]->name,
-          'pontuacao' => $playerScore->score,
-          'posicao' => $playerScore->rank,
-        ];
-        $jogadores[] = $jogador['nome'] . ':' . $jogador['pontuacao'];
+        $letra = $refs['players'][$playerScore->playerRefId]->name[0];
+        $jogadores[] = "$playerScore->rank:$letra:$playerScore->score";
       }
       sort($jogadores);
       $plays[] = "$data,$jogo->name,$local," . implode(',', $jogadores);
     }
     sort($plays);
 
-    echo implode("\n", $plays);
-  }
-
-  public function teste() {
-    $file = new \SplFileObject(__DIR__ . '/../../../resources/jogos.csv');
-    $empates = [];
-    while (!$file->eof()) {
-      $line = $file->fgetcsv();
-      if (!$line || empty($line[1])) {
-        continue;
-      }
-      $pontuacoes = [];
-      for ($i = 3; $i < count($line); $i++) {
-        [$letra, $pontuacao] = explode(':', $line[$i]);
-        $pontuacoes[] = $pontuacao;
-      }
-      if (count($pontuacoes) != count(array_unique($pontuacoes))) {
-        $empates[] = implode(',', $line);
-      }
-    }
-    var_dump($empates);
+    echo '<pre>' . implode("\n", $plays) . '</pre>';
   }
 
   public function importa() {
@@ -298,33 +274,27 @@ class PartidasController extends Controller {
       if (empty($line) || empty($line[1])) {
         continue;
       }
-      $partida = [
-        'id_jogo' => $jogos_map[$line[1]],
-        'data' => $line[0],
-        'local' => $line[2],
-      ];
-      $id_partida = DB::table('partidas')->insertGetId($partida);
-      $count++;
-
-      $jogadores_partida = [];
-      for ($i = 3; $i < count($line); $i++) {
-        [$letra, $pontuacao] = explode(':', $line[$i]);
-        $id_jogador = $jogadores_map[$letra];
-        $jogadores_partida[] = [
-          'id_partida' => $id_partida,
-          'id_jogador' => $id_jogador,
-          'pontuacao' => $pontuacao,
+      DB::transaction(function() use (&$jogos_map, &$count, &$line, &$jogadores_map) {
+        $partida = [
+          'id_jogo' => $jogos_map[$line[1]],
+          'data' => $line[0],
+          'local' => $line[2],
         ];
-      }
+        $id_partida = DB::table('partidas')->insertGetId($partida);
+        $count++;
 
-      usort($jogadores_partida, function($a, $b) {
-        return $a['pontuacao'] < $b['pontuacao'];
+        for ($i = 3; $i < count($line); $i++) {
+          [$posicao, $letra, $pontuacao] = explode(':', $line[$i]);
+          $id_jogador = $jogadores_map[$letra];
+          $jogador_partida = [
+            'id_partida' => $id_partida,
+            'id_jogador' => $id_jogador,
+            'pontuacao' => $pontuacao,
+            'posicao' => $posicao,
+          ];
+          DB::table('jogadores_partidas')->insert($jogador_partida);
+        }
       });
-
-      foreach ($jogadores_partida as $i => $jogador_partida) {
-        $jogador_partida['posicao'] = $i + 1;
-        DB::table('jogadores_partidas')->insert($jogador_partida);
-      }
     }
 
     return new Response($count . ' partidas inseridas');
