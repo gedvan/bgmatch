@@ -22,6 +22,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
   $router->post('jogos/salva/{id}', 'JogosController@postSalvaJogo');
 
   $router->get('jogadores', 'JogadoresController@getJogadores');
+  $router->get('jogadores/dados', 'JogadoresController@getDadosJogadores');
 
   $router->get('partidas', 'PartidasController@getLista');
   $router->get('partidas/locais', 'PartidasController@getLocais');

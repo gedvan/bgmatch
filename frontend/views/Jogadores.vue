@@ -2,17 +2,16 @@
   <div id="lista-jogadores">
     <b-card-group columns class="my-4">
       <b-card class="jogador" v-for="jogador in jogadores" v-bind:key="jogador.id" :title="jogador.nome">
-        <h5>Tabela de resultados</h5>
         <table class="table table-sm">
           <tbody>
+          <tr>
+            <th scope="row">Total de partidas</th>
+            <td colspan="2"><strong>{{ jogador.num_partidas }}</strong></td>
+          </tr>
           <tr v-for="resultado in jogador.resultados">
             <td>{{ resultado.posicao }}º Lugar</td>
             <td>{{ resultado.quantidade }}</td>
             <td>{{ (100 * resultado.quantidade / jogador.num_partidas).toFixed(1) }}%</td>
-          </tr>
-          <tr>
-            <th scope="row">Total de partidas</th>
-            <td colspan="2"><strong>{{ jogador.num_partidas }}</strong></td>
           </tr>
           </tbody>
         </table>
@@ -22,6 +21,9 @@
             {{ vitoria.nome_jogo }} ({{ vitoria.qtd }})
           </li>
         </ul>
+      </b-card>
+      <b-card title="Vitórias">
+        <grafico-vitorias :labels="labelsVitorias" :values="valuesVitorias"></grafico-vitorias>
       </b-card>
     </b-card-group>
     <b-card>
@@ -33,9 +35,11 @@
 <script>
   import BGMatch from "../BGMatch";
   import GraficoJogadores from "../components/GraficoJogadores.vue";
+  import GraficoVitorias from "../components/GraficoVitorias.vue";
 
   export default {
     components: {
+      GraficoVitorias,
       GraficoJogadores
     },
 
@@ -45,9 +49,20 @@
       }
     },
 
+    computed: {
+      labelsVitorias() {
+        return this.jogadores.map(j => j.nome);
+        //return this.jogadores.sort((a, b) => a.num_vitorias - b.num_vitorias).map(j => j.nome);
+      },
+      valuesVitorias() {
+        return this.jogadores.map(j => j.num_vitorias);
+        //return this.jogadores.sort((a, b) => a.num_vitorias - b.num_vitorias).map(j => j.num_vitorias);
+      }
+    },
+
     methods: {
       fetchJogadores: function() {
-        window.fetch(BGMatch.apiUrl + '/jogadores')
+        window.fetch(BGMatch.apiUrl + '/jogadores/dados')
           .then(response => response.json())
           .then(jogadores => this.jogadores = jogadores)
           .catch(error => {

@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\DB;
 class JogadoresController extends Controller {
 
   public function getJogadores() {
+    $jogadores = DB::table('jogadores')->get();
+    return new JsonResponse($jogadores);
+  }
+
+  public function getDadosJogadores() {
 
     $queryJogadores = <<<SQL
 SELECT

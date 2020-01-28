@@ -12,7 +12,11 @@
         </b-form-group>
 
         <b-form-group label="Jogo" label-for="input-jogo" class="col-md-4">
-          <v-select id="input-jogo" v-model="filtros.jogo" required :options="opcoes.jogos" />
+          <v-select id="input-jogo" v-model="filtros.jogo" :options="opcoes.jogos" />
+        </b-form-group>
+
+        <b-form-group label="Jogador" label-for="filtro-jogador" class="col-md-4">
+          <b-form-select id="filtro-jogador" :options="opcoes.jogadores" v-model="filtros.jogador"></b-form-select>
         </b-form-group>
 
       </div>
@@ -111,12 +115,16 @@
         filtros: {
           data_inicial: '',
           data_final: '',
-          jogo: null
+          jogo: null,
+          jogador: 0
         },
 
         opcoes: {
           // Lista de jogos para o filtro de jogos
-          jogos: []
+          jogos: [],
+
+          // Lista de jogadores
+          jogadores: [{value: 0, text: '-- Quaisquer --'}]
         },
 
         // Critérios de ordenação
@@ -138,6 +146,12 @@
           .filter(partida => this.filtros.data_inicial ? partida.data >= this.filtros.data_inicial : true)
           .filter(partida => this.filtros.data_final ? partida.data <= this.filtros.data_final : true)
           .filter(partida => this.filtros.jogo ? partida.id_jogo === this.filtros.jogo.code : true)
+          .filter(partida => {
+            if (this.filtros.jogador > 0) {
+              return partida.jogadores.find(j => j.id === this.filtros.jogador) ? true : false;
+            }
+            return true;
+          })
           .sort(this.sortFunction());
       }
 
@@ -207,6 +221,14 @@
           .catch(error => console.error(error));
       },
 
+      fetchJogadores: function () {
+        window.fetch(BGMatch.apiUrl + '/jogadores')
+          .then(response => response.json())
+          .then(jogadores => jogadores.map(j => ({value: j.id, text: j.nome})))
+          .then(jogadores => this.opcoes.jogadores = this.opcoes.jogadores.concat(jogadores))
+          .catch(error => console.error(error));
+      },
+
       /**
        * Consulta a lista de jogos para o select.
        */
@@ -220,6 +242,7 @@
 
     created() {
       this.fetchJogos();
+      this.fetchJogadores();
       this.atualizaPartidas();
     }
   }

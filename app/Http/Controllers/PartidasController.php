@@ -16,7 +16,7 @@ class PartidasController extends Controller {
       ->join('jogos AS g', 'p.id_jogo', '=', 'g.id')
       ->join('jogadores_partidas AS jp', 'jp.id_partida', '=', 'p.id')
       ->join('jogadores AS j', 'jp.id_jogador', '=', 'j.id')
-      ->select('p.*', 'g.nome AS nome_jogo', 'j.nome AS jogador', 'jp.posicao')
+      ->select('p.*', 'g.nome AS nome_jogo', 'j.id AS id_jogador', 'j.nome AS nome_jogador', 'jp.posicao')
       ->orderBy('p.data', 'desc')
       ->orderBy('g.nome', 'asc')
       ->orderBy('jp.posicao', 'asc')
@@ -36,7 +36,8 @@ class PartidasController extends Controller {
         ];
       }
       $partidas[$id]['jogadores'][] = [
-        'nome' => $row->jogador,
+        'id' => $row->id_jogador,
+        'nome' => $row->nome_jogador,
         'posicao' => $row->posicao,
       ];
     }
