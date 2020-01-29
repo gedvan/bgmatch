@@ -3,7 +3,7 @@
 
   export default {
     extends: Pie,
-    props: ['labels', 'values'],
+    props: ['jogadores'],
 
     data() {
       return {
@@ -18,10 +18,11 @@
 
     computed: {
       chartdata() {
+        let jogadores = this.jogadores.sort((a, b) => b.num_vitorias - a.num_vitorias);
         return {
-          labels: this.labels,
+          labels: jogadores.map(j => j.nome),
           datasets: [{
-            data: this.values,
+            data: jogadores.map(j => j.num_vitorias),
             backgroundColor: this.colors
           }]
         }
@@ -29,7 +30,7 @@
     },
 
     watch: {
-      values() {
+      jogadores() {
         this.renderChart(this.chartdata, this.options)
       }
     },

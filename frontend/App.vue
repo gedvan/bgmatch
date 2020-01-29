@@ -8,13 +8,22 @@
       </div>
 
       <nav class="main-nav">
-        <ul class="nav">
-          <li v-for="menuItem in menuItems" class="nav-item">
-            <router-link :to="menuItem.path" class="nav-link" :class="{active: $route.path == menuItem.path}">
-              {{ menuItem.title }}
-            </router-link>
-          </li>
-        </ul>
+        <b-nav>
+          <b-nav-item to="/" :active="$route.path === '/'">
+            Jogos
+          </b-nav-item>
+          <b-nav-item to="/partidas" :active="$route.path === '/partidas'">
+            Partidas
+          </b-nav-item>
+          <b-nav-item-dropdown text="Ranking">
+            <b-dropdown-item to="/ranking/2020" :active="$route.path === '/ranking/2020'">2020</b-dropdown-item>
+            <b-dropdown-item to="/ranking/2019" :active="$route.path === '/ranking/2019'">2019</b-dropdown-item>
+            <b-dropdown-item to="/ranking/2018" :active="$route.path === '/ranking/2018'">2018</b-dropdown-item>
+          </b-nav-item-dropdown>
+          <b-nav-item to="/jogadores" :active="$route.path === '/jogadores'">
+            Jogadores
+          </b-nav-item>
+        </b-nav>
       </nav>
     </header>
 
@@ -27,31 +36,14 @@
 
 <script>
   import Logo from './assets/images/logo.svg';
-  import ListaJogos from "./views/ListaJogos.vue";
 
   export default {
     components: {
-      Logo,
-      ListaJogos
+      Logo
     },
 
     data() {
       return {
-        menuItems: [
-          {
-            path: '/',
-            title: 'Jogos'
-          }, {
-            path: '/partidas',
-            title: 'Partidas'
-          }, {
-            path: '/ranking',
-            title: 'Ranking'
-          }, {
-            path: '/jogadores',
-            title: 'Jogadores'
-          }
-        ]
       }
     }
   }
@@ -69,17 +61,17 @@
         border-bottom: 3px solid #ddd;
         .nav-item {
           margin-bottom: -3px;
-          a {
+          > a {
             border-bottom: 3px solid transparent;
             font-weight: $font-weight-bold;
             color: $body-color;
-          }
-          a:hover, a:focus {
-            border-bottom-color: #bbb;
-          }
-          a.active {
-            border-bottom-color: $primary;
-            color: $primary;
+            &:hover, &:focus {
+              border-bottom-color: #bbb;
+            }
+            &.active {
+              border-bottom-color: $primary;
+              color: $primary;
+            }
           }
         }
       }

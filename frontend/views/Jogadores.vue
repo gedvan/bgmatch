@@ -22,11 +22,11 @@
           </li>
         </ul>
       </b-card>
-      <b-card title="Vitórias">
-        <grafico-vitorias :labels="labelsVitorias" :values="valuesVitorias"></grafico-vitorias>
+      <b-card title="% de vitórias">
+        <grafico-vitorias :jogadores="jogadores"></grafico-vitorias>
       </b-card>
     </b-card-group>
-    <b-card>
+    <b-card title="% de posições por jogador">
       <grafico-jogadores :jogadores="jogadores" class="grafico-posicoes"></grafico-jogadores>
     </b-card>
   </div>

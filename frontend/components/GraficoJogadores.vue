@@ -32,10 +32,6 @@
           }],
         },
         options: {
-          title: {
-            display: true,
-            text: 'Percentual de posições'
-          },
           legend: {
             position: 'bottom'
           },
