@@ -34,5 +34,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
   $router->get('bruno', 'PartidasController@bruno');
   $router->get('rodrigo', 'PartidasController@rodrigo');
+
+  $router->get('ranking/{ano}', 'RankingController@getDados');
 });
 
