@@ -27,6 +27,8 @@ $app->withFacades();
 
 $app->configure('app');
 
+config(['app.locale' => env('APP_LOCALE')]);
+
 /*
 |--------------------------------------------------------------------------
 | Register Container Bindings

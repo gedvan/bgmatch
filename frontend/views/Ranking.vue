@@ -2,14 +2,24 @@
   <div id="ranking">
     <h3>Ranking {{ $route.params.ano }}</h3>
     <div class="trilha-pontos">
+      <div v-for="(unidades, dezena) in this.trilha" :class="['dezena', 'dezena-' + dezena]">
+        <div v-for="(casa, unidade) in unidades" :class="['casa', `casa-${casa.numero}`, `unidade-${unidade}`]">
+          {{ casa.numero }}
+          <Marcador v-for="(jogador, i) in casa.jogadores" :class="['marcador', `sobre-${i}`]" :color="jogador.cor"
+                    v-b-popover.hover.click.bottom="`${jogador.nome} (${jogador.total})`"></Marcador>
+        </div>
+      </div>
+      <!--
       <div v-for="(x, d) in 10" :class="['dezena', 'dezena-' + d]">
         <div v-for="(y, u) in 10" :class="['casa', 'casa-' + u]">
           {{ (d * 10) + u }}
           <template v-for="jogador in jogadores">
-            <Marcador v-if="((d * 10) + u) === jogador.pontuacao" class="marcador" :color="jogador.cor"></Marcador>
+            <Marcador v-if="((d * 10) + u) === jogador.pontuacao" class="marcador" :color="jogador.cor"
+                      v-b-popover.hover.click.bottom="`${jogador.nome} (${jogador.pontuacao})`"></Marcador>
           </template>
         </div>
       </div>
+      -->
       <div class="info">
         <div class="row">
           <div class="col-lg col-pontuacao">
@@ -26,16 +36,16 @@
                   <Marcador class="marcador" :color="jogador.cor"></Marcador>
                   {{ jogador.nome }}
                 </td>
-                <td class="text-right">{{ jogador.pontuacao }}</td>
+                <td class="text-right">{{ jogador.total }}</td>
               </tr>
               </tbody>
             </table>
 
           </div>
           <div class="col-lg">
-
           </div>
         </div>
+        <grafico-ranking class="grafico" :jogadores="jogadores" periodo="semanal"></grafico-ranking>
       </div>
     </div>
   </div>
@@ -44,49 +54,59 @@
 <script>
   import Marcador from '../components/Marcador.vue';
   import BGMatch from "../BGMatch";
+  import GraficoRanking from "../components/GraficoRanking.vue";
 
   export default {
     components: {
-      Marcador,
+      GraficoRanking,
+      Marcador
     },
 
     data() {
       return {
-        jogadores: [],
-
-        cores: [
-          '#36A2EB',
-          '#9966FF',
-          '#FF6384',
-          '#36C07B',
-          '#FFCE56',
-        ],
+        trilha: [],
+        jogadores: []
       }
     },
 
     methods: {
-      fetchJogadores() {
-        window.fetch(BGMatch.apiUrl + '/jogadores')
-          .then(response => response.json())
-          .then(jogadores => this.jogadores = jogadores)
-          .then(() => this.fetchDados())
-          .catch(error => {
-            alert('Ocorreu um erro ao obter os dados dos jgoadores.');
-            console.error(error);
-          });
+      montaTrilha() {
+        this.trilha = new Array(10);
+        for (let d = 0; d < 10; d++) {
+          this.trilha[d] = new Array(10);
+          for (let u = 0; u < 10; u++) {
+            const n = d * 10 + u;
+            this.trilha[d][u] = {
+              numero: n,
+              jogadores: [],
+            };
+          }
+        }
       },
 
       fetchDados() {
+        const cores = [
+          '#36C07B',
+          '#9966FF',
+          '#36A2EB',
+          '#FF6384',
+          '#FFCE56',
+        ];
         const ano = this.$route.params.ano;
         window.fetch(BGMatch.apiUrl + '/ranking/' + ano)
           .then(response => response.json())
-          .then(pontuacao => {
+          .then(jogadores => this.jogadores = jogadores.map(jogador => {
+            let j = jogadores.find(j => j.id === jogador.id);
+            jogador.total = j ? j.total : 0;
+            jogador.cor = cores[jogador.id - 1];
+            return jogador;
+          }))
+          .then(jogadores => {
             this.jogadores.forEach(jogador => {
-              let p = pontuacao.find(p => p.id === jogador.id);
-              jogador.pontuacao = p ? p.pontuacao : 0;
-              jogador.cor = this.cores[jogador.id - 1];
+              const d = Math.floor((jogador.total % 100) / 10);
+              const u = jogador.total % 10;
+              this.trilha[d][u].jogadores.push(jogador);
             });
-            this.jogadores = this.jogadores.sort((a, b) => b.pontuacao - a.pontuacao);
             this.$forceUpdate();
           })
           .catch(error => {
@@ -97,7 +117,8 @@
     },
 
     mounted() {
-      this.fetchJogadores();
+      this.montaTrilha();
+      this.fetchDados();
     }
   }
 </script>
@@ -116,8 +137,10 @@
       grid-template-areas: "d0 d0 d0" "d9 c d1" "d8 c d2" "d7 c d3" "d6 c d4" "d5 d5 d5";
 
       .casa {
-        background: #f7f6ee;
-        color: #dddabe;
+        background: #f2ece1;
+        color: #ddd4c2;
+        font-size: 110%;
+        font-weight: bold;
         border: 1px solid white;
         flex-grow: 1;
         min-width: 29px;
@@ -127,10 +150,10 @@
         align-items: center;
         position: relative;
 
-        &.casa-0, &.casa-5 {
-          font-weight: bold;
-          background: #f2ece1;
-          color: #ccbe86;
+        &.unidade-0, &.unidade-5 {
+          background: #e1d7c3;
+          color: white;
+          font-size: 120%;
         }
         .marcador {
           width: 30px;
@@ -140,18 +163,23 @@
           top: 50%;
           margin-left: -15px;
           margin-top: -15px;
+          z-index: 0;
 
           &.sobre-1 {
             margin-top: -22px;
+            z-index: 1;
           }
           &.sobre-2 {
             margin-top: -29px;
+            z-index: 2;
           }
           &.sobre-3 {
             margin-top: -36px;
+            z-index: 3;
           }
           &.sobre-4 {
             margin-top: -43px;
+            z-index: 4;
           }
         }
       }
@@ -246,17 +274,22 @@
 
       .info {
         grid-area: c;
+        padding: 40px;
 
         .table-pontuacao {
-          margin: 50px auto;
+          margin: 0 auto;
           width: 80%;
           font-size: 120%;
 
           .marcador {
-            width: 30px;
+            width: 20px;
             height: auto;
-            margin-right: .5em;
+            margin-right: .2em;
           }
+        }
+
+        .grafico {
+          margin-top: 30px;
         }
       }
 
