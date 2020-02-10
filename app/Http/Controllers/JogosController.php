@@ -37,9 +37,14 @@ class JogosController extends Controller {
    */
   public function getLista(Request $request = null): JsonResponse
   {
-    $rows = DB::table('jogos')
-      ->orderByRaw('id_base NULLS FIRST')
-      ->orderBy('nome')
+    $rows = DB::table('jogos AS j')
+      ->select(['j.id', 'j.nome', 'j.categoria', 'j.min', 'j.max', 'j.imagem', 'j.slug', 'j.id_base', 'j.coop', 'j.editado', 'j.excluido'])
+      ->leftJoin('partidas AS p', 'p.id_jogo', '=', 'j.id')
+      ->selectRaw('COUNT(p.id) AS num_partidas')
+      ->selectRaw('MAX(p.data) AS ultima_partida')
+      ->groupBy('j.id', 'j.nome', 'j.categoria', 'j.min', 'j.max', 'j.imagem', 'j.slug', 'j.id_base', 'j.coop', 'j.editado', 'j.excluido')
+      ->orderByRaw('j.id_base NULLS FIRST')
+      ->orderBy('j.nome')
       ->get();
 
     $jogos = [];

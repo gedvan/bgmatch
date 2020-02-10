@@ -1,28 +1,25 @@
 <template>
   <div id="ranking">
-    <h3>Ranking {{ $route.params.ano }}</h3>
+    <header class="d-flex">
+      <h3>Ranking {{ ano }}</h3>
+      <b-dropdown text="Anteriores" right size="sm" class="ml-auto align-self-center">
+        <b-dropdown-item to="/ranking" :active="$route.path === '/ranking'">Atual</b-dropdown-item>
+        <b-dropdown-item to="/ranking/2019" :active="$route.path === '/ranking/2019'">2019</b-dropdown-item>
+        <b-dropdown-item to="/ranking/2018" :active="$route.path === '/ranking/2018'">2018</b-dropdown-item>
+      </b-dropdown>
+    </header>
     <div class="trilha-pontos">
       <div v-for="(unidades, dezena) in this.trilha" :class="['dezena', 'dezena-' + dezena]">
         <div v-for="(casa, unidade) in unidades" :class="['casa', `casa-${casa.numero}`, `unidade-${unidade}`]">
           {{ casa.numero }}
-          <Marcador v-for="(jogador, i) in casa.jogadores" :class="['marcador', `sobre-${i}`]" :color="jogador.cor"
-                    v-b-popover.hover.click.bottom="`${jogador.nome} (${jogador.total})`"></Marcador>
+          <Marcador v-for="(jogador, i) in casa.jogadores" :key="jogador.id" :class="['marcador', `sobre-${i}`]" :color="jogador.cor"
+                    v-b-popover.hover.click.top="`${jogador.nome} (${jogador.total})`"></Marcador>
         </div>
       </div>
-      <!--
-      <div v-for="(x, d) in 10" :class="['dezena', 'dezena-' + d]">
-        <div v-for="(y, u) in 10" :class="['casa', 'casa-' + u]">
-          {{ (d * 10) + u }}
-          <template v-for="jogador in jogadores">
-            <Marcador v-if="((d * 10) + u) === jogador.pontuacao" class="marcador" :color="jogador.cor"
-                      v-b-popover.hover.click.bottom="`${jogador.nome} (${jogador.pontuacao})`"></Marcador>
-          </template>
-        </div>
-      </div>
-      -->
       <div class="info">
+
         <div class="row">
-          <div class="col-lg col-pontuacao">
+          <div class="col-lg">
 
             <table v-if="jogadores.length > 0" class="table table-pontuacao">
               <thead>
@@ -43,9 +40,12 @@
 
           </div>
           <div class="col-lg">
+
           </div>
         </div>
+
         <grafico-ranking class="grafico" :jogadores="jogadores" periodo="semanal"></grafico-ranking>
+
       </div>
     </div>
   </div>
@@ -64,6 +64,7 @@
 
     data() {
       return {
+        ano: '',
         trilha: [],
         jogadores: []
       }
@@ -92,7 +93,7 @@
           '#FF6384',
           '#FFCE56',
         ];
-        const ano = this.$route.params.ano;
+        const ano = this.ano;
         window.fetch(BGMatch.apiUrl + '/ranking/' + ano)
           .then(response => response.json())
           .then(jogadores => this.jogadores = jogadores.map(jogador => {
@@ -117,6 +118,11 @@
     },
 
     mounted() {
+      if (this.$route.params.hasOwnProperty('ano') && /^\d{4}$/.test(this.$route.params.ano)) {
+        this.ano = this.$route.params.ano;
+      } else {
+        this.ano = new Date().getFullYear();
+      }
       this.montaTrilha();
       this.fetchDados();
     }
@@ -128,7 +134,7 @@
 
   #ranking {
     h3 {
-      margin: .5em 0;
+      margin: .8em 0;
     }
     .trilha-pontos {
       display: grid;
@@ -274,12 +280,11 @@
 
       .info {
         grid-area: c;
-        padding: 40px;
+        padding: 15px;
 
         .table-pontuacao {
-          margin: 0 auto;
-          width: 80%;
-          font-size: 120%;
+          //width: 80%;
+          //font-size: 120%;
 
           .marcador {
             width: 20px;
@@ -289,7 +294,19 @@
         }
 
         .grafico {
-          margin-top: 30px;
+          //margin-top: 30px;
+          position: relative;
+          overflow: auto;
+        }
+
+        @include media-breakpoint-up(sm) {
+        }
+        @include media-breakpoint-up(md) {
+          padding: 30px;
+        }
+        @include media-breakpoint-up(lg) {
+        }
+        @include media-breakpoint-up(xl) {
         }
       }
 

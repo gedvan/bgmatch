@@ -95,10 +95,10 @@
           // Lista de opções do critério de ordenação
           ordenacao: [
             {text: 'Pelo nome', value: 'nome'},
+            {text: 'Última partida', value: 'ult'},
+            {text: 'Qtd. de partidas', value: 'qtd'},
             {text: 'Min. jogadores', value: 'min'},
             {text: 'Máx. jogadores', value: 'max'},
-            {text: 'Última partida (não funcionando)', value: 'ult'},
-            {text: 'Qtd. de partidas (não funcionando)', value: 'qtd'},
           ]
         },
 
@@ -156,7 +156,14 @@
           .filter(jogo => this.filtros.coop_grupo || !jogo.coop)
           .filter(jogo => this.filtros.excluidos || !jogo.excluido)
           .filter(jogo => this.filtros.num === '' || (this.filtros.num >= jogo.min && this.filtros.num <= jogo.max))
-          .sort(this.sortFunction());
+          .sort(this.sortFunction())
+          .map(jogo => {
+            if (jogo.expansoes.length > 0) {
+              const m = [jogo.max].concat(jogo.expansoes.map(e => e.max));
+              jogo.max = Math.max.apply(null, m);
+            }
+            return jogo;
+          });
       },
 
       qtdJogosColecao: function () {
@@ -175,10 +182,22 @@
           return (jogoA, jogoB) => this.ordenacao.inverter ?
             jogoB.nome.toLocaleLowerCase().localeCompare(jogoA.nome.toLocaleLowerCase()) :
             jogoA.nome.toLocaleLowerCase().localeCompare(jogoB.nome.toLocaleLowerCase());
-        } else if (this.ordenacao.campo === 'min') {
+        }
+        else if (this.ordenacao.campo === 'min') {
           return (jogoA, jogoB) => this.ordenacao.inverter ? jogoB.min - jogoA.min : jogoA.min - jogoB.min;
-        } else if (this.ordenacao.campo === 'max') {
+        }
+        else if (this.ordenacao.campo === 'max') {
           return (jogoA, jogoB) => this.ordenacao.inverter ? jogoB.max - jogoA.max : jogoA.max - jogoB.max;
+        }
+        else if (this.ordenacao.campo === 'ult') {
+          return (jogoA, jogoB) => {
+            let dataA = jogoA.ultima_partida ? jogoA.ultima_partida : '';
+            let dataB = jogoB.ultima_partida ? jogoB.ultima_partida : '';
+            return this.ordenacao.inverter ? dataA.localeCompare(dataB) : dataB.localeCompare(dataA);
+          };
+        }
+        else if (this.ordenacao.campo === 'qtd') {
+          return (jogoA, jogoB) => this.ordenacao.inverter ? jogoA.num_partidas - jogoB.num_partidas : jogoB.num_partidas - jogoA.num_partidas;
         }
       },
 

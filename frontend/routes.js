@@ -7,6 +7,7 @@ const routes = [
   { path: '/', component: ListaJogos },
   { path: '/partidas', component: ListaPartidas },
   { path: '/jogadores', component: Jogadores },
+  { path: '/ranking', component: Ranking },
   { path: '/ranking/:ano', component: Ranking }
 ];
 

@@ -8,13 +8,23 @@
     </h3>
     <div class="info">
       {{ numJogadores }} | {{ nomeCategoria }} {{ jogo.coop ? '| Coop/Grupo' : '' }}
-      <b-badge v-if="jogo.excluido">Excluído</b-badge>
+      <b-badge v-if="jogo.excluido">Excluído</b-badge><br />
+    </div>
+    <div class="partidas">
+      <template v-if="jogo.num_partidas > 0">
+        {{ jogo.num_partidas }} {{ jogo.num_partidas === 1 ? 'partida' : 'partidas' }} -
+        {{ jogo.ultima_partida | data_br }}
+      </template>
+      <template v-else>
+        Nunca jogado
+      </template>
     </div>
   </div>
 </template>
 
 <script>
   import BGMatch from "../BGMatch";
+  import Vue from 'vue';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import { library } from '@fortawesome/fontawesome-svg-core';
   import { faUserFriends } from '@fortawesome/free-solid-svg-icons';
@@ -41,7 +51,7 @@
 
       nomeCategoria: function() {
         return BGMatch.nomeCategoria(this.jogo.categoria);
-      }
+      },
 
     }
 
@@ -73,6 +83,11 @@
       }
     }
     .info {
+      font-size: 90%;
+      color: $text-muted;
+      margin-bottom: .5em;
+    }
+    .partidas {
       font-size: 90%;
       color: $text-muted;
     }

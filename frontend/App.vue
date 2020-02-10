@@ -15,21 +15,30 @@
           <b-nav-item to="/partidas" :active="$route.path === '/partidas'">
             Partidas
           </b-nav-item>
-          <b-nav-item-dropdown text="Ranking">
-            <b-dropdown-item to="/ranking/2020" :active="$route.path === '/ranking/2020'">2020</b-dropdown-item>
-            <b-dropdown-item to="/ranking/2019" :active="$route.path === '/ranking/2019'">2019</b-dropdown-item>
-            <b-dropdown-item to="/ranking/2018" :active="$route.path === '/ranking/2018'">2018</b-dropdown-item>
-          </b-nav-item-dropdown>
+          <b-nav-item to="/ranking" :active="$route.path === '/ranking'">
+            Ranking
+          </b-nav-item>
           <b-nav-item to="/jogadores" :active="$route.path === '/jogadores'">
             Jogadores
+          </b-nav-item>
+          <b-nav-item to="/estatisticas" :active="$route.path === '/estatisticas'">
+            Estatísticas
           </b-nav-item>
         </b-nav>
       </nav>
     </header>
 
     <main id="main">
-      <router-view></router-view>
+      <router-view :key="$route.fullPath"></router-view>
     </main>
+
+    <template v-if="isLocalhost()">
+      <div class="responsive-indicator d-sm-none">xs</div>
+      <div class="responsive-indicator d-none d-sm-flex d-md-none">sm</div>
+      <div class="responsive-indicator d-none d-md-flex d-lg-none">md</div>
+      <div class="responsive-indicator d-none d-lg-flex d-xl-none">lg</div>
+      <div class="responsive-indicator d-none d-xl-flex">xl</div>
+    </template>
 
   </div>
 </template>
@@ -45,6 +54,12 @@
     data() {
       return {
       }
+    },
+
+    methods: {
+      isLocalhost() {
+        return window.location.hostname === 'localhost';
+      }
     }
   }
 </script>
@@ -57,8 +72,10 @@
       padding: 30px 0 20px;
     }
     .main-nav {
+      overflow-x: auto;
       .nav {
         border-bottom: 3px solid #ddd;
+        flex-wrap: nowrap;
         .nav-item {
           margin-bottom: -3px;
           > a {
@@ -80,5 +97,20 @@
 
   #main {
     margin-bottom: 1rem;
+  }
+
+  .responsive-indicator {
+    position: fixed;
+    right: 15px;
+    top: 15px;
+    background: red;
+    color: white;
+    font-size: 150%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: .5;
   }
 </style>
