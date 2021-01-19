@@ -4,7 +4,7 @@
       <h3>Ranking {{ ano }}</h3>
       <b-dropdown text="Anteriores" right size="sm" class="ml-auto align-self-center">
         <b-dropdown-item to="/ranking" :active="$route.path === '/ranking'">Atual</b-dropdown-item>
-        <b-dropdown-item v-for="anoAnterior in anteriores" :to="'/ranking/' + anoAnterior" :active="$route.path === '/ranking/' + anoAnterior">{{ anoAnterior }}</b-dropdown-item>
+        <b-dropdown-item v-for="anoAnterior in anteriores" :key="anoAnterior" :to="'/ranking/' + anoAnterior" :active="$route.path === '/ranking/' + anoAnterior">{{ anoAnterior }}</b-dropdown-item>
       </b-dropdown>
     </header>
     <div class="trilha-pontos">
