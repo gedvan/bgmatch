@@ -28,6 +28,8 @@ $app->withFacades();
 $app->configure('app');
 
 config(['app.locale' => env('APP_LOCALE')]);
+date_default_timezone_set(env('APP_TIMEZONE', 'UTC-3'));
+
 
 /*
 |--------------------------------------------------------------------------
