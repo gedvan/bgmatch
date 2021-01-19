@@ -198,7 +198,7 @@
 
       excluirPartida: function (partida) {
         if (window.confirm(`Deseja realmente excluir a partida de ${partida.nome_jogo} de ${partida.data}?`)) {
-          window.fetch(BGMatch.apiUrl + '/partida/' + partida.id + '/delete', {method: 'POST'})
+          BGMatch.fetch(`/partida/${partida.id}/delete`, {method: 'POST'})
             .then(response => response.json())
             .then(data => {
               console.log(data);
@@ -215,14 +215,14 @@
        * Atualiza a lista de partidas com base nos dados do servidor.
        */
       atualizaPartidas: function () {
-        window.fetch(BGMatch.apiUrl + '/partidas')
+        BGMatch.fetch('/partidas')
           .then(response => response.json())
           .then(partidas => this.partidas = partidas)
           .catch(error => console.error(error));
       },
 
       fetchJogadores: function () {
-        window.fetch(BGMatch.apiUrl + '/jogadores')
+        BGMatch.fetch('/jogadores')
           .then(response => response.json())
           .then(jogadores => jogadores.map(j => ({value: j.id, text: j.nome})))
           .then(jogadores => this.opcoes.jogadores = this.opcoes.jogadores.concat(jogadores))
@@ -233,7 +233,7 @@
        * Consulta a lista de jogos para o select.
        */
       fetchJogos: function () {
-        window.fetch(BGMatch.apiUrl + '/jogos')
+        BGMatch.fetch('/jogos')
           .then(response => response.json())
           .then(jogos => this.opcoes.jogos = jogos.map(jogo => ({code: jogo.id, label: jogo.nome})))
           .catch(error => console.error(error));

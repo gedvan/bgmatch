@@ -92,6 +92,7 @@ class JogosController extends Controller {
    */
   public function postAtualizaJogos(Request $request) {
 
+    set_time_limit(300);
     $jogosLocal = DB::table('jogos')->orderBy('slug')->pluck('slug')->toArray();
 
     try {

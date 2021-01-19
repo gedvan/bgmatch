@@ -205,7 +205,7 @@
        * Faz a requisição inicial ao backend para obter a lista de jogos.
        */
       inicializaJogos: function () {
-        window.fetch(BGMatch.apiUrl + '/jogos')
+        BGMatch.fetch('/jogos')
           .then(response => response.json())
           .then(jogos => this.jogos = jogos)
           .catch(error => console.error(error));
@@ -227,7 +227,7 @@
       atualizaJogos: function () {
         if (window.confirm("A atualização do acervo consultará todos os jogos do grupo na Ludopedia e pode demorar alguns minutos. Deseja continuar?")) {
           this.atualizando = true;
-          window.fetch(BGMatch.apiUrl + '/jogos/atualiza', {method: "POST"})
+          BGMatch.fetch('/jogos/atualiza', {method: "POST"})
             .then(response => response.json())
             .then(jogos => this.jogos = jogos)
             .finally(() => this.atualizando = false)

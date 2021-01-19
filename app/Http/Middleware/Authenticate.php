@@ -3,42 +3,49 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Contracts\Auth\Factory as Auth;
+use Firebase\JWT\JWT;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class Authenticate
-{
-    /**
-     * The authentication guard factory instance.
-     *
-     * @var \Illuminate\Contracts\Auth\Factory
-     */
-    protected $auth;
+class Authenticate {
 
-    /**
-     * Create a new middleware instance.
-     *
-     * @param  \Illuminate\Contracts\Auth\Factory  $auth
-     * @return void
-     */
-    public function __construct(Auth $auth)
-    {
-        $this->auth = $auth;
-    }
+  /**
+   * Handle an incoming request.
+   *
+   * @param \Illuminate\Http\Request $request
+   * @param \Closure $next
+   *
+   * @return mixed
+   */
+  public function handle(Request $request, Closure $next) {
 
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @param  string|null  $guard
-     * @return mixed
-     */
-    public function handle($request, Closure $next, $guard = null)
-    {
-        if ($this->auth->guard($guard)->guest()) {
-            return response('Unauthorized.', 401);
+    try {
+      $authorization = $request->header('Authorization');
+      if ($authorization) {
+        [$name, $token] = explode(' ', $authorization);
+        if ($name == 'Bearer' && $token) {
+          $jwt = JWT::decode($token, env('JWT_SECRET'), [env('JWT_ALG')]);
+          $user = DB::table('usuarios')->find($jwt->sub);
+          if (!$user) {
+            throw new \Exception('Usuário não encontrado');
+          }
         }
-
-        return $next($request);
+        else {
+          throw new \Exception('Autorização inválida');
+        }
+      }
+      else {
+        throw new \Exception('Autorização ausente');
+      }
     }
+    catch (\Exception $e) {
+      return response($e->getMessage(), 401);
+    }
+
+    unset($user->senha);
+    $request->attributes->add(['user' => $user]);
+    return $next($request);
+  }
 }

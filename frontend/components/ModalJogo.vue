@@ -99,8 +99,8 @@
       },
 
       salvaEdicao: function () {
-        const url = `${BGMatch.apiUrl}/jogos/salva/${this.jogo.id}`;
-        window.fetch(url, {
+        const url = '/jogos/salva/' + this.jogo.id;
+        BGMatch.fetch(url, {
           method: "POST",
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({

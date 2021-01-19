@@ -119,7 +119,7 @@
           .map(j => ({id: j.id, pontuacao: j.pontuacao, posicao: j.posicao}));
 
         var path = this.partida ? `/partida/${this.partida.id}/update` : '/partidas/nova';
-        window.fetch(BGMatch.apiUrl + path, {
+        BGMatch.fetch(path, {
           method: 'POST',
           headers: new Headers({"Content-Type": "application/json"}),
           body: JSON.stringify(data)
@@ -169,7 +169,7 @@
        * Consulta a lista de jogos para o select.
        */
       fetchGames: function () {
-        window.fetch(BGMatch.apiUrl + '/jogos')
+        BGMatch.fetch('/jogos')
           .then(response => response.json())
           .then(jogos => this.listaJogos = jogos.map(jogo => ({code: jogo.id, label: jogo.nome})))
           .catch(error => console.error(error));
@@ -179,7 +179,7 @@
        * Consulta a lista de locais existentes para o input.
        */
       fetchPlaces: function () {
-        window.fetch(BGMatch.apiUrl + '/partidas/locais')
+        BGMatch.fetch('/partidas/locais')
           .then(response => response.json())
           .then(locais => this.listaLocais = locais)
           .catch(error => console.error(error));
@@ -189,7 +189,7 @@
        * Consulta a lista de jogadores.
        */
       fetchPlayers: function () {
-        window.fetch(BGMatch.apiUrl + '/jogadores')
+        BGMatch.fetch('/jogadores')
           .then(response => response.json())
           .then(jogadores => jogadores.map(jogador => ({
             presente: false,
@@ -203,14 +203,12 @@
       },
 
       fetchPartida: function(id) {
-        window.fetch(BGMatch.apiUrl + '/partida/' + id)
+        BGMatch.fetch('/partida/' + id)
           .then(response => response.json())
           .then(partida => {
             this.form.data = partida.data;
             this.form.jogo = this.listaJogos.find(j => j.code == partida.id_jogo);
             this.form.local = partida.local;
-            //console.log(partida.jogadores);
-            //console.log(this.form.jogadores);
             partida.jogadores.forEach(jogador => {
               var jog = this.form.jogadores.find(j => j.id == jogador.id);
               jog.presente = true;

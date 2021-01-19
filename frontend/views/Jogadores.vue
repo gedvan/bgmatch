@@ -1,34 +1,37 @@
 <template>
   <div id="lista-jogadores">
-    <b-card-group columns class="my-4">
-      <b-card class="jogador" v-for="jogador in jogadores" v-bind:key="jogador.id" :title="jogador.nome">
-        <table class="table table-sm">
-          <tbody>
-          <tr>
-            <th scope="row">Total de partidas</th>
-            <td colspan="2"><strong>{{ jogador.num_partidas }}</strong></td>
-          </tr>
-          <tr v-for="resultado in jogador.resultados">
-            <td>{{ resultado.posicao }}º Lugar</td>
-            <td>{{ resultado.quantidade }}</td>
-            <td>{{ (100 * resultado.quantidade / jogador.num_partidas).toFixed(1) }}%</td>
-          </tr>
-          </tbody>
-        </table>
-        <h5>Jogos com mais vitórias</h5>
-        <ul class="mb-0">
-          <li v-for="vitoria in jogador.vitorias">
-            {{ vitoria.nome_jogo }} ({{ vitoria.qtd }})
-          </li>
-        </ul>
+    <b-alert variant="danger" :show="erro.length" class="mt-3">{{ erro }}</b-alert>
+    <template v-if="jogadores.length > 0">
+      <b-card-group columns class="my-4">
+        <b-card class="jogador" v-for="jogador in jogadores" v-bind:key="jogador.id" :title="jogador.nome">
+          <table class="table table-sm">
+            <tbody>
+            <tr>
+              <th scope="row">Total de partidas</th>
+              <td colspan="2"><strong>{{ jogador.num_partidas }}</strong></td>
+            </tr>
+            <tr v-for="resultado in jogador.resultados">
+              <td>{{ resultado.posicao }}º Lugar</td>
+              <td>{{ resultado.quantidade }}</td>
+              <td>{{ (100 * resultado.quantidade / jogador.num_partidas).toFixed(1) }}%</td>
+            </tr>
+            </tbody>
+          </table>
+          <h5>Jogos com mais vitórias</h5>
+          <ul class="mb-0">
+            <li v-for="vitoria in jogador.vitorias">
+              {{ vitoria.nome_jogo }} ({{ vitoria.qtd }})
+            </li>
+          </ul>
+        </b-card>
+        <b-card title="% de vitórias">
+          <grafico-vitorias :jogadores="jogadores"></grafico-vitorias>
+        </b-card>
+      </b-card-group>
+      <b-card title="% de posições por jogador">
+        <grafico-jogadores :jogadores="jogadores" class="grafico-posicoes"></grafico-jogadores>
       </b-card>
-      <b-card title="% de vitórias">
-        <grafico-vitorias :jogadores="jogadores"></grafico-vitorias>
-      </b-card>
-    </b-card-group>
-    <b-card title="% de posições por jogador">
-      <grafico-jogadores :jogadores="jogadores" class="grafico-posicoes"></grafico-jogadores>
-    </b-card>
+    </template>
   </div>
 </template>
 
@@ -45,6 +48,7 @@
 
     data() {
       return {
+        erro: '',
         jogadores: [],
       }
     },
@@ -62,11 +66,11 @@
 
     methods: {
       fetchJogadores: function() {
-        window.fetch(BGMatch.apiUrl + '/jogadores/dados')
-          .then(response => response.json())
+        BGMatch.fetch('/jogadores/dados')
+          .then(response =>  response.json())
           .then(jogadores => this.jogadores = jogadores)
           .catch(error => {
-            alert('Ocorreu um erro ao obter a lista de jogadores.');
+            this.erro = 'Ocorreu um erro ao obter a lista de jogadores.';
             console.error(error);
           });
       }

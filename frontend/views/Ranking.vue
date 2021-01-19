@@ -4,8 +4,7 @@
       <h3>Ranking {{ ano }}</h3>
       <b-dropdown text="Anteriores" right size="sm" class="ml-auto align-self-center">
         <b-dropdown-item to="/ranking" :active="$route.path === '/ranking'">Atual</b-dropdown-item>
-        <b-dropdown-item to="/ranking/2019" :active="$route.path === '/ranking/2019'">2019</b-dropdown-item>
-        <b-dropdown-item to="/ranking/2018" :active="$route.path === '/ranking/2018'">2018</b-dropdown-item>
+        <b-dropdown-item v-for="anoAnterior in anteriores" :to="'/ranking/' + anoAnterior" :active="$route.path === '/ranking/' + anoAnterior">{{ anoAnterior }}</b-dropdown-item>
       </b-dropdown>
     </header>
     <div class="trilha-pontos">
@@ -52,9 +51,9 @@
 </template>
 
 <script>
-  import Marcador from '../components/Marcador.vue';
+  import Marcador from '../components/Marcador';
   import BGMatch from "../BGMatch";
-  import GraficoRanking from "../components/GraficoRanking.vue";
+  import GraficoRanking from "../components/GraficoRanking";
 
   export default {
     components: {
@@ -63,8 +62,12 @@
     },
 
     data() {
+      const anoInicial = 2018;
+      const anoAtual = new Date().getFullYear();
+      const anos = Array.from({length: anoAtual - anoInicial}, (v, k) => anoInicial + k).reverse();
       return {
-        ano: '',
+        ano: anoAtual,
+        anteriores: anos,
         trilha: [],
         jogadores: []
       }
@@ -94,7 +97,7 @@
           '#FFCE56',
         ];
         const ano = this.ano;
-        window.fetch(BGMatch.apiUrl + '/ranking/' + ano)
+        BGMatch.fetch('/ranking/' + ano)
           .then(response => response.json())
           .then(jogadores => this.jogadores = jogadores.map(jogador => {
             let j = jogadores.find(j => j.id === jogador.id);

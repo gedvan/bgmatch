@@ -16,25 +16,33 @@ $router->get('/', function () use ($router) {
 });
 
 $router->group(['prefix' => 'api'], function () use ($router) {
-  $router->get('jogos', 'JogosController@getLista');
-  $router->get('jogos/importa/{slug}', 'JogosController@importa');
-  $router->post('jogos/atualiza', 'JogosController@postAtualizaJogos');
-  $router->post('jogos/salva/{id}', 'JogosController@postSalvaJogo');
+  $router->post('login', 'AuthController@login');
 
-  $router->get('jogadores', 'JogadoresController@getJogadores');
-  $router->get('jogadores/dados', 'JogadoresController@getDadosJogadores');
+  $router->group(['middleware' => 'auth'], function() use ($router) {
+    $router->get('userinfo', 'AuthController@userInfo');
 
-  $router->get('partidas', 'PartidasController@getLista');
-  $router->get('partidas/locais', 'PartidasController@getLocais');
-  $router->get('partidas/importa', 'PartidasController@importa');
-  $router->post('partidas/nova', 'PartidasController@postNovaPartida');
-  $router->get('partida/{id}', 'PartidasController@getPartida');
-  $router->post('partida/{id}/update', 'PartidasController@postAtualizaPartida');
-  $router->post('partida/{id}/delete', 'PartidasController@postExcluirPartida');
+    $router->get('jogos', 'JogosController@getLista');
 
-  $router->get('bruno', 'PartidasController@bruno');
-  $router->get('rodrigo', 'PartidasController@rodrigo');
+    $router->get('jogos/importa/{slug}', 'JogosController@importa');
+    $router->post('jogos/atualiza', 'JogosController@postAtualizaJogos');
+    $router->post('jogos/salva/{id}', 'JogosController@postSalvaJogo');
 
-  $router->get('ranking/{ano}', 'RankingController@getDados');
+    $router->get('jogadores', 'JogadoresController@getJogadores');
+    $router->get('jogadores/dados', 'JogadoresController@getDadosJogadores');
+
+    $router->get('partidas', 'PartidasController@getLista');
+    $router->get('partidas/locais', 'PartidasController@getLocais');
+    $router->get('partidas/importa', 'PartidasController@importa');
+    $router->post('partidas/nova', 'PartidasController@postNovaPartida');
+    $router->get('partida/{id}', 'PartidasController@getPartida');
+    $router->post('partida/{id}/update', 'PartidasController@postAtualizaPartida');
+    $router->post('partida/{id}/delete', 'PartidasController@postExcluirPartida');
+
+    $router->get('ranking/{ano}', 'RankingController@getDados');
+  });
+
+//  $router->get('bruno', 'PartidasController@bruno');
+//  $router->get('rodrigo', 'PartidasController@rodrigo');
+
 });
 

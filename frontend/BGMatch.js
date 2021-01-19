@@ -1,3 +1,12 @@
+import Vue from "vue";
+
+export class FecthError extends Error {
+  constructor(response) {
+    super(response.statusText);
+    this.response = response
+  }
+}
+
 export default {
 
   apiUrl: window.location.protocol + '//' + window.location.host + '/api',
@@ -19,6 +28,36 @@ export default {
   nomeCategoria: function (key) {
     const find = this.categoriasJogos.findIndex(option => option.value === key);
     return find > -1 ? this.categoriasJogos[find].text : '';
+  },
+
+  /**
+   * Wrapper para a função window.fetch(). Inclui automaticamente o token (JWT) de autenticação nos cabeçalhos
+   * e também já faz a verificação da resposta (response.ok), lançando uma exceção em caso de erro.
+   *
+   * @param {string} path
+   * @param {object} [opts]
+   * @returns {Promise<Response>}
+   */
+  fetch: function (path, opts = {}) {
+    const url = this.apiUrl + path;
+    const token = window.localStorage.getItem('token');
+    if (token) {
+      const authOpts = {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      };
+      opts = {...opts, ...authOpts};
+    }
+    return window.fetch(url, opts).then(response => {
+      if (!response.ok) {
+        if (response.status === 401) {
+          //console.log();
+        }
+        throw new FecthError(response);
+      }
+      return response;
+    });
   }
 
 }

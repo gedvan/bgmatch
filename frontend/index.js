@@ -3,7 +3,7 @@ import VueRouter from "vue-router";
 import BootstrapVue from 'bootstrap-vue';
 import vSelect from 'vue-select';
 import App from './App.vue';
-import routes from './routes';
+import router from './router';
 import './scss/main.scss';
 
 
@@ -24,7 +24,8 @@ Vue.filter('data_br', function (value) {
   }
 });
 
-new Vue({
+const app = new Vue({
   render: h => h(App),
-  router: new VueRouter({routes})
-}).$mount('#app');
+  router
+})
+app.$mount('#app');
