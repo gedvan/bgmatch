@@ -11,23 +11,23 @@
           labels: [],
           datasets: [{
             label: '1º Lugar',
-            backgroundColor: '#36A2EB',
+            backgroundColor: '#0073cc',
             data: []
           },{
             label: '2º Lugar',
-            backgroundColor: '#36C07B',
+            backgroundColor: '#0d8ff2',
             data: []
           },{
             label: '3º Lugar',
-            backgroundColor: '#FFCE56',
+            backgroundColor: '#47a4eb',
             data: []
           },{
             label: '4º Lugar',
-            backgroundColor: '#FF6384',
+            backgroundColor: '#7dbae8',
             data: []
           },{
             label: '5º Lugar',
-            backgroundColor: '#9966FF',
+            backgroundColor: '#add2eb',
             data: []
           }],
         },
@@ -56,19 +56,20 @@
       }
     },
 
-    watch: {
-      jogadores(jogadores, old) {
-        for (let jogador of jogadores) {
-          this.chartdata.labels.push(jogador.nome);
-          jogador.resultados.forEach(resultado => {
-            this.chartdata.datasets[resultado.posicao - 1].data.push((100 * resultado.quantidade / jogador.num_partidas).toFixed(2));
-          });
-        }
-        this.renderChart(this.chartdata, this.options);
-      }
+    methods: {
     },
 
     mounted() {
+      this.chartdata.labels = this.jogadores.map(j => j.nome);
+      this.chartdata.datasets.forEach((dataset, i) => {
+        dataset.data = this.jogadores.map(jogador => {
+          const resultado = jogador.resultados.find(r => r.posicao === (i+1));
+          if (resultado && jogador.num_partidas > 0) {
+            return (100 * resultado.quantidade / jogador.num_partidas).toFixed(2)
+          }
+          return 0;
+        })
+      });
       this.renderChart(this.chartdata, this.options);
     }
   }

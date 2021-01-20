@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 class JogadoresController extends Controller {
 
   public function getJogadores() {
-    $jogadores = DB::table('jogadores')->get();
+    $jogadores = DB::table('jogadores')->orderBy('nome')->get();
     return new JsonResponse($jogadores);
   }
 
@@ -17,7 +17,7 @@ class JogadoresController extends Controller {
 
     $queryJogadores = <<<SQL
 SELECT
-    j.id, j.nome,
+    j.id, j.nome, j.cor,
     COUNT(jp.id_partida) AS num_partidas,
     COUNT(jp.posicao) FILTER (WHERE jp.posicao = 1) AS num_vitorias
 FROM jogadores j

@@ -43,7 +43,7 @@
         Exibindo {{ jogosFiltrados.length }} {{ jogosFiltrados.length | plural('jogo', 'jogos') }}
       </div>
       <div class="col text-right">
-        <button class="btn btn-primary" @click="atualizaJogos" :disabled="atualizando">
+        <button class="btn btn-outline-primary" @click="atualizaJogos" :disabled="atualizando">
           <font-awesome-icon icon="sync-alt" :class="{'fa-spin': atualizando}" />&nbsp;
           Atualizar acervo
         </button>

@@ -89,20 +89,12 @@
       },
 
       fetchDados() {
-        const cores = [
-          '#36C07B',
-          '#9966FF',
-          '#36A2EB',
-          '#FF6384',
-          '#FFCE56',
-        ];
         const ano = this.ano;
         BGMatch.fetch('/ranking/' + ano)
           .then(response => response.json())
           .then(jogadores => this.jogadores = jogadores.map(jogador => {
             let j = jogadores.find(j => j.id === jogador.id);
             jogador.total = j ? j.total : 0;
-            jogador.cor = cores[jogador.id - 1];
             return jogador;
           }))
           .then(jogadores => {
@@ -189,6 +181,10 @@
           &.sobre-4 {
             margin-top: -43px;
             z-index: 4;
+          }
+          &.sobre-5 {
+            margin-top: -50px;
+            z-index: 5;
           }
         }
       }

@@ -1,4 +1,3 @@
-import Vue from "vue";
 
 export class FecthError extends Error {
   constructor(response) {
@@ -42,17 +41,21 @@ export default {
     const url = this.apiUrl + path;
     const token = window.localStorage.getItem('token');
     if (token) {
-      const authOpts = {
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
-      };
-      opts = {...opts, ...authOpts};
+      const auth = 'Bearer ' + token;
+      if (opts.headers instanceof Headers) {
+        opts.headers.append('Authorization', auth);
+      }
+      else if (typeof opts.headers === 'object') {
+        opts.headers.Authorization = auth;
+      }
+      else {
+        opts.headers = {'Authorization': auth}
+      }
     }
     return window.fetch(url, opts).then(response => {
       if (!response.ok) {
         if (response.status === 401) {
-          //console.log();
+          // TODO: deslogar o usuário
         }
         throw new FecthError(response);
       }

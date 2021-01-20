@@ -22,11 +22,12 @@ class RankingController extends Controller {
     }
 
     $jogadores = [];
-    $result = DB::table('jogadores')->get(['id', 'nome']);
+    $result = DB::table('jogadores')->orderBy('nome')->get(['id', 'nome', 'cor']);
     foreach ($result as $row) {
       $jogadores[$row->id] = [
         'id' => $row->id,
         'nome' => $row->nome,
+        'cor' => $row->cor,
         'total' => 0,
         'semanal' => [],
         'mensal' => [],

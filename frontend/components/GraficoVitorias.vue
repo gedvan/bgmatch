@@ -7,7 +7,6 @@
 
     data() {
       return {
-        colors: ['#36A2EB', '#36C07B', '#FFCE56', '#FF6384', '#9966FF'],
         options: {
           legend: {
             position: 'bottom'
@@ -18,12 +17,11 @@
 
     computed: {
       chartdata() {
-        let jogadores = this.jogadores.sort((a, b) => b.num_vitorias - a.num_vitorias);
         return {
-          labels: jogadores.map(j => j.nome),
+          labels: this.jogadores.map(j => j.nome),
           datasets: [{
-            data: jogadores.map(j => j.num_vitorias),
-            backgroundColor: this.colors
+            data: this.jogadores.map(j => j.num_vitorias),
+            backgroundColor: this.jogadores.map(j => j.cor)
           }]
         }
       }
