@@ -9,6 +9,9 @@
             <b-form-input id="input-data" v-model="filtros.data_inicial" type="date" required placeholder="DD/MM/AAAA" />
             <b-form-input id="input-data" v-model="filtros.data_final" type="date" required placeholder="DD/MM/AAAA" />
           </b-input-group>
+          <b-button v-for="periodo in periodos" :key="periodo.key" size="sm" variant="link"
+                    :class="{'periodo-ativo': (periodo.inicial == filtros.data_inicial && periodo.final == filtros.data_final)}"
+                    @click="filtroPeriodo(periodo.inicial, periodo.final)">{{ periodo.label }}</b-button>
         </b-form-group>
 
         <b-form-group label="Jogo" label-for="input-jogo" class="col-md-4">
@@ -30,59 +33,59 @@
         Exibindo {{ partidasFiltradas.length }} partida(s)
       </div>
       <div class="col text-right">
-        <b-button @click="abrirFormPartida(null)" class="ml-auto">
+        <b-button @click="abrirFormPartida(null)" class="ml-auto" variant="primary">
           <font-awesome-icon icon="plus" />&nbsp;Cadastrar partida
         </b-button>
       </div>
     </div>
 
     <div class="table-responsive">
-    <table v-if="partidasFiltradas.length > 0" class="table table-striped table-sm">
-      <thead>
-      <tr>
-        <th>
-          <a href="#" @click="ordenarPor('data')">
-            Data <font-awesome-icon v-if="ordenacao.campo == 'data'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
-          </a>
-        </th>
-        <th>
-          <a href="#" @click="ordenarPor('nome_jogo')">
-            Jogo <font-awesome-icon v-if="ordenacao.campo == 'nome_jogo'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
-          </a>
-        </th>
-        <th>
-          <a href="#" @click="ordenarPor('local')">
-            Local <font-awesome-icon v-if="ordenacao.campo == 'local'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
-          </a>
-        </th>
-        <th>Jogadores</th>
-        <th class="text-center" width="5%">Ações</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr v-for="(partida, index) in partidasFiltradas">
-        <td>{{ partida.data | data_br }}</td>
-        <td>{{ partida.nome_jogo }}</td>
-        <td>{{ partida.local }}</td>
-        <td>
-          <template v-for="(jogador, i) in partida.jogadores">
-            <span :class="['jogador', 'posicao-' + jogador.posicao]">
-              <font-awesome-icon icon="medal" v-if="jogador.posicao <= 3" />
-              {{ jogador.nome + (i < partida.jogadores.length - 1 ? ',' : '')}}
-            </span>{{ ' ' }}
-          </template>
-        </td>
-        <td class="text-center text-nowrap">
-          <b-button variant="link" size="sm" @click="abrirFormPartida(partida)">
-            <font-awesome-icon icon="edit" />
-          </b-button>
-          <b-button variant="link" size="sm" @click="excluirPartida(partida)">
-            <font-awesome-icon icon="trash" />
-          </b-button>
-        </td>
-      </tr>
-      </tbody>
-    </table>
+      <table v-if="partidasFiltradas.length > 0" class="table table-striped table-sm">
+        <thead>
+        <tr>
+          <th>
+            <a href="#" @click="ordenarPor('data')">
+              Data <font-awesome-icon v-if="ordenacao.campo == 'data'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
+            </a>
+          </th>
+          <th>
+            <a href="#" @click="ordenarPor('nome_jogo')">
+              Jogo <font-awesome-icon v-if="ordenacao.campo == 'nome_jogo'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
+            </a>
+          </th>
+          <th>
+            <a href="#" @click="ordenarPor('local')">
+              Local <font-awesome-icon v-if="ordenacao.campo == 'local'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
+            </a>
+          </th>
+          <th>Jogadores</th>
+          <th class="text-center" width="5%">Ações</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="(partida, index) in partidasFiltradas">
+          <td>{{ partida.data | data_br }}</td>
+          <td>{{ partida.nome_jogo }}</td>
+          <td>{{ partida.local }}</td>
+          <td>
+            <template v-for="(jogador, i) in partida.jogadores">
+              <span :class="['jogador', 'posicao-' + jogador.posicao]">
+                <font-awesome-icon icon="medal" v-if="jogador.posicao <= 3" />
+                {{ jogador.nome + (i < partida.jogadores.length - 1 ? ',' : '')}}
+              </span>{{ ' ' }}
+            </template>
+          </td>
+          <td class="text-center text-nowrap">
+            <b-button variant="link" size="sm" @click="abrirFormPartida(partida)">
+              <font-awesome-icon icon="edit" />
+            </b-button>
+            <b-button variant="link" size="sm" @click="excluirPartida(partida)">
+              <font-awesome-icon icon="trash" />
+            </b-button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
     </div>
 
     <form-partida :partida="edicaoPartida" @updated="atualizaPartidas" />
@@ -93,10 +96,6 @@
   import BGMatch from "../BGMatch";
   import FormPartida from "../components/FormPartida.vue";
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-  import { library } from '@fortawesome/fontawesome-svg-core';
-  import { faMedal, faEdit, faPlus, faTrash, faSortUp, faSortDown } from '@fortawesome/free-solid-svg-icons';
-
-  library.add(faMedal, faEdit, faPlus, faTrash, faSortUp, faSortDown);
 
   export default {
     components: {
@@ -106,12 +105,10 @@
 
     data() {
       return {
-        // Lista de partidas exibidas na tabela
+        // Lista de todas as partidas cadastradas
         partidas: [],
 
-        // Partida sendo editada
-        edicaoPartida: null,
-
+        // Lista de filtros para as partidas exibidas
         filtros: {
           data_inicial: '',
           data_final: '',
@@ -119,28 +116,27 @@
           jogador: 0
         },
 
+        // Opções dos campos de filtro
         opcoes: {
-          // Lista de jogos para o filtro de jogos
           jogos: [],
-
-          // Lista de jogadores
           jogadores: [{value: 0, text: '-- Quaisquer --'}]
         },
 
         // Critérios de ordenação
         ordenacao: {
-
-          // Campo para ordenação
           campo: 'data',
-
-          // Flag para ordenação invertida
           inverter: false,
-        }
+        },
+
+        // Lista de períodos pré-definidos (anos)
+        periodos: [],
+
+        // Partida sendo editada
+        edicaoPartida: null
       }
     },
 
     computed: {
-
       partidasFiltradas: function() {
         return this.partidas
           .filter(partida => this.filtros.data_inicial ? partida.data >= this.filtros.data_inicial : true)
@@ -154,10 +150,14 @@
           })
           .sort(this.sortFunction());
       }
-
     },
 
     methods: {
+      filtroPeriodo(inicial, final) {
+        this.filtros.data_inicial = inicial
+        this.filtros.data_final = final
+      },
+
       /**
        * Abre o modal com o formulário de cadastro/edição de uma partida.
        *
@@ -240,6 +240,28 @@
     },
 
     created() {
+      this.periodos.push({
+        key: 'all',
+        label: 'Tudo',
+        inicial: '',
+        final: ''
+      });
+      const anoInicial = 2018;
+      const anoAtual = new Date().getFullYear();
+      for (let ano = anoAtual; ano >= anoInicial; ano--) {
+        this.periodos.push({
+          key: ano,
+          label: ano,
+          inicial: `${ano}-01-01`,
+          final: `${ano}-12-31`
+        })
+      }
+
+      this.filtros.data_inicial = `${anoAtual}-01-01`;
+      this.filtros.data_final = `${anoAtual}-12-31`;
+    },
+
+    mounted() {
       this.fetchJogos();
       this.fetchJogadores();
       this.atualizaPartidas();
@@ -247,36 +269,40 @@
   }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
   @import "../scss/includes";
 
-  #view-lista-partidas {
-    .filter-form {
-      .form-group-sorting {
-        position: relative;
-        .custom-switch {
-          float: right;
-          font-size: 90%;
-        }
-        select[name=sort] {
-          flex-grow: 2;
-        }
+  .filter-form {
+    .form-group-sorting {
+      position: relative;
+      .custom-switch {
+        float: right;
+        font-size: 90%;
+      }
+      select[name=sort] {
+        flex-grow: 2;
       }
     }
-    .jogador {
-      white-space: nowrap;
-      &.posicao-1 {
-        font-weight: bold;
-        .fa-medal {
-          color: goldenrod;
-        }
-      }
-      &.posicao-2 .fa-medal {
-        color: silver;
-      }
-      &.posicao-3 .fa-medal {
-        color: chocolate;
+  }
+
+  .jogador {
+    white-space: nowrap;
+    &.posicao-1 {
+      font-weight: bold;
+      .fa-medal {
+        color: goldenrod;
       }
     }
+    &.posicao-2 .fa-medal {
+      color: silver;
+    }
+    &.posicao-3 .fa-medal {
+      color: chocolate;
+    }
+  }
+
+  .periodo-ativo {
+    font-weight: bold;
+    text-decoration: underline;
   }
 </style>
