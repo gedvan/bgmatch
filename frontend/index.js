@@ -2,10 +2,18 @@ import Vue from 'vue';
 import VueRouter from "vue-router";
 import BootstrapVue from 'bootstrap-vue';
 import vSelect from 'vue-select';
+import { library } from '@fortawesome/fontawesome-svg-core'
+import {faExternalLinkAlt, faSearch, faSpinner} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import App from './App.vue';
 import router from './router';
 import './scss/main.scss';
 
+library.add(faSearch)
+library.add(faSpinner)
+library.add(faExternalLinkAlt)
+
+Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 Vue.config.productionTip = false;
 Vue.use(BootstrapVue);

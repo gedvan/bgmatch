@@ -4,7 +4,17 @@
     <div class="filter-form bg-light">
       <div class="form-row">
 
-        <div class="col-md-5 form-group form-group-categoria">
+        <div class="col-sm-8 col-lg-4 form-group form-group-nome">
+          <label for="filtro-nome">Nome</label>
+          <b-form-input id="filtro-nome" v-model="filtros.nome" />
+        </div>
+
+        <div class="col-sm-4 col-lg-2 form-group">
+          <label for="filtro-num-jogadores">Nº de Jogadores</label>
+          <b-form-input type="number" v-model="filtros.num" id="filtro-num-jogadores" min="1" placeholder="Qualquer" />
+        </div>
+
+        <div class="col-sm-6 col-lg-3 form-group form-group-categoria">
           <label>Categorias</label>
           <b-dropdown id="dd-categorias" :text="categoriasSelecionadas" ref="dropdown" variant="outline-secondary" class="d-flex align-items-start">
             <b-dropdown-form>
@@ -13,12 +23,7 @@
           </b-dropdown>
         </div>
 
-        <div class="col-md-2 form-group">
-          <label for="filtro-num-jogadores">Nº de Jogadores</label>
-          <b-form-input type="number" v-model="filtros.num" id="filtro-num-jogadores" min="1" placeholder="Qualquer"></b-form-input>
-        </div>
-
-        <div class="col-md-5 form-group form-group-order">
+        <div class="col-sm-6 col-lg-3 form-group form-group-order">
           <label>Ordenação</label>
           <b-form-checkbox v-model="ordenacao.inverter" switch id="sort-inv">Inverter</b-form-checkbox>
           <b-form-select v-model="ordenacao.campo" :options="opcoes.ordenacao"></b-form-select>
@@ -26,10 +31,10 @@
 
       </div>
       <div class="form-row">
-        <div class="col-md-4 form-group">
+        <div class="col-md-6 col-lg-4 form-group">
           <b-form-checkbox v-model="filtros.coop_grupo" switch id="filtro-coop-grupo">Exibir jogos cooperativos ou em grupo</b-form-checkbox>
         </div>
-        <div class="col-md-4 form-group">
+        <div class="col-md-6 col-lg-4 form-group">
           <b-form-checkbox v-model="filtros.excluidos" switch id="filtro-excluidos">Exibir jogos excluídos da coleção</b-form-checkbox>
         </div>
       </div>
@@ -37,16 +42,22 @@
 
     <div class="row my-3">
       <div class="col">
-        Total de jogos na coleção: {{ qtdJogosColecao }}
+        Total de jogos cadastrados: {{ jogos.length }}
       </div>
       <div class="col text-center">
         Exibindo {{ jogosFiltrados.length }} {{ jogosFiltrados.length | plural('jogo', 'jogos') }}
       </div>
       <div class="col text-right">
-        <button class="btn btn-outline-primary" @click="atualizaJogos" :disabled="atualizando">
-          <font-awesome-icon icon="sync-alt" :class="{'fa-spin': atualizando}" />&nbsp;
-          Atualizar acervo
-        </button>
+        <b-dropdown split right variant="primary" @click="abrirModalCadastro">
+          <template #button-content>
+            <font-awesome-icon icon="plus" />&nbsp;
+            Cadastrar jogo
+          </template>
+          <b-dropdown-item-button @click="atualizaJogos" :disabled="true">
+            <font-awesome-icon icon="sync-alt" :class="{'fa-spin': atualizando}" />&nbsp;
+            Atualizar acervo
+          </b-dropdown-item-button>
+        </b-dropdown>
       </div>
     </div>
 
@@ -57,6 +68,7 @@
     </ul>
 
     <modal-jogo :jogo="jogoModal" />
+    <modal-cadastrar-jogo @jogo-cadastrado="jogoCadastrado" />
 
   </div>
 </template>
@@ -67,19 +79,21 @@
   import ItemJogo from "../components/ItemJogo.vue";
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import { library } from '@fortawesome/fontawesome-svg-core';
-  import { faSyncAlt } from '@fortawesome/free-solid-svg-icons';
+  import {faPlus, faSyncAlt} from '@fortawesome/free-solid-svg-icons';
+  import ModalCadastrarJogo from "../components/ModalCadastrarJogo";
 
   library.add(faSyncAlt);
+  library.add(faPlus);
 
   export default {
     components: {
+      ModalCadastrarJogo,
       ItemJogo,
       ModalJogo,
       FontAwesomeIcon
     },
     data() {
       return {
-
         // Lista de jogos carregados
         jogos: [],
 
@@ -104,27 +118,16 @@
 
         // Conjunto de filtros da listagem de jogos
         filtros: {
-
-          // Categorias de jogos exibidos
+          nome: '',
           categorias: ['P', 'M', 'L', 'F', 'I'],
-
-          // Filtro pelo número de jogadores
           num: "",
-
-          // Exibir ou não os jogos cooperativos ou em grupo
           coop_grupo: true,
-
-          // Exibir ou não os jogos excluídos da coleção
           excluidos: false,
         },
 
         // Critérios de ordenação
         ordenacao: {
-
-          // Campo para ordenação
           campo: 'nome',
-
-          // Flag para ordenação invertida
           inverter: false,
         },
 
@@ -152,6 +155,7 @@
       // Retorna a lista dos jogos depois de aplicados os filtros
       jogosFiltrados: function() {
         return this.jogos
+          .filter(jogo => this.filtros.nome === '' || jogo.nome.toLocaleLowerCase().indexOf(this.filtros.nome.toLocaleLowerCase()) >= 0)
           .filter(jogo => this.filtros.categorias.indexOf(jogo.categoria) > -1)
           .filter(jogo => this.filtros.coop_grupo || !jogo.coop)
           .filter(jogo => this.filtros.excluidos || !jogo.excluido)
@@ -173,6 +177,9 @@
     },
 
     methods: {
+      abrirModalCadastro() {
+        this.$bvModal.show('modal-cadastrar-jogo')
+      },
 
       /**
        * Função para ordenar os jogos de acordo com o critério escolhido.
@@ -236,6 +243,10 @@
               console.error(error);
             });
         }
+      },
+
+      jogoCadastrado(event) {
+        this.inicializaJogos()
       }
     },
 

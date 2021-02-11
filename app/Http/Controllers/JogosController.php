@@ -191,7 +191,6 @@ class JogosController extends Controller {
    *
    * @throws \PHPHtmlParser\Exceptions\ChildNotFoundException
    * @throws \PHPHtmlParser\Exceptions\CircularException
-   * @throws \PHPHtmlParser\Exceptions\CurlException
    * @throws \PHPHtmlParser\Exceptions\NotLoadedException
    * @throws \PHPHtmlParser\Exceptions\StrictException
    */
@@ -265,12 +264,49 @@ class JogosController extends Controller {
   public function importa($slug) {
     $jogo = $this->getInfoJogoLudopedia($slug);
     if ($jogo) {
-      $jogo['excluido'] = TRUE;
       DB::table('jogos')->insert($jogo);
-      return new Response('Jogo importado');
+      return new JsonResponse([
+        'sucesso' => true,
+        'jogo' => $jogo,
+      ]);
     } else {
       throw new HttpException(500, 'Jogo não encontrado');
     }
+  }
+
+  /**
+   * Pesquisa os jogos na Ludopedia a partir de uma string.
+   *
+   * @param string $termo
+   *
+   * @return \Illuminate\Http\JsonResponse
+   */
+  public function pesquisarJogosLudopedia(string $termo): JsonResponse {
+    $cadastrados = DB::table('jogos')->pluck('id')->all();
+
+    $urlPesquisa = self::LUDOPEDIA_URL.'/search_jogo?search='.urlencode($termo);
+    $dom = new Dom();
+    $dom->loadFromUrl($urlPesquisa);
+
+    $jogos = [];
+    $results = $dom->find('.main-panel-body .media.bord-btm.pad-btm');
+    if ($results->count()) {
+      foreach ($results as $result) {
+        $image = $result->find('img.img-capa', 0)->getAttribute('src');
+        $id = preg_match('|ludopedia-capas/(\d+)_s\.jpg|', $image, $m) ? $m[1] : NULL;
+        $link = $result->find('a.full-link', 0);
+        $jogos[] = [
+          'id'    => $id,
+          'link'  => $link->getAttribute('href'),
+          'slug'  => explode('/', $link->getAttribute('href'))[4],
+          'title' => trim($link->find('h4')->text),
+          'image' => $image,
+          'cadastrado' => in_array($id, $cadastrados),
+        ];
+      }
+    }
+
+    return new JsonResponse($jogos);
   }
 
 }

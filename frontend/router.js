@@ -25,6 +25,7 @@ router.beforeEach((to, from, next) => {
     const token = window.localStorage.getItem('token');
     if (token) {
       BGMatch.fetch('/userinfo')
+        .then(response => response.json())
         .then(user => router.app.$emit('check-user', user))
         .catch(error => router.app.$emit('check-user', null));
     }

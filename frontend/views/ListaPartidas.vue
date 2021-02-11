@@ -201,7 +201,6 @@
           BGMatch.fetch(`/partida/${partida.id}/delete`, {method: 'POST'})
             .then(response => response.json())
             .then(data => {
-              console.log(data);
               this.atualizaPartidas();
             })
             .catch(error => {

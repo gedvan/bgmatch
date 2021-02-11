@@ -22,8 +22,8 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('userinfo', 'AuthController@userInfo');
 
     $router->get('jogos', 'JogosController@getLista');
-
-    $router->get('jogos/importa/{slug}', 'JogosController@importa');
+    $router->get('jogos/pesquisa/{termo}', 'JogosController@pesquisarJogosLudopedia');
+    $router->post('jogos/importa/{slug}', 'JogosController@importa');
     $router->post('jogos/atualiza', 'JogosController@postAtualizaJogos');
     $router->post('jogos/salva/{id}', 'JogosController@postSalvaJogo');
 

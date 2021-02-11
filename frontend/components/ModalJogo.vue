@@ -1,9 +1,9 @@
 <template>
   <b-modal id="modal-jogo" size="lg" :title="jogo ? jogo.nome : ''">
     <div v-if="jogo" class="media">
-      <img :src="jogo.imagem" class="mr-3">
+      <img :src="jogo.imagem" class="mr-3 imagem-jogo">
       <div class="media-body">
-        <dl class="row">
+        <dl class="row info-jogo">
           <dt class="col-sm-3">Nº de jogadores</dt>
           <dd class="col-sm-9">{{ numJogadores }}</dd>
           <dt class="col-sm-3">Cooperativo/Em grupo</dt>
@@ -136,3 +136,10 @@
 
   }
 </script>
+
+<style lang="scss" scoped>
+.info-jogo dt {
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+</style>
