@@ -1,9 +1,11 @@
 
-// Local variables and mixins
-@import "variables";
-//@import "mixins";
-
-// Bootstrap's functions, variables and mixins
+// Bootstrap's functions first
 @import "~bootstrap/scss/functions";
+
+// Local variables and overrides
+@import "variables";
+@import "fonts";
+
+// Bootstrap's variables and mixins
 @import "~bootstrap/scss/variables";
 @import "~bootstrap/scss/mixins";

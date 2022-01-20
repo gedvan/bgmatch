@@ -1,68 +1,30 @@
 <template>
-  <div id="app" class="container">
+  <div id="app" :class="'route-' + $route.name">
 
-    <template v-if="$route.name == 'login'">
+    <header id="header">
+      <div class="container">
 
-      <div id="login" class="row justify-content-center">
-        <div class="col-sm-10 col-md-8 col-lg-6 col-xl-5">
-
-          <header id="header" class="mt-5 mb-2">
-            <div class="branding text-center">
-              <Logo class="logo" />
-              <h1 class="app-name sr-only">BGMatch</h1>
-            </div>
-          </header>
-
-          <main id="main">
-            <router-view :key="$route.fullPath"></router-view>
-          </main>
-
+        <div class="branding">
+          <Logo class="logo" />
+          <h1 class="title">
+            <span class="prefix">BG</span>Match
+          </h1>
         </div>
+
+        <div v-if="isLogged" class="user-info">
+          <strong>{{ usuario.usuario }}</strong> | <a href="#" @click.prevent="logout">sair</a>
+        </div>
+
       </div>
+    </header>
 
-    </template>
-    <template v-else>
+    <main-nav v-if="isLogged" :route-path="$route.path" id="main-nav"></main-nav>
 
-      <header id="header">
-        <div class="header-top">
-          <div class="branding">
-            <Logo class="logo" />
-            <h1 class="app-name sr-only">BGMatch</h1>
-          </div>
-          <div class="user-info">
-            Logado como: <strong>{{ usuario.usuario }}</strong>
-            | <a href="#" @click.prevent="logout">sair</a>
-          </div>
-        </div>
+    <main id="main">
+      <router-view :key="$route.fullPath"></router-view>
+    </main>
 
-        <nav class="main-nav">
-          <b-nav>
-            <b-nav-item to="/" :active="$route.path === '/'">
-              Jogos
-            </b-nav-item>
-            <b-nav-item to="/partidas" :active="$route.path === '/partidas'">
-              Partidas
-            </b-nav-item>
-            <b-nav-item to="/ranking" :active="$route.path === '/ranking'">
-              Ranking
-            </b-nav-item>
-            <b-nav-item to="/jogadores" :active="$route.path === '/jogadores'">
-              Jogadores
-            </b-nav-item>
-            <b-nav-item to="/estatisticas" :active="$route.path === '/estatisticas'">
-              Estatísticas
-            </b-nav-item>
-          </b-nav>
-        </nav>
-      </header>
-
-      <main id="main">
-        <router-view :key="$route.fullPath"></router-view>
-      </main>
-
-    </template>
-
-    <template v-if="isLocalhost()">
+    <template v-if="isLocalhost">
       <div class="responsive-indicator d-sm-none">xs</div>
       <div class="responsive-indicator d-none d-sm-flex d-md-none">sm</div>
       <div class="responsive-indicator d-none d-md-flex d-lg-none">md</div>
@@ -74,13 +36,16 @@
 </template>
 
 <script>
-  import Logo from './assets/images/logo.svg';
+  import Logo from './assets/images/logo.svg?inline';
+  import Titulo from './assets/images/titulo.svg?inline';
   import router from "./router";
   import BGMatch from "./BGMatch";
+  import MainNav from "./components/MainNav";
 
   export default {
     components: {
-      Logo
+      MainNav,
+      Logo, Titulo
     },
 
     data() {
@@ -95,13 +60,18 @@
     computed: {
       classes() {
         return 'teste';
+      },
+
+      isLocalhost() {
+        return window.location.hostname === 'localhost';
+      },
+
+      isLogged() {
+        return this.usuario.id !== 0;
       }
     },
 
     methods: {
-      isLocalhost() {
-        return window.location.hostname === 'localhost';
-      },
 
       logout() {
         this.usuario = {
@@ -135,61 +105,3 @@
     }
   }
 </script>
-
-<style lang="scss">
-  @import "scss/includes";
-
-  #header {
-    .header-top {
-      display: flex;
-    }
-    .branding {
-      padding: 30px 0 20px;
-    }
-    .user-info {
-      margin-left: auto;
-      padding: .5rem;
-    }
-    .main-nav {
-      overflow-x: auto;
-      .nav {
-        border-bottom: 3px solid #ddd;
-        flex-wrap: nowrap;
-        .nav-item {
-          margin-bottom: -3px;
-          > a {
-            border-bottom: 3px solid transparent;
-            font-weight: $font-weight-bold;
-            color: $body-color;
-            &:hover, &:focus {
-              border-bottom-color: #bbb;
-            }
-            &.active {
-              border-bottom-color: $primary;
-              color: $primary;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  #main {
-    margin-bottom: 1rem;
-  }
-
-  .responsive-indicator {
-    position: fixed;
-    right: 15px;
-    top: 15px;
-    background: red;
-    color: white;
-    font-size: 150%;
-    width: 50px;
-    height: 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: .5;
-  }
-</style>

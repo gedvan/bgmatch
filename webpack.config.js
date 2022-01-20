@@ -1,5 +1,5 @@
 const path = require('path');
-const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const { VueLoaderPlugin } = require('vue-loader');
 
 module.exports = {
   mode: "development",
@@ -11,42 +11,53 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        loader: "babel-loader"
-      },
-      {
         test: /\.vue$/,
         loader: 'vue-loader'
+      },
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        loader: 'babel-loader'
       },
       {
         test: /\.css$/,
         use: [
           'vue-style-loader',
+          'css-loader'
+        ]
+      },
+      {
+        test: /\.s[ac]ss$/,
+        use: [
+          'vue-style-loader',
           {
-            loader: 'css-loader',
+            loader: "css-loader",
             options: {
-              esModule: false
-            }
+              sourceMap: true,
+            },
+          },
+          {
+            loader: "sass-loader",
+            options: {
+              sourceMap: true,
+            },
           }
         ]
       },
       {
-        test: /\.scss$/,
-        use: [
-          'vue-style-loader',
-          {
-            loader: 'css-loader',
-            options: {
-              esModule: false
-            }
-          },
-          'sass-loader'
-        ]
-      },
-      {
         test: /\.svg$/,
-        loader: 'vue-svg-loader'
+        oneOf: [
+          {
+            resourceQuery: /inline/,
+            use: [
+              'babel-loader',
+              'vue-svg-loader',
+            ],
+          },
+          {
+            type: 'asset/resource'
+          },
+        ],
       }
     ]
   },
