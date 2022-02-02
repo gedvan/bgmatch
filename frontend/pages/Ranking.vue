@@ -1,52 +1,59 @@
 <template>
-  <div id="ranking" class="container">
-    <header class="d-flex">
-      <h3>Ranking {{ ano }}</h3>
-      <b-dropdown text="Anteriores" right size="sm" class="ml-auto align-self-center">
-        <b-dropdown-item to="/ranking" :active="$route.path === '/ranking'">Atual</b-dropdown-item>
-        <b-dropdown-item v-for="anoAnterior in anteriores" :key="anoAnterior" :to="'/ranking/' + anoAnterior" :active="$route.path === '/ranking/' + anoAnterior">{{ anoAnterior }}</b-dropdown-item>
-      </b-dropdown>
-    </header>
-    <div class="trilha-pontos">
-      <div v-for="(unidades, dezena) in this.trilha" :class="['dezena', 'dezena-' + dezena]">
-        <div v-for="(casa, unidade) in unidades" :class="['casa', `casa-${casa.numero}`, `unidade-${unidade}`]">
-          {{ casa.numero }}
-          <Marcador v-for="(jogador, i) in casa.jogadores" :key="jogador.id" :class="['marcador', `sobre-${i}`]" :color="jogador.cor"
-                    v-b-popover.hover.click.top="`${jogador.nome} (${jogador.total})`"></Marcador>
-        </div>
+  <div id="ranking">
+
+    <header class="bg-alternate">
+      <div class="container">
+        <h3>Ranking {{ ano }}</h3>
+        <b-dropdown text="Anteriores" right size="sm" variant="light">
+          <b-dropdown-item to="/ranking" :active="$route.path === '/ranking'">Atual</b-dropdown-item>
+          <b-dropdown-item v-for="anoAnterior in anteriores" :key="anoAnterior" :to="'/ranking/' + anoAnterior" :active="$route.path === '/ranking/' + anoAnterior">{{ anoAnterior }}</b-dropdown-item>
+        </b-dropdown>
       </div>
-      <div class="info">
+    </header>
 
-        <div class="row">
-          <div class="col-lg">
-
-            <table v-if="jogadores.length > 0" class="table table-pontuacao">
-              <thead>
-              <tr>
-                <th>Jogador</th><th class="text-right">Pontuação</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="jogador in jogadores" :key="jogador.id">
-                <td>
-                  <Marcador class="marcador" :color="jogador.cor"></Marcador>
-                  {{ jogador.nome }}
-                </td>
-                <td class="text-right">{{ jogador.total }}</td>
-              </tr>
-              </tbody>
-            </table>
-
-          </div>
-          <div class="col-lg">
-
+    <div class="container">
+      <div class="trilha-pontos">
+        <div v-for="(unidades, dezena) in this.trilha" :class="['dezena', 'dezena-' + dezena]">
+          <div v-for="(casa, unidade) in unidades" :class="['casa', `casa-${casa.numero}`, `unidade-${unidade}`]">
+            {{ casa.numero }}
+            <Marcador v-for="(jogador, i) in casa.jogadores" :key="jogador.id" :class="['marcador', `sobre-${i}`]" :color="jogador.cor"
+                      v-b-popover.hover.click.top="`${jogador.nome} (${jogador.total})`"></Marcador>
           </div>
         </div>
+        <div class="info">
 
-        <grafico-ranking class="grafico" :jogadores="jogadores" periodo="semanal"></grafico-ranking>
+          <div class="row">
+            <div class="col-lg">
 
+              <table v-if="jogadores.length > 0" class="table table-pontuacao">
+                <thead>
+                <tr>
+                  <th>Jogador</th><th class="text-right">Pontuação</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="jogador in jogadores" :key="jogador.id">
+                  <td>
+                    <Marcador class="marcador" :color="jogador.cor"></Marcador>
+                    {{ jogador.nome }}
+                  </td>
+                  <td class="text-right">{{ jogador.total }}</td>
+                </tr>
+                </tbody>
+              </table>
+
+            </div>
+            <div class="col-lg">
+
+            </div>
+          </div>
+
+          <grafico-ranking class="grafico" :jogadores="jogadores" periodo="semanal"></grafico-ranking>
+
+        </div>
       </div>
     </div>
+
   </div>
 </template>
 

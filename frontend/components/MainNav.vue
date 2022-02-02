@@ -8,7 +8,7 @@
         <b-nav-item to="/partidas" :active="$route.path === '/partidas'">
           Partidas
         </b-nav-item>
-        <b-nav-item to="/ranking" :active="$route.path === '/ranking'">
+        <b-nav-item to="/ranking" :active="$route.path.startsWith('/ranking')">
           Ranking
         </b-nav-item>
         <b-nav-item to="/jogadores" :active="$route.path === '/jogadores'">

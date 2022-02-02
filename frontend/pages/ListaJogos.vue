@@ -1,7 +1,7 @@
 <template>
   <div id="lista-jogos">
 
-    <div class="filter-form">
+    <div class="filter-form bg-alternate">
       <div class="container">
 
         <div class="form-row">

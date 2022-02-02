@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\JogosService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -18,6 +19,7 @@ class JogosController extends Controller {
   const CATEGORIA_LEVE      = 'L';
   const CATEGORIA_PARTY     = 'F';
   const CATEGORIA_INFANTIL  = 'I';
+  const CATEGORIA_PARTY_INFANTIL  = 'Y';
   const CATEGORIA_EXPANSAO  = 'X';
 
   const CATEGORIAS = [
@@ -26,8 +28,16 @@ class JogosController extends Controller {
     self::CATEGORIA_LEVE      => 'Leve',
     self::CATEGORIA_PARTY     => 'Party game',
     self::CATEGORIA_INFANTIL  => 'Infantil',
+    self::CATEGORIA_PARTY_INFANTIL  => 'Party/Infantil',
     self::CATEGORIA_EXPANSAO  => 'Expansão',
   ];
+
+  protected $jogosService;
+
+  public function __construct(JogosService $jogosService)
+  {
+    $this->jogosService = $jogosService;
+  }
 
   /**
    * Endpoint que retorna a lista completa dos jogos salvos no banco próprio.
@@ -241,10 +251,10 @@ class JogosController extends Controller {
       }
 
       if ($boxInfo->find('a[href$="dominio/6"]', 0)) { // Domínio: Jogos Infantis
-        $jogo['categoria'] = self::CATEGORIA_INFANTIL;
+        $jogo['categoria'] = self::CATEGORIA_PARTY_INFANTIL;
       }
       elseif ($boxInfo->find('a[href$="categoria/113"]', 0)) { // Categoria: Jogos Festivos
-        $jogo['categoria'] = self::CATEGORIA_PARTY;
+        $jogo['categoria'] = self::CATEGORIA_PARTY_INFANTIL;
       }
       elseif ($boxInfo->find('a[href$="dominio/9"]', 0)) { // Domínio: Jogos Expert
         $jogo['categoria'] = self::CATEGORIA_PESADO;

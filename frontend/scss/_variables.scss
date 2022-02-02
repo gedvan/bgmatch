@@ -22,9 +22,15 @@ $font-weight-normal: 400;
 $font-weight-bold:   600;
 
 $border-radius: 1px;
-$border-radius-lg: 1px;
+$border-radius-lg: 2px;
 $border-radius-sm: 1px;
 
 $form-group-margin-bottom: 1.25rem;
 //$input-border-color: white;
 $btn-line-height: 1.25;
+
+$modal-header-border-width: 0;
+$modal-content-border-width: 0;
+$modal-content-border-radius: 2px;
+$modal-header-padding: 1.25rem;
+$modal-inner-padding: 1.25rem;
