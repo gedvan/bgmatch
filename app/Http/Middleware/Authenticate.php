@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +27,8 @@ class Authenticate {
       if ($authorization) {
         [$name, $token] = explode(' ', $authorization);
         if ($name == 'Bearer' && $token) {
-          $jwt = JWT::decode($token, env('JWT_SECRET'), [env('JWT_ALG')]);
+          $key = new Key(env('JWT_SECRET'), env('JWT_ALG'));
+          $jwt = JWT::decode($token, $key);
           $user = DB::table('usuarios')->find($jwt->sub);
           if (!$user) {
             throw new \Exception('Usuário não encontrado');

@@ -8,7 +8,7 @@
         "php": "^7.3|^8.0",
         "ext-json": "*",
         "doctrine/dbal": "^3.0",
-        "firebase/php-jwt": "^5.2",
+        "firebase/php-jwt": "^6.0",
         "laravel/lumen-framework": "^8.0",
         "paquettg/php-html-parser": "^3.1"
     },
