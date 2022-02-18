@@ -1,91 +1,97 @@
 <template>
-  <div id="view-lista-partidas">
+  <div id="lista-partidas">
 
-    <div class="bg-light pt-3 px-3 pb-1 filter-form">
-      <div class="form-row">
+    <div class="filter-form bg-alternate">
+      <div class="container">
+        <div class="form-row">
 
-        <b-form-group label="Período" label-for="input-data" class="col-md-4">
-          <b-input-group>
-            <b-form-input id="input-data" v-model="filtros.data_inicial" type="date" required placeholder="DD/MM/AAAA" />
-            <b-form-input id="input-data" v-model="filtros.data_final" type="date" required placeholder="DD/MM/AAAA" />
-          </b-input-group>
-          <b-button v-for="periodo in periodos" :key="periodo.key" size="sm" variant="link"
-                    :class="{'periodo-ativo': (periodo.inicial == filtros.data_inicial && periodo.final == filtros.data_final)}"
-                    @click="filtroPeriodo(periodo.inicial, periodo.final)">{{ periodo.label }}</b-button>
-        </b-form-group>
+          <b-form-group label="Período" label-for="input-data" class="col-md-4">
+            <b-input-group>
+              <b-form-input id="input-data" v-model="filtros.data_inicial" type="date" required placeholder="DD/MM/AAAA" />
+              <b-form-input id="input-data" v-model="filtros.data_final" type="date" required placeholder="DD/MM/AAAA" />
+            </b-input-group>
+            <b-button v-for="periodo in periodos" :key="periodo.key" size="sm" variant="link"
+                      :class="{'periodo-ativo': (periodo.inicial == filtros.data_inicial && periodo.final == filtros.data_final)}"
+                      @click="filtroPeriodo(periodo.inicial, periodo.final)">{{ periodo.label }}</b-button>
+          </b-form-group>
 
-        <b-form-group label="Jogo" label-for="input-jogo" class="col-md-4">
-          <v-select id="input-jogo" v-model="filtros.jogo" :options="opcoes.jogos" />
-        </b-form-group>
+          <b-form-group label="Jogo" label-for="input-jogo" class="col-md-4">
+            <v-select id="input-jogo" v-model="filtros.jogo" :options="opcoes.jogos" />
+          </b-form-group>
 
-        <b-form-group label="Jogador" label-for="filtro-jogador" class="col-md-4">
-          <b-form-select id="filtro-jogador" :options="opcoes.jogadores" v-model="filtros.jogador"></b-form-select>
-        </b-form-group>
+          <b-form-group label="Jogador" label-for="filtro-jogador" class="col-md-4">
+            <b-form-select id="filtro-jogador" :options="opcoes.jogadores" v-model="filtros.jogador"></b-form-select>
+          </b-form-group>
 
+        </div>
       </div>
     </div>
 
-    <div class="row my-3">
-      <div class="col">
-        Total de partidas cadastradas: {{ partidas.length }}
-      </div>
-      <div class="col text-center">
-        Exibindo {{ partidasFiltradas.length }} partida(s)
-      </div>
-      <div class="col text-right">
-        <b-button @click="abrirFormPartida(null)" class="ml-auto" variant="primary">
-          <font-awesome-icon icon="plus" />&nbsp;Cadastrar partida
-        </b-button>
-      </div>
-    </div>
+    <div class="container">
 
-    <div class="table-responsive">
-      <table v-if="partidasFiltradas.length > 0" class="table table-striped table-sm">
-        <thead>
-        <tr>
-          <th>
-            <a href="#" @click="ordenarPor('data')">
-              Data <font-awesome-icon v-if="ordenacao.campo == 'data'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
-            </a>
-          </th>
-          <th>
-            <a href="#" @click="ordenarPor('nome_jogo')">
-              Jogo <font-awesome-icon v-if="ordenacao.campo == 'nome_jogo'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
-            </a>
-          </th>
-          <th>
-            <a href="#" @click="ordenarPor('local')">
-              Local <font-awesome-icon v-if="ordenacao.campo == 'local'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
-            </a>
-          </th>
-          <th>Jogadores</th>
-          <th class="text-center" width="5%">Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="(partida, index) in partidasFiltradas">
-          <td>{{ partida.data | data_br }}</td>
-          <td>{{ partida.nome_jogo }}</td>
-          <td>{{ partida.local }}</td>
-          <td>
-            <template v-for="(jogador, i) in partida.jogadores">
-              <span :class="['jogador', 'posicao-' + jogador.posicao]">
-                <font-awesome-icon icon="medal" v-if="jogador.posicao <= 3" />
-                {{ jogador.nome + (i < partida.jogadores.length - 1 ? ',' : '')}}
-              </span>{{ ' ' }}
-            </template>
-          </td>
-          <td class="text-center text-nowrap">
-            <b-button variant="link" size="sm" @click="abrirFormPartida(partida)">
-              <font-awesome-icon icon="edit" />
-            </b-button>
-            <b-button variant="link" size="sm" @click="excluirPartida(partida)">
-              <font-awesome-icon icon="trash" />
-            </b-button>
-          </td>
-        </tr>
-        </tbody>
-      </table>
+      <div class="row my-3">
+        <div class="col">
+          Total de partidas cadastradas: {{ partidas.length }}
+        </div>
+        <div class="col text-center">
+          Exibindo {{ partidasFiltradas.length }} partida(s)
+        </div>
+        <div class="col text-right">
+          <b-button @click="abrirFormPartida(null)" class="ml-auto" variant="primary">
+            <font-awesome-icon icon="plus" />&nbsp;Cadastrar partida
+          </b-button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table v-if="partidasFiltradas.length > 0" class="table table-striped table-sm">
+          <thead>
+          <tr>
+            <th>
+              <a href="#" @click="ordenarPor('data')">
+                Data <font-awesome-icon v-if="ordenacao.campo == 'data'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
+              </a>
+            </th>
+            <th>
+              <a href="#" @click="ordenarPor('nome_jogo')">
+                Jogo <font-awesome-icon v-if="ordenacao.campo == 'nome_jogo'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
+              </a>
+            </th>
+            <th>
+              <a href="#" @click="ordenarPor('local')">
+                Local <font-awesome-icon v-if="ordenacao.campo == 'local'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
+              </a>
+            </th>
+            <th>Jogadores</th>
+            <th class="text-center" width="5%">Ações</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr v-for="(partida, index) in partidasFiltradas">
+            <td>{{ partida.data | data_br }}</td>
+            <td>{{ partida.nome_jogo }}</td>
+            <td>{{ partida.local }}</td>
+            <td>
+              <template v-for="(jogador, i) in partida.jogadores">
+                <span :class="['jogador', 'posicao-' + jogador.posicao]">
+                  <font-awesome-icon icon="medal" v-if="jogador.posicao <= 3" />
+                  {{ jogador.nome + (i < partida.jogadores.length - 1 ? ',' : '')}}
+                </span>{{ ' ' }}
+              </template>
+            </td>
+            <td class="text-center text-nowrap">
+              <b-button variant="link" size="sm" @click="abrirFormPartida(partida)">
+                <font-awesome-icon icon="edit" />
+              </b-button>
+              <b-button variant="link" size="sm" @click="excluirPartida(partida)">
+                <font-awesome-icon icon="trash" />
+              </b-button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
     </div>
 
     <form-partida :partida="edicaoPartida" @updated="atualizaPartidas" />
@@ -268,41 +274,3 @@
     }
   }
 </script>
-
-<style lang="scss" scoped>
-  @import "../scss/includes";
-
-  .filter-form {
-    .form-group-sorting {
-      position: relative;
-      .custom-switch {
-        float: right;
-        font-size: 90%;
-      }
-      select[name=sort] {
-        flex-grow: 2;
-      }
-    }
-  }
-
-  .jogador {
-    white-space: nowrap;
-    &.posicao-1 {
-      font-weight: bold;
-      .fa-medal {
-        color: goldenrod;
-      }
-    }
-    &.posicao-2 .fa-medal {
-      color: silver;
-    }
-    &.posicao-3 .fa-medal {
-      color: chocolate;
-    }
-  }
-
-  .periodo-ativo {
-    font-weight: bold;
-    text-decoration: underline;
-  }
-</style>

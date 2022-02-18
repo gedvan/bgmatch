@@ -1,8 +1,8 @@
-import ListaJogos from "./views/ListaJogos";
-import ListaPartidas from "./views/ListaPartidas";
-import Jogadores from "./views/Jogadores";
-import Ranking from "./views/Ranking";
-import Login from "./views/Login";
+import ListaJogos from "./pages/ListaJogos";
+import ListaPartidas from "./pages/ListaPartidas";
+import Jogadores from "./pages/Jogadores";
+import Ranking from "./pages/Ranking";
+import Login from "./pages/Login";
 import VueRouter from "vue-router";
 import BGMatch from "./BGMatch";
 

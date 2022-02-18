@@ -37,6 +37,9 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "scripts": {
+        "dev": [
+          "@php -S localhost:8000 -t ./public"
+        ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
         ]

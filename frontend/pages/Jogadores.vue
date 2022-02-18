@@ -1,5 +1,5 @@
 <template>
-  <div id="lista-jogadores">
+  <div id="lista-jogadores" class="container">
 
     <b-alert variant="danger" :show="erro.length" class="mt-3">{{ erro }}</b-alert>
 
@@ -96,17 +96,3 @@
     }
   }
 </script>
-
-<style lang="scss">
-  @import "../scss/includes";
-
-  #lista-jogadores {
-    .grafico-vitorias {
-      max-width: 340px;
-      margin: 0 auto;
-    }
-    .grafico-posicoes {
-      height: 300px;
-    }
-  }
-</style>

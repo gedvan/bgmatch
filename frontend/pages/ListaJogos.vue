@@ -1,71 +1,79 @@
 <template>
   <div id="lista-jogos">
 
-    <div class="filter-form bg-light">
-      <div class="form-row">
+    <div class="filter-form bg-alternate">
+      <div class="container">
 
-        <div class="col-sm-8 col-lg-4 form-group form-group-nome">
-          <label for="filtro-nome">Nome</label>
-          <b-form-input id="filtro-nome" v-model="filtros.nome" />
+        <div class="form-row">
+
+          <div class="col-sm-8 col-lg-4 form-group form-group-nome">
+            <label for="filtro-nome">Nome</label>
+            <b-form-input id="filtro-nome" v-model="filtros.nome" />
+          </div>
+
+          <div class="col-sm-4 col-lg-2 form-group">
+            <label for="filtro-num-jogadores">Nº de Jogadores</label>
+            <b-form-input type="number" v-model="filtros.num" id="filtro-num-jogadores" min="1" placeholder="Qualquer" />
+          </div>
+
+          <div class="col-sm-6 col-lg-3 form-group form-group-categoria">
+            <label>Categorias</label>
+            <b-dropdown id="dd-categorias" :text="categoriasSelecionadas" ref="dropdown" variant="outline-secondary" class="d-flex align-items-start">
+              <b-dropdown-form>
+                <b-form-checkbox-group id="filtro-categorias" v-model="filtros.categorias" :options="opcoes.categorias" name="categorias" stacked></b-form-checkbox-group>
+              </b-dropdown-form>
+            </b-dropdown>
+          </div>
+
+          <div class="col-sm-6 col-lg-3 form-group form-group-order">
+            <label>Ordenação</label>
+            <b-form-checkbox v-model="ordenacao.inverter" switch id="sort-inv">Inverter</b-form-checkbox>
+            <b-form-select v-model="ordenacao.campo" :options="opcoes.ordenacao"></b-form-select>
+          </div>
+
+        </div>
+        <div class="form-row">
+          <div class="col-md-6 col-lg-4 form-group">
+            <b-form-checkbox v-model="filtros.coop_grupo" switch id="filtro-coop-grupo">Exibir jogos cooperativos ou em grupo</b-form-checkbox>
+          </div>
+          <div class="col-md-6 col-lg-4 form-group">
+            <b-form-checkbox v-model="filtros.excluidos" switch id="filtro-excluidos">Exibir jogos excluídos da coleção</b-form-checkbox>
+          </div>
         </div>
 
-        <div class="col-sm-4 col-lg-2 form-group">
-          <label for="filtro-num-jogadores">Nº de Jogadores</label>
-          <b-form-input type="number" v-model="filtros.num" id="filtro-num-jogadores" min="1" placeholder="Qualquer" />
-        </div>
+      </div>
+    </div>
 
-        <div class="col-sm-6 col-lg-3 form-group form-group-categoria">
-          <label>Categorias</label>
-          <b-dropdown id="dd-categorias" :text="categoriasSelecionadas" ref="dropdown" variant="outline-secondary" class="d-flex align-items-start">
-            <b-dropdown-form>
-              <b-form-checkbox-group id="filtro-categorias" v-model="filtros.categorias" :options="opcoes.categorias" name="categorias" stacked></b-form-checkbox-group>
-            </b-dropdown-form>
+    <div class="container">
+
+      <div class="info-listagem row my-3">
+        <div class="col">
+          Total de jogos cadastrados: {{ jogos.length }}
+        </div>
+        <div class="col text-center">
+          Exibindo {{ jogosFiltrados.length }} {{ jogosFiltrados.length | plural('jogo', 'jogos') }}
+        </div>
+        <div class="col text-right">
+          <b-dropdown split right variant="primary" @click="abrirModalCadastro">
+            <template #button-content>
+              <font-awesome-icon icon="plus" />&nbsp;
+              Cadastrar jogo
+            </template>
+            <b-dropdown-item-button @click="atualizaJogos" :disabled="true">
+              <font-awesome-icon icon="sync-alt" :class="{'fa-spin': atualizando}" />&nbsp;
+              Atualizar acervo
+            </b-dropdown-item-button>
           </b-dropdown>
         </div>
-
-        <div class="col-sm-6 col-lg-3 form-group form-group-order">
-          <label>Ordenação</label>
-          <b-form-checkbox v-model="ordenacao.inverter" switch id="sort-inv">Inverter</b-form-checkbox>
-          <b-form-select v-model="ordenacao.campo" :options="opcoes.ordenacao"></b-form-select>
-        </div>
-
       </div>
-      <div class="form-row">
-        <div class="col-md-6 col-lg-4 form-group">
-          <b-form-checkbox v-model="filtros.coop_grupo" switch id="filtro-coop-grupo">Exibir jogos cooperativos ou em grupo</b-form-checkbox>
-        </div>
-        <div class="col-md-6 col-lg-4 form-group">
-          <b-form-checkbox v-model="filtros.excluidos" switch id="filtro-excluidos">Exibir jogos excluídos da coleção</b-form-checkbox>
-        </div>
-      </div>
+
+      <ul class="grid-jogos">
+        <li v-for="jogo in jogosFiltrados">
+          <item-jogo :jogo="jogo" @on-click="abreModalJogo" />
+        </li>
+      </ul>
+
     </div>
-
-    <div class="row my-3">
-      <div class="col">
-        Total de jogos cadastrados: {{ jogos.length }}
-      </div>
-      <div class="col text-center">
-        Exibindo {{ jogosFiltrados.length }} {{ jogosFiltrados.length | plural('jogo', 'jogos') }}
-      </div>
-      <div class="col text-right">
-        <b-dropdown split right variant="primary" @click="abrirModalCadastro">
-          <template #button-content>
-            <font-awesome-icon icon="plus" />&nbsp;
-            Cadastrar jogo
-          </template>
-          <b-dropdown-item-button @click="atualizaJogos" :disabled="true">
-            <font-awesome-icon icon="sync-alt" :class="{'fa-spin': atualizando}" />&nbsp;
-            Atualizar acervo
-          </b-dropdown-item-button>
-        </b-dropdown>
-      </div>
-    </div>
-
-    <ul class="grid">
-      <li v-for="jogo in jogosFiltrados">
-        <item-jogo :jogo="jogo" @on-click="abreModalJogo" />
-      </li>
-    </ul>
 
     <modal-jogo :jogo="jogoModal" />
     <modal-cadastrar-jogo @jogo-cadastrado="jogoCadastrado" />
@@ -99,13 +107,8 @@
 
         opcoes: {
           // Lista de opções do filtro de categorias
-          categorias: [
-            {value: 'P', text: 'Pesado'},
-            {value: 'M', text: 'Médio'},
-            {value: 'L', text: 'Leve'},
-            {value: 'F', text: 'Party game'},
-            {value: 'I', text: 'Infantil'}
-          ],
+          categorias: BGMatch.categoriasJogos.map(c => ({value: c.key, text: c.label})),
+
           // Lista de opções do critério de ordenação
           ordenacao: [
             {text: 'Pelo nome', value: 'nome'},
@@ -119,7 +122,7 @@
         // Conjunto de filtros da listagem de jogos
         filtros: {
           nome: '',
-          categorias: ['P', 'M', 'L', 'F', 'I'],
+          categorias: BGMatch.categoriasJogos.map(c => c.key),
           num: "",
           coop_grupo: true,
           excluidos: false,
@@ -255,78 +258,3 @@
     }
   }
 </script>
-
-<style lang="scss">
-  @import "../scss/includes";
-
-  #lista-jogos {
-
-    .filter-form {
-      padding: 17px 20px 7px;
-
-      .form-group-categoria {
-        .dropdown {
-          .dropdown-toggle {
-            text-align: left;
-            background: white;
-            border-color: $input-border-color;
-
-            &::after {
-              float: right;
-              margin-top: .5rem;
-            }
-            &:hover, &:focus {
-              color: $body-color;
-            }
-          }
-          &.show > .dropdown-toggle {
-            color: $body-color;
-          }
-        }
-      }
-      .form-group-order {
-        position: relative;
-        .custom-switch {
-          float: right;
-          font-size: 90%;
-        }
-        select[name=sort] {
-          flex-grow: 2;
-        }
-      }
-    }
-
-    ul.grid {
-      display: grid;
-      margin: 0;
-      padding: 0;
-      grid-template-columns: repeat(2, 50%);
-      grid-template-rows: auto;
-      justify-content: space-between;
-
-      @media (min-width: 576px) {
-        grid-template-columns: repeat(3, 33.3%);
-      }
-      @media (min-width: 768px) {
-        grid-template-columns: repeat(4, 25%);
-      }
-      @media (min-width: 992px) {
-        grid-template-columns: repeat(5, 20%);
-      }
-      @media (min-width: 1200px) {
-        grid-template-columns: repeat(6, 16.66%);
-      }
-
-      li {
-        list-style: none;
-        border: 1px solid transparent;
-        border-radius: 3px;
-        &:hover {
-          border-color: $border-color;
-        }
-      }
-    }
-
-  }
-
-</style>
