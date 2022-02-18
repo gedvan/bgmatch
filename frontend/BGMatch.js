@@ -13,11 +13,10 @@ export default {
   ludopediaUrl: 'https://www.ludopedia.com.br',
 
   categoriasJogos: [
-    {value: 'P', text: 'Pesado'},
-    {value: 'M', text: 'Médio'},
-    {value: 'L', text: 'Leve'},
-    {value: 'F', text: 'Party game'},
-    {value: 'I', text: 'Infantil'},
+    {key: 'P', label: 'Pesado'},
+    {key: 'M', label: 'Médio'},
+    {key: 'L', label: 'Leve'},
+    {key: 'Y', label: 'Party/Infantil'},
   ],
 
   urlJogoLudopedia: function (jogo) {
@@ -25,8 +24,8 @@ export default {
   },
 
   nomeCategoria: function (key) {
-    const find = this.categoriasJogos.findIndex(option => option.value === key);
-    return find > -1 ? this.categoriasJogos[find].text : '';
+    const index = this.categoriasJogos.findIndex(c => c.key === key);
+    return index > -1 ? this.categoriasJogos[index].label : '';
   },
 
   /**

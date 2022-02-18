@@ -107,13 +107,8 @@
 
         opcoes: {
           // Lista de opções do filtro de categorias
-          categorias: [
-            {value: 'P', text: 'Pesado'},
-            {value: 'M', text: 'Médio'},
-            {value: 'L', text: 'Leve'},
-            {value: 'F', text: 'Party game'},
-            {value: 'I', text: 'Infantil'}
-          ],
+          categorias: BGMatch.categoriasJogos.map(c => ({value: c.key, text: c.label})),
+
           // Lista de opções do critério de ordenação
           ordenacao: [
             {text: 'Pelo nome', value: 'nome'},
@@ -127,7 +122,7 @@
         // Conjunto de filtros da listagem de jogos
         filtros: {
           nome: '',
-          categorias: ['P', 'M', 'L', 'F', 'I'],
+          categorias: BGMatch.categoriasJogos.map(c => c.key),
           num: "",
           coop_grupo: true,
           excluidos: false,

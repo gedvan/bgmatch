@@ -14,9 +14,11 @@
         <b-nav-item to="/jogadores" :active="$route.path === '/jogadores'">
           Jogadores
         </b-nav-item>
+        <!--
         <b-nav-item to="/estatisticas" :active="$route.path === '/estatisticas'">
           Estatísticas
         </b-nav-item>
+        -->
       </b-nav>
     </div>
   </nav>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\JogosController;
+use App\Services\JogosService;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,7 @@ class JoinCategoryPartyInfantil extends Migration
       DB::table('jogos')
         ->where('categoria', 'F')
         ->orWhere('categoria', 'I')
-        ->update(['categoria' => JogosController::CATEGORIA_PARTY_INFANTIL]);
+        ->update(['categoria' => JogosService::CATEGORIA_PARTY_INFANTIL]);
     }
 
     /**
@@ -29,7 +30,7 @@ class JoinCategoryPartyInfantil extends Migration
     public function down()
     {
       DB::table('jogos')
-        ->where('categoria', JogosController::CATEGORIA_PARTY_INFANTIL)
+        ->where('categoria', JogosService::CATEGORIA_PARTY_INFANTIL)
         ->update(['categoria' => 'F']);
     }
 }
