@@ -26,24 +26,47 @@
             <div class="col-lg">
 
               <table v-if="jogadores.length > 0" class="table table-pontuacao">
+                <colgroup>
+                  <col class="col-jogador">
+                </colgroup>
                 <thead>
-                <tr>
-                  <th>Jogador</th><th class="text-right">Pontuação</th>
-                </tr>
+                  <tr>
+                    <th>Jogador</th><th class="text-center">Pontos</th>
+                  </tr>
                 </thead>
                 <tbody>
-                <tr v-for="jogador in jogadores" :key="jogador.id">
-                  <td>
-                    <Marcador class="marcador" :color="jogador.cor"></Marcador>
-                    {{ jogador.nome }}
-                  </td>
-                  <td class="text-right">{{ jogador.total }}</td>
-                </tr>
+                  <tr v-for="jogador in jogadores" :key="jogador.id">
+                    <td>
+                      <Marcador class="marcador" :color="jogador.cor"></Marcador>
+                      {{ jogador.nome }}
+                    </td>
+                    <td class="text-center">{{ jogador.total }}</td>
+                  </tr>
                 </tbody>
               </table>
 
             </div>
             <div class="col-lg">
+
+              <table class="table">
+                <colgroup>
+                  <col class="col-posicao">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th scope="col">Posição / Pontuação</th>
+                    <th scope="col" v-for="peso in pesosPontuacao" class="text-center">{{ peso }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="pontosPosicao in pontuacao">
+                    <td>{{ pontosPosicao.posicao }}º lugar</td>
+                    <td v-for="pontos in Object.values(pontosPosicao.pontuacao)" class="text-center">
+                      {{ pontos }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
             </div>
           </div>
@@ -75,8 +98,17 @@
       return {
         ano: anoAtual,
         anteriores: anos,
+        pontuacao: [],
         trilha: [],
         jogadores: []
+      }
+    },
+
+    computed: {
+      pesosPontuacao() {
+        return this.pontuacao.length > 0
+          ? Object.keys(this.pontuacao[0].pontuacao).map(p => BGMatch.nomeCategoria(p))
+          : [];
       }
     },
 
@@ -116,6 +148,30 @@
             alert('Ocorreu um erro ao obter os dados do ranking.');
             console.error(error);
           });
+      },
+
+      fetchTabelaPontuacao() {
+        BGMatch.fetch('/ranking/' + this.ano + '/pontuacao')
+          .then(response => response.json())
+          .then(pontuacao => {
+            console.log(pontuacao);
+            this.pontuacao = pontuacao;
+            /*
+            this.pontuacao = [1, 2, 3, 4, 5, 6].map(p => ({
+              pos: p,
+              pontuacao: {P: 10, M: 7, L: 5},
+            }));
+            console.log(this.pontuacao);
+             */
+          })
+          .catch(error => {
+            alert('Ocorreu um erro ao obter os dados do ranking.');
+            console.error(error);
+          });
+      },
+
+      pontuacaoPosicao(pos) {
+        this.pontuacao.reduce();
       }
     },
 
@@ -126,7 +182,17 @@
         this.ano = new Date().getFullYear();
       }
       this.montaTrilha();
+      this.fetchTabelaPontuacao();
       this.fetchDados();
     }
   }
 </script>
+
+<style lang="scss" scoped>
+.col-jogador {
+  width: 90%;
+}
+.col-posicao {
+  width: 40%;
+}
+</style>
