@@ -27,7 +27,6 @@
 
           <div class="col-sm-6 col-lg-3 form-group form-group-order">
             <label>Ordenação</label>
-            <b-form-checkbox v-model="ordenacao.inverter" switch id="sort-inv">Inverter</b-form-checkbox>
             <b-form-select v-model="ordenacao.campo" :options="opcoes.ordenacao"></b-form-select>
           </div>
 
@@ -36,8 +35,11 @@
           <div class="col-md-6 col-lg-4 form-group">
             <b-form-checkbox v-model="filtros.coop_grupo" switch id="filtro-coop-grupo">Exibir jogos cooperativos ou em grupo</b-form-checkbox>
           </div>
-          <div class="col-md-6 col-lg-4 form-group">
+          <div class="col-md-6 col-lg-5 form-group">
             <b-form-checkbox v-model="filtros.excluidos" switch id="filtro-excluidos">Exibir jogos excluídos da coleção</b-form-checkbox>
+          </div>
+          <div class="col-md-6 col-lg-3 form-group">
+            <b-form-checkbox v-model="ordenacao.inverter" switch id="sort-inv">Inverter ordenação</b-form-checkbox>
           </div>
         </div>
 

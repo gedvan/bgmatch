@@ -9,7 +9,7 @@ use Psr\Http\Client\ClientExceptionInterface;
 
 class JogosService
 {
-  const LUDOPEDIA_URL = 'https://www.ludopedia.com.br';
+  const LUDOPEDIA_URL = 'https://ludopedia.com.br';
 
   const CATEGORIA_PESADO    = 'P';
   const CATEGORIA_MEDIO     = 'M';
@@ -161,7 +161,7 @@ class JogosService
     $jogos = [];
 
     try {
-      $urlPesquisa = self::LUDOPEDIA_URL . '/search_jogo?search=' . urlencode($termo);
+      $urlPesquisa = self::LUDOPEDIA_URL . '/search_jogo?search=' . $termo;
       $dom = new Dom();
       $dom->loadFromUrl($urlPesquisa);
 

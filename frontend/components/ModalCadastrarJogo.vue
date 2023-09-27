@@ -39,7 +39,7 @@
       </table>
     </div>
     <template #modal-footer>
-      <b-button variant="secondary" @click="closeModal()">Cancelar</b-button>
+      <b-button variant="secondary" @click="closeModal()">Fechar</b-button>
     </template>
   </b-modal>
 </template>
@@ -61,6 +61,7 @@ export default {
       this.touched = true;
       if (this.term.length > 2) {
         this.loading = true;
+        this.jogos = [];
         BGMatch.fetch('/jogos/pesquisa/' + encodeURIComponent(this.term))
           .then(response => response.json())
           .then(jogos => {
