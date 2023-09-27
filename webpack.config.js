@@ -71,8 +71,9 @@ module.exports = {
     new VueLoaderPlugin()
   ],
   devServer: {
+    allowedHosts: '.ddev.site',
     proxy: {
-      '/': 'http://localhost:8000'
+      '/': 'http://localhost'
     }
   }
 };

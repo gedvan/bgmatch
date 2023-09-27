@@ -1,5 +1,6 @@
 /public/main.js
 /vendor
 /node_modules
+/database/dumps
 /.idea
 .env
