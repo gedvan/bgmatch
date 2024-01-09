@@ -4,33 +4,52 @@
       <template #aside>
         <img :src="jogo.imagem" class="imagem-jogo">
       </template>
-      <dl class="row info-jogo">
-        <dt class="col-sm-3">Nº de jogadores</dt>
-        <dd class="col-sm-9">{{ numJogadores }}</dd>
-        <dt class="col-sm-3">Cooperativo/Em grupo</dt>
-        <dd class="col-sm-9">
-          <span v-if="!editando">{{ jogo.coop ? 'Sim' : 'Não' }}</span>
-          <b-checkbox v-if="editando" v-model="jogoEdicao.coop" switch></b-checkbox>
-        </dd>
-        <dt class="col-sm-3">Categoria</dt>
-        <dd class="col-sm-9">
-          <span v-if="!editando">{{ nomeCategoria(jogo.categoria) }}</span>
-          <b-form-select v-if="editando" v-model="jogoEdicao.categoria" :options="categoriasJogos" size="sm" class="w-auto"></b-form-select>
-        </dd>
-        <template v-if="jogo.expansoes.length">
-          <dt class="col-sm-3">Expansões</dt>
-          <dd class="col-sm-9" v-if="jogo.expansoes.length">
-            <ul class="m-0 pl-3">
-              <li v-for="exp in jogo.expansoes">
-                {{ exp.nome }}
-                <b-link :href="urlJogoLudopedia(exp)" target="_blank" class="small" title="Abrir na Ludopedia">
-                  <font-awesome-icon icon="external-link-alt" />
-                </b-link>
-              </li>
-            </ul>
-          </dd>
-        </template>
-      </dl>
+      <div class="form-row">
+        <div class="form-group col-sm-6">
+          <label>Nº de jogadores</label>
+          <div>{{ numJogadores }}</div>
+        </div>
+        <div class="form-group col-sm-6">
+          <label>Cooperativo/Em grupo</label>
+          <div v-if="!editando">
+            {{ jogo.coop ? 'Sim' : 'Não' }}
+          </div>
+          <b-form-radio-group v-if="editando" v-model="jogoEdicao.coop">
+            <b-form-radio :value="false">Não</b-form-radio>
+            <b-form-radio :value="true">Sim</b-form-radio>
+          </b-form-radio-group>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-sm-6">
+          <label>Categoria</label>
+          <div>
+            <span v-if="!editando">{{ nomeCategoria(jogo.categoria) }}</span>
+            <b-form-select v-if="editando" v-model="jogoEdicao.categoria" :options="categoriasJogos" size="sm" class="w-auto"></b-form-select>
+          </div>
+        </div>
+        <div class="form-group col-sm-6">
+          <label>Excluído da coleção</label>
+          <div v-if="!editando">
+            {{ jogo.excluido ? 'Sim' : 'Não' }}
+          </div>
+          <b-form-radio-group v-if="editando" v-model="jogoEdicao.excluido">
+            <b-form-radio :value="false">Não</b-form-radio>
+            <b-form-radio :value="true">Sim</b-form-radio>
+          </b-form-radio-group>
+        </div>
+      </div>
+      <div v-if="jogo.expansoes.length">
+        <label>Expansões</label>
+        <ul v-if="jogo.expansoes.length">
+          <li v-for="exp in jogo.expansoes">
+            {{ exp.nome }}
+            <b-link :href="urlJogoLudopedia(exp)" target="_blank" class="small" title="Abrir na Ludopedia">
+              <font-awesome-icon icon="external-link-alt" />
+            </b-link>
+          </li>
+        </ul>
+      </div>
     </b-media>
     <template #modal-footer>
       <b-link :href="urlJogoLudopedia(jogo)" target="_blank" title="Página do jogo na Ludopedia" class="small mr-auto">
@@ -115,8 +134,9 @@
           method: "POST",
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
+            categoria: this.jogoEdicao.categoria,
             coop: this.jogoEdicao.coop,
-            categoria: this.jogoEdicao.categoria
+            excluido: this.jogoEdicao.excluido
           })
         })
           .then(response => response.json())
@@ -124,6 +144,7 @@
             if (data.updated === 1) {
               this.jogo.categoria = this.jogoEdicao.categoria;
               this.jogo.coop = this.jogoEdicao.coop;
+              this.jogo.excluido = this.jogoEdicao.excluido;
             } else {
               throw new Error('Erro ao salvar o jogo.');
             }
@@ -154,9 +175,5 @@
 }
 .imagem-jogo {
   margin-bottom: .3em;
-}
-.info-jogo dt {
-  line-height: 1.1;
-  margin-bottom: 0.5rem;
 }
 </style>

@@ -56,11 +56,12 @@ class JogosService
       ->find($id);
   }
 
-  public function salvaJogo($id, $coop, $categoria)
+  public function salvaJogo($id, array $dados)
   {
     return DB::table('jogos')->where('id', $id)->update([
-      'coop' => (bool) $coop,
-      'categoria' => $categoria,
+      'categoria' => $dados['categoria'],
+      'coop' => (bool) ($dados['coop'] ?? false),
+      'excluido' => (bool) ($dados['excluido'] ?? false),
       'editado' => true,
     ]);
   }
@@ -68,6 +69,18 @@ class JogosService
   public function insere($jogo)
   {
     DB::table('jogos')->insert($jogo);
+  }
+
+  protected function categoriaValida($categoria) {
+    $categoriasValidas = [
+      self::CATEGORIA_PESADO,
+      self::CATEGORIA_MEDIO,
+      self::CATEGORIA_LEVE,
+      self::CATEGORIA_PARTY_INFANTIL,
+    ];
+    if (!in_array($categoria, $categoriasValidas)) {
+      throw new \Exception('Categoria inválida: ' . $categoria);
+    }
   }
 
   /**

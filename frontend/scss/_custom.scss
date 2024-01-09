@@ -6,8 +6,11 @@ a, .btn-link {
 
 label {
   margin-bottom: .3rem;
-  font-weight: $font-weight-normal;
   line-height: 1.1;
+
+  &:not(.custom-control-label) {
+    font-weight: $font-weight-bold;
+  }
 }
 
 .btn {
@@ -28,6 +31,12 @@ label {
   }
   &::after {
     top: 2px;
+  }
+}
+
+.custom-control-label {
+  &::before, &::after {
+    top: 0;
   }
 }
 
@@ -67,19 +76,22 @@ label {
   }
 }
 
+// Modal
 .modal-header {
   background-color: $primary;
   color: white;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+  padding: 1rem 1.5rem;
 
   .close {
     color: white;
     text-shadow: none;
   }
 }
+.modal-body {
+  padding: 1.5rem;
+}
 .modal-footer {
-  padding-top: .25rem;
+  padding: 0 1.5rem 1.5rem;
 }
 
 // Layout
