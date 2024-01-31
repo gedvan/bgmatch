@@ -31,6 +31,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('jogadores/dados', 'JogadoresController@getDadosJogadores');
 
     $router->get('partidas', 'PartidasController@getLista');
+    $router->get('partidas-periodo[/{periodo}]', 'PartidasController@lista');
     $router->get('partidas/locais', 'PartidasController@getLocais');
     $router->get('partidas/importa', 'PartidasController@importa');
     $router->post('partidas/nova', 'PartidasController@postNovaPartida');

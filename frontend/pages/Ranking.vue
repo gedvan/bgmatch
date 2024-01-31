@@ -4,7 +4,7 @@
     <header class="bg-alternate">
       <div class="container">
         <h3>Ranking {{ ano }}</h3>
-        <b-dropdown text="Ano" right size="sm" variant="light">
+        <b-dropdown :text="ano" right size="sm" variant="light">
           <b-dropdown-item to="/ranking" :active="$route.path === '/ranking'">Atual</b-dropdown-item>
           <b-dropdown-item v-for="anoAnterior in anteriores" :key="anoAnterior" :to="'/ranking/' + anoAnterior" :active="$route.path === '/ranking/' + anoAnterior">{{ anoAnterior }}</b-dropdown-item>
         </b-dropdown>
@@ -97,6 +97,7 @@
       const anos = Array.from({length: anoAtual - anoInicial}, (v, k) => anoInicial + k).reverse();
       return {
         ano: anoAtual,
+        anoAtual: anoAtual,
         anteriores: anos,
         pontuacao: [],
         trilha: [],

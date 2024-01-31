@@ -1,7 +1,7 @@
 import ListaJogos from "./pages/ListaJogos";
 import ListaPartidas from "./pages/ListaPartidas";
 import Jogadores from "./pages/Jogadores";
-import Ranking from "./pages/Ranking";
+import RankingWrapper from "./pages/RankingWrapper";
 import Login from "./pages/Login";
 import VueRouter from "vue-router";
 import BGMatch from "./BGMatch";
@@ -13,8 +13,8 @@ const router = new VueRouter({
     { name: 'login', path: '/login', component: Login },
     { name: 'partidas', path: '/partidas', component: ListaPartidas },
     { name: 'jogadores', path: '/jogadores', component: Jogadores },
-    { name: 'ranking', path: '/ranking', component: Ranking },
-    { name: 'ranking-ano', path: '/ranking/:ano', component: Ranking }
+    { name: 'ranking', path: '/ranking', component: RankingWrapper },
+    { name: 'ranking-ano', path: '/ranking/:ano', component: RankingWrapper }
   ]
 });
 

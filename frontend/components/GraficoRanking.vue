@@ -26,7 +26,7 @@
           return;
         }
 
-        if (this.periodo == 'semanal') {
+        if (this.periodo === 'semanal') {
           this.labels = Object.keys(this.jogadores[0].semanal)
             .map(d => d.split('-').reverse().join('/'));
         }
@@ -58,6 +58,7 @@
 
     watch: {
       jogadores() {
+        console.log('watch jogadores antigo');
         this.render();
       }
     },

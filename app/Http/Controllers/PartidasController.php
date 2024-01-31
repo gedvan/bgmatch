@@ -2,14 +2,79 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\PartidasService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class PartidasController extends Controller {
+
+  protected PartidasService $partidasService;
+
+  public function __construct(PartidasService $partidasService)
+  {
+    $this->partidasService = $partidasService;
+  }
+
+  public function lista(Request $request, string $periodo = ''): HttpResponse
+  {
+    $sort = $request->input('sort');
+    if (!$sort) {
+      $sort = 'asc';
+    } elseif (!in_array($sort, ['asc', 'desc'])) {
+      throw new HttpException(500, 'Invalid sort parameter.');
+    }
+
+    if ($periodo) {
+      // Apenas ano: [AAAA] ou [AAAA:AAAA] (início:fim).
+      if (preg_match('/^(\d{4})(?::(\d{4}))?$/', $periodo, $m)) {
+        $ano_inicio = $m[1];
+        $mes_inicio = '01';
+        $dia_inicio = '01';
+        $ano_fim = $m[2] ?? $ano_inicio;
+        $mes_fim = '12';
+        $dia_fim = '31';
+      }
+      // Ano e mês: [AAAA-MM] ou [AAAA-MM:AAAA-MM] (início:fim).
+      elseif (preg_match('/^(\d{4})-(\d{2})(?::(\d{4})-(\d{2}))?$/', $periodo, $m)) {
+        $ano_inicio = $m[1];
+        $mes_inicio = $m[2];
+        $dia_inicio = '01';
+        $ano_fim = $m[3] ?? $ano_inicio;
+        $mes_fim = $m[4] ?? $mes_inicio;
+        $dia_fim = (new \DateTime("$ano_fim-$mes_fim-01"))->format('t');
+      }
+      // Ano, mês e dia: [AAAA-MM-DD] ou [AAAA-MM-DD:AAAA-MM-DD] (início:fim).
+      elseif (preg_match('/^(\d{4})-(\d{2})-(\d{2})(?::(\d{4})-(\d{2})-(\d{2}))?$/', $periodo, $m)) {
+        $ano_inicio = $m[1];
+        $mes_inicio = $m[2];
+        $dia_inicio = $m[3];
+        $ano_fim = $m[4] ?? $ano_inicio;
+        $mes_fim = $m[5] ?? $mes_inicio;
+        $dia_fim = $m[6] ?? $dia_inicio;
+      }
+      else {
+        throw new HttpException(500, 'Invalid date period.');
+      }
+
+      // Valida as datas.
+      if (!checkdate($mes_inicio, $dia_inicio, $ano_inicio) || !checkdate($mes_fim, $dia_fim, $ano_fim)) {
+        throw new HttpException(500, 'Invalid date period.');
+      }
+
+      $inicio = "$ano_inicio-$mes_inicio-$dia_inicio";
+      $fim = "$ano_fim-$mes_fim-$dia_fim";
+      $partidas = $this->partidasService->getPartidasPorPeriodo($inicio, $fim, $sort);
+    }
+    else {
+      $partidas = $this->partidasService->getPartidasPorPeriodo('', '', $sort);
+    }
+    return new JsonResponse($partidas);
+  }
 
   public function getLista() {
     $result = DB::table('partidas AS p')

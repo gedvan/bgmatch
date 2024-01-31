@@ -13,7 +13,7 @@ class RankingController extends Controller {
   /**
    * @var RankingService
    */
-  protected $rankingService;
+  protected RankingService $rankingService;
 
   public function __construct(RankingService $rankingService)
   {
