@@ -138,7 +138,6 @@ export default {
     processaPartida(partida) {
       // Data da partida no formato "MM-DD".
       const data = partida.data.substring(5);
-      console.log(data);
 
       // Mes da partida com inteiro (0 => Jan..11 => Dez).
       const mes = parseInt(partida.data.substring(5, 7)) - 1;
@@ -184,12 +183,12 @@ export default {
 </script>
 
 <template>
-  <div class="trilha-pontos">
+  <div class="trilha-pontos trilha-100">
     <div v-for="(unidades, dezena) in this.trilha" :class="['dezena', 'dezena-' + dezena]">
-      <div v-for="(casa, unidade) in unidades" :class="['casa', `casa-${casa.numero}`, `unidade-${unidade}`]">
+      <div v-for="(casa, unidade) in unidades" :class="['casa', `casa-${casa.numero}`, `und-${unidade}`]">
         {{ casa.numero }}
         <Marcador v-for="(jogador, i) in casa.jogadores" :key="jogador.id" :class="['marcador', `sobre-${i}`]"
-                  :color="jogador.cor" :numero="Math.floor(jogador.total / 100) * 100"
+                  :color="jogador.cor" :numero="jogador.total"
                   v-b-popover.hover.click.top="`${jogador.nome} (${jogador.total})`"></Marcador>
       </div>
     </div>

@@ -1,0 +1,44 @@
+#lista-partidas {
+
+  .filter-form {
+    .form-group-sorting {
+      position: relative;
+      .custom-switch {
+        float: right;
+        font-size: 90%;
+      }
+      select[name=sort] {
+        flex-grow: 2;
+      }
+    }
+    #input-jogo {
+      .vs__dropdown-toggle {
+        border-color: white;
+        border-radius: $input-border-radius;
+        min-height: 38px;
+      }
+    }
+  }
+
+  .jogador {
+    white-space: nowrap;
+    &.posicao-1 {
+      font-weight: bold;
+      .fa-medal {
+        color: goldenrod;
+      }
+    }
+    &.posicao-2 .fa-medal {
+      color: silver;
+    }
+    &.posicao-3 .fa-medal {
+      color: chocolate;
+    }
+  }
+
+  .periodo-ativo {
+    font-weight: bold;
+    text-decoration: underline;
+  }
+
+}

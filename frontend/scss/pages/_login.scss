@@ -1,0 +1,42 @@
+#app.route-login {
+
+  #header {
+    .branding {
+      padding: 30px 0;
+      flex-direction: column;
+      .logo {
+        margin: 0 0 .5rem;
+      }
+    }
+  }
+
+  .login-card {
+    border: none;
+    background-color: $primary;
+    background-image: $primary-gradient;
+
+    .card-title {
+      text-align: center;
+      text-transform: uppercase;
+      font-family: $font-family-display;
+      margin-bottom: 1.25rem;
+    }
+    .card-body {
+      padding: 1.5rem;
+    }
+    #input-user, #input-password {
+      padding-left: 36px;
+      font-size: 1rem;
+      background: white url("../assets/icons/meeple.svg") no-repeat 10px center;
+      border-color: white;
+    }
+    #input-password {
+      background-image: url("../assets/icons/padlock.svg");
+    }
+    button {
+      text-transform: uppercase;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+  }
+}

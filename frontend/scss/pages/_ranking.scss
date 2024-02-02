@@ -1,0 +1,475 @@
+#ranking {
+
+  svg {
+    height: auto;
+  }
+
+  > header {
+    display: flex;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    > .container {
+      display: flex;
+    }
+    h2 {
+      margin: 0;
+      font-family: $font-family-display;
+      font-size: 1.75rem;
+    }
+    .dropdown {
+      margin-left: auto;
+      .dropdown-toggle {
+        background-color: white;
+      }
+    }
+  }
+
+  .trilha-pontos {
+
+    .casa {
+      background: #e6eded;
+      color: #c6d5d5;
+      font-size: 90%;
+      font-family: "Poetsen One", sans-serif;
+      border: 1px solid white;
+      flex-grow: 1;
+      min-width: 29px;
+      min-height: 29px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+
+      &.und-0, &.und-5 {
+        background: #cbdadb;
+        color: white;
+        font-size: 110%;
+        text-shadow: 0 1px 2px rgb(0 0 0 / 25%);
+      }
+      .marcador {
+        width: 30px;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        margin-left: -15px;
+        margin-top: -15px;
+        z-index: 0;
+
+        &.sobre-1 {
+          margin-top: -22px;
+          z-index: 1;
+        }
+        &.sobre-2 {
+          margin-top: -29px;
+          z-index: 2;
+        }
+        &.sobre-3 {
+          margin-top: -36px;
+          z-index: 3;
+        }
+        &.sobre-4 {
+          margin-top: -43px;
+          z-index: 4;
+        }
+        &.sobre-5 {
+          margin-top: -50px;
+          z-index: 5;
+        }
+
+        &:hover {
+          z-index: 10;
+        }
+      }
+    }
+
+    .info {
+      padding: 15px;
+
+      .table-pontuacao {
+        //width: 80%;
+        //font-size: 120%;
+
+        .marcador {
+          width: 20px;
+          margin-right: .2em;
+        }
+      }
+
+      .grafico {
+        //margin-top: 30px;
+        position: relative;
+        overflow: auto;
+        max-width: calc(100vw - 120px);
+      }
+
+      @include media-breakpoint-up(sm) {
+        .grafico {
+          max-width: 431px;
+        }
+      }
+      @include media-breakpoint-up(md) {
+        padding: 20px;
+        .grafico {
+          max-width: 582px;
+        }
+      }
+      @include media-breakpoint-up(lg) {
+        padding: 30px;
+        .grafico {
+          max-width: 802px;
+        }
+      }
+      @include media-breakpoint-up(xl) {
+        .grafico {
+          max-width: 976px;
+        }
+      }
+    }
+
+    &.trilha-100 {
+      display: grid;
+      grid-template-columns: 29px auto 29px;
+      grid-template-rows: 29px auto auto auto auto 29px;
+      grid-template-areas:
+        "d0 d0 d0"
+        "d9 c  d1"
+        "d8 c  d2"
+        "d7 c  d3"
+        "d6 c  d4"
+        "d5 d5 d5";
+
+      .info {
+        grid-area: c;
+      }
+
+      .dezena {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+
+        &.dezena-0 {
+          grid-area: d0;
+          flex-direction: row;
+        }
+        &.dezena-1 {
+          grid-area: d1;
+          flex-direction: column;
+        }
+        &.dezena-2 {
+          grid-area: d2;
+          flex-direction: column;
+        }
+        &.dezena-3 {
+          grid-area: d3;
+          flex-direction: column;
+        }
+        &.dezena-4 {
+          grid-area: d4;
+          flex-direction: column;
+        }
+        &.dezena-5 {
+          grid-area: d5;
+          flex-direction: row-reverse;
+        }
+        &.dezena-6 {
+          grid-area: d6;
+          flex-direction: column-reverse;
+        }
+        &.dezena-7 {
+          grid-area: d7;
+          flex-direction: column-reverse;
+        }
+        &.dezena-8 {
+          grid-area: d8;
+          flex-direction: column-reverse;
+        }
+        &.dezena-9 {
+          grid-area: d9;
+          flex-direction: column-reverse;
+        }
+      }
+
+      @include media-breakpoint-up(sm) {
+        grid-template-columns: 34px auto 34px;
+        grid-template-rows: 34px auto auto auto auto 34px;
+
+        .casa {
+          min-width: 34px;
+          min-height: 34px;
+        }
+      }
+
+      @include media-breakpoint-up(md) {
+        grid-template-columns: 34px auto auto 34px;
+        grid-template-rows: 34px auto auto auto 34px;
+        grid-template-areas:
+          "d0 d0 d1 d1"
+          "d9 c  c  d2"
+          "d8 c  c  d3"
+          "d7 c  c  d4"
+          "d6 d6 d5 d5";
+
+        .dezena.dezena-1 {
+          flex-direction: row;
+        }
+        .dezena.dezena-6 {
+          flex-direction: row-reverse;
+        }
+      }
+
+      @include media-breakpoint-up(xl) {
+        grid-template-columns: 37px auto auto auto 37px;
+        grid-template-rows: 37px auto auto 37px;
+        grid-template-areas:
+          "d0 d0 d1 d2 d2"
+          "d9 c  c  c  d3"
+          "d8 c  c  c  d4"
+          "d7 d7 d6 d5 d5";
+
+        .casa {
+          min-width: 37px;
+          min-height: 37px;
+        }
+
+        .dezena.dezena-2 {
+          flex-direction: row;
+        }
+        .dezena.dezena-7 {
+          flex-direction: row-reverse;
+        }
+      }
+    }
+
+    &.trilha-50 {
+      position: relative;
+      display: grid;
+      grid-template-columns: 29px auto auto 29px;
+      grid-template-rows: 29px auto auto auto 29px;
+      grid-template-areas:
+        "g0 g0 g1 g2"
+        "g9 c  c  g2"
+        "g8 c  c  g3"
+        "g7 c  c  g4"
+        "g7 g6 g5 g5";
+
+      .info {
+        grid-area: c;
+      }
+
+      .marcadores .marcador {
+        width: 32px;
+        position: absolute;
+        transition-property: left, top;
+        transition-duration: .5s;
+      }
+
+      .grupo {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+
+        .casa {
+          flex-basis: 20%;
+        }
+
+        &.grupo-0 {
+          grid-area: g0;
+          flex-direction: row;
+        }
+        &.grupo-1 {
+          grid-area: g1;
+          flex-direction: row;
+        }
+        &.grupo-2 {
+          grid-area: g2;
+          flex-direction: column;
+        }
+        &.grupo-3 {
+          grid-area: g3;
+          flex-direction: column;
+        }
+        &.grupo-4 {
+          grid-area: g4;
+          flex-direction: column;
+        }
+        &.grupo-5 {
+          grid-area: g5;
+          flex-direction: row-reverse;
+        }
+        &.grupo-6 {
+          grid-area: g6;
+          flex-direction: row-reverse;
+        }
+        &.grupo-7 {
+          grid-area: g7;
+          flex-direction: column-reverse;
+        }
+        &.grupo-8 {
+          grid-area: g8;
+          flex-direction: column-reverse;
+        }
+        &.grupo-9 {
+          grid-area: g9;
+          flex-direction: column-reverse;
+        }
+      }
+
+      @include media-breakpoint-up(lg) {
+        grid-template-columns: 36px calc(33.33% - 48px) calc(33.33% - 12px) calc(33.33% - 12px) 36px;
+        grid-template-rows: 36px auto auto 36px;
+        grid-template-areas:
+          "g0 g0 g1 g2 g3"
+          "g9 c  c  c  g3"
+          "g8 c  c  c  g4"
+          "g8 g7 g6 g5 g5";
+
+        .grupo {
+          &.grupo-2 {
+            flex-direction: row;
+          }
+          &.grupo-7 {
+            flex-direction: row-reverse;
+          }
+          &.grupo-3, &.grupo-4, &.grupo-8, &.grupo-9 {
+            .casa {
+              min-height: 48px;
+            }
+          }
+        }
+
+        .marcadores .marcador {
+          width: 36px;
+
+          &.sobre-1 {
+            margin-top: -27px;
+          }
+          &.sobre-2 {
+            margin-top: -34px;
+          }
+          &.sobre-3 {
+            margin-top: -41px;
+          }
+          &.sobre-4 {
+            margin-top: -48px;
+          }
+          &.sobre-5 {
+            margin-top: -55px;
+          }
+        }
+      }
+    }
+  }
+
+  .ranking-2024 {
+    h3 {
+      font-family: $font-family-display;
+      font-size: 1.35rem;
+      margin-block: 1.5rem 1.25rem;
+      text-align: center;
+    }
+
+    .nav-meses {
+      .nav-item {
+        a {
+          .three, .end {
+            display: none;
+          }
+          @include media-breakpoint-up(md) {
+            .three {
+              display: inline;
+            }
+          }
+          @include media-breakpoint-up(xl) {
+            .end {
+              display: inline;
+            }
+          }
+        }
+      }
+    }
+
+    .tabela-geral {
+      margin-bottom: 3rem;
+
+      th, td {
+        padding-inline: 0.25rem;
+        vertical-align: middle;
+      }
+
+      th {
+        .three, .end {
+          display: none;
+        }
+        @include media-breakpoint-up(md) {
+          .three {
+            display: inline;
+          }
+        }
+        @include media-breakpoint-up(xl) {
+          .end {
+            display: inline;
+          }
+        }
+      }
+
+      .col-jogador {
+        white-space: nowrap;
+        text-align: center;
+
+        .meeple {
+          width: 24px;
+        }
+        .nome-jogador {
+          display: none;
+        }
+
+        @include media-breakpoint-up(md) {
+          text-align: initial;
+          padding-inline: 0.5rem;
+
+          .meeple {
+            margin-right: 0.25em;
+          }
+          .nome-jogador {
+            display: inline;
+          }
+        }
+      }
+
+      .col-estrelas {
+        padding-inline: 0.25rem;
+        border-left: 1px solid #dee2e6;
+
+        .estrela {
+          width: 18px;
+          height: auto;
+          display: block;
+          margin-inline: auto;
+        }
+
+        @include media-breakpoint-up(lg) {
+          white-space: nowrap;
+          text-align: center;
+
+          .estrela {
+            display: inline-block;
+          }
+        }
+
+        @include media-breakpoint-up(xl) {
+          .estrela {
+            width: 20px;
+          }
+        }
+      }
+
+      .col-total {
+        text-align: center;
+      }
+      td.col-total {
+        font-size: 110%;
+      }
+    }
+  }
+}

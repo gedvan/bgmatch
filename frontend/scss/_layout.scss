@@ -1,0 +1,75 @@
+@use "sass:math";
+
+#header {
+
+  > .container {
+    position: relative;
+  }
+  .branding {
+    padding: 20px 0;
+    display: flex;
+    align-items: center;
+    .logo {
+      margin-right: .5rem;
+      width: 100px;
+      height: auto;
+    }
+    .title {
+      font-family: $font-family-display;
+      font-size: 2.75rem;
+      line-height: 1.1;
+      text-transform: uppercase;
+      color: $primary;
+      margin: 0;
+      .prefix {
+        color: $text-color;
+      }
+    }
+  }
+  .user-info {
+    position: absolute;
+    top: 5px;
+    right: math.div($grid-gutter-width, 2);
+  }
+}
+
+#main-nav {
+  background-color: $primary;
+  background-image: $primary-gradient;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+
+  > .container {
+    overflow-x: auto;
+
+    @include media-breakpoint-down(xs) {
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  .nav {
+    flex-wrap: nowrap;
+    .nav-item {
+      > a {
+        color: inherit;
+        &:hover, &:focus {
+        }
+        &.active {
+          background-color: $alternate;
+          color: $text-color;
+        }
+      }
+    }
+  }
+}
+
+#main {
+  margin-bottom: 1rem;
+
+  .filter-form {
+    padding-top: 1rem;
+    font-size: 0.9375rem;
+  }
+}
