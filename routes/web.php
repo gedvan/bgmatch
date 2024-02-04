@@ -12,7 +12,9 @@
 */
 
 $router->get('/', function () use ($router) {
-  return view('index');
+  return view('index', [
+    'build' => getenv('APP_BUILD'),
+  ]);
 });
 
 $router->group(['prefix' => 'api'], function () use ($router) {

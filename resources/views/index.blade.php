@@ -14,7 +14,7 @@
 
 <div id="app"></div>
 
-<script src="main.js"></script>
+<script src="main.js{{ $build ? '?'.$build : '' }}"></script>
 
 </body>
 </html>
