@@ -116,6 +116,7 @@ class PartidasController extends Controller {
       ->join('jogadores_partidas AS jp', 'jp.id_partida', '=', 'p.id')
       ->select('p.*', 'jp.id_jogador', 'jp.pontuacao', 'jp.posicao')
       ->where('p.id', $id)
+      ->orderBy('jp.posicao')
       ->get();
 
     if ($result->count() == 0) {

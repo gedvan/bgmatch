@@ -30,8 +30,10 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="jogador in form.jogadores" :key="jogador.posicao">
-          <td>{{jogador.posicao}}º lugar</td>
+        <tr v-for="(jogador, j) in form.jogadores" :key="j">
+          <td>
+            <b-form-select :options="listaPosicoes" v-model="jogador.posicao"></b-form-select>
+          </td>
           <td>
             <b-form-select :options="listaJogadores" v-model="jogador.id"></b-form-select>
           </td>
@@ -61,6 +63,16 @@
         // Lista de locais para o input
         listaLocais: [],
 
+        // Lista de posições para os selects
+        listaPosicoes: [
+          {text: '1º lugar', value: 1},
+          {text: '2º lugar', value: 2},
+          {text: '3º lugar', value: 3},
+          {text: '4º lugar', value: 4},
+          {text: '5º lugar', value: 5},
+          {text: '6º lugar', value: 6}
+        ],
+
         // Lista de jogadores para os selects
         listaJogadores: [
           {value: null, text: '--'}
@@ -73,14 +85,6 @@
           local: '',
           jogadores: []
         },
-
-        posicoes: [
-          {text: '1º lugar', value: 1},
-          {text: '2º lugar', value: 2},
-          {text: '3º lugar', value: 3},
-          {text: '4º lugar', value: 4},
-          {text: '5º lugar', value: 5}
-        ],
 
         partidaObj: null,
       }
@@ -107,8 +111,8 @@
         const numJogadores = 6;
         for (let i = 0; i < numJogadores; i++) {
           this.form.jogadores.push({
-            posicao: i + 1,
             id: null,
+            posicao: i + 1,
             pontuacao: null,
           });
         }
@@ -129,8 +133,9 @@
         this.form.data = '';
         this.form.jogo = '';
         this.form.local = '';
-        this.form.jogadores.forEach(jogador => {
+        this.form.jogadores.forEach((jogador, i) => {
           jogador.id = null;
+          jogador.posicao = i + 1;
           jogador.pontuacao = null;
         });
       },
@@ -183,10 +188,11 @@
             this.form.data = partida.data;
             this.form.jogo = this.listaJogos.find(j => j.code == partida.id_jogo);
             this.form.local = partida.local;
-            partida.jogadores.forEach(jogadorPartida => {
-              const jogadorForm = this.form.jogadores.find(j => j.posicao == jogadorPartida.posicao);
-              jogadorForm.id = jogadorPartida.id;
-              jogadorForm.pontuacao = jogadorPartida.pontuacao;
+            partida.jogadores.sort((a, b) => a.posicao - b.posicao);
+            partida.jogadores.forEach((jogadorPartida, i) => {
+              this.form.jogadores[i].id = jogadorPartida.id;
+              this.form.jogadores[i].posicao = jogadorPartida.posicao;
+              this.form.jogadores[i].pontuacao = jogadorPartida.pontuacao;
             });
           })
           .catch(error => console.error(error));
