@@ -80,20 +80,20 @@ export default {
       const mesAtual = hoje.getUTCMonth();
       const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
         "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-      let ultimoConcluido = 0;
 
       this.meses = meses.map((mes, i) => {
-        const concluido = anoAtual > this.ano || mesAtual > i;
-        if (concluido) {
-          ultimoConcluido = i;
+        let concluido = false;
+        if (anoAtual > this.ano) {
+          concluido = true;
+        } else if (anoAtual === this.ano) {
+          concluido = mesAtual > i;
         }
         return {
           nome: mes,
           partidas: [],
-          concluido: concluido,
+          concluido,
         }
       });
-      this.mes = ultimoConcluido;
     },
 
     /**
@@ -145,15 +145,17 @@ export default {
       return BGMatch.fetch('/partidas-periodo/' + this.ano + '?sort=asc')
         .then(response => response.json())
         .then(partidas => {
+          let mes = 0;
           for (const partida of partidas) {
             // Data da partida no formato "MM-DD".
             const data = partida.data.substring(5);
 
             // Mes da partida como inteiro (0-indexed).
-            const mes = parseInt(partida.data.substring(5, 7)) - 1;
+            mes = parseInt(partida.data.substring(5, 7)) - 1;
 
             this.meses[mes].partidas.push(partida);
           }
+          this.mes = mes;
         })
         .catch(error => {
           alert('Ocorreu um erro ao obter os dados do ranking.');
