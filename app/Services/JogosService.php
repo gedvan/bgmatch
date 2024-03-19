@@ -11,6 +11,10 @@ class JogosService
 {
   const LUDOPEDIA_URL = 'https://ludopedia.com.br';
 
+  const BGG_URL = 'https://boardgamegeek.com';
+
+  const BGG_API_URL = self::BGG_URL . '/xmlapi';
+
   const CATEGORIA_PESADO    = 'P';
   const CATEGORIA_MEDIO     = 'M';
   const CATEGORIA_LEVE      = 'L';
@@ -27,23 +31,19 @@ class JogosService
   public function getLista(): array
   {
     $rows = DB::table('jogos AS j')
-      ->select(['j.id', 'j.nome', 'j.categoria', 'j.min', 'j.max', 'j.imagem', 'j.slug', 'j.id_base', 'j.coop', 'j.editado', 'j.excluido'])
+      ->select(['j.*'])
       ->leftJoin('partidas AS p', 'p.id_jogo', '=', 'j.id')
       ->selectRaw('COUNT(p.id) AS num_partidas')
       ->selectRaw('MAX(p.data) AS ultima_partida')
-      ->groupBy('j.id', 'j.nome', 'j.categoria', 'j.min', 'j.max', 'j.imagem', 'j.slug', 'j.id_base', 'j.coop', 'j.editado', 'j.excluido')
-      ->orderByRaw('j.id_base NULLS FIRST')
+      ->groupBy('j.id', 'j.nome', 'j.categoria', 'j.min', 'j.max', 'j.imagem', 'j.slug', 'j.id_base', 'j.coop',
+        'j.editado', 'j.excluido', 'j.bgg_id', 'j.bgg_weight')
+      //->orderByRaw('j.id_base NULLS FIRST')
       ->orderBy('j.nome')
       ->get();
 
     $jogos = [];
     foreach ($rows as $row) {
-      if (empty($row->id_base)) {
-        $jogos[$row->id] = $row;
-        $jogos[$row->id]->expansoes = [];
-      } elseif (isset($jogos[$row->id_base])) {
-        $jogos[$row->id_base]->expansoes[] = $row;
-      }
+      $jogos[$row->id] = $row;
     }
 
     return array_values($jogos);
@@ -62,6 +62,8 @@ class JogosService
       'categoria' => $dados['categoria'],
       'coop' => (bool) ($dados['coop'] ?? false),
       'excluido' => (bool) ($dados['excluido'] ?? false),
+      'bgg_id' => $dados['bgg_id'] ?? null,
+      'bgg_weight' => $dados['bgg_weight'] ?? null,
       'editado' => true,
     ]);
   }
@@ -146,10 +148,11 @@ class JogosService
         } elseif ($boxInfo->find('a[href$="dominio/9"]', 0)) { // Domínio: Jogos Expert
           $jogo['categoria'] = self::CATEGORIA_PESADO;
         } else {
-          $jogo['categoria'] = self::CATEGORIA_MEDIO;
           $duracao = trim($dom->find('#page-content .jogo-top-main > ul.list-inline li', 1)->text);
           if (preg_match('/^(\d+) min/', $duracao, $m) && $m[1] < 60) {
             $jogo['categoria'] = self::CATEGORIA_LEVE;
+          } else {
+            $jogo['categoria'] = self::CATEGORIA_MEDIO;
           }
         }
       }
@@ -290,6 +293,54 @@ class JogosService
         ->where(['slug' => $slug, 'excluido' => true])
         ->update(['excluido' => false]);
     }
+  }
+
+  /**
+   * Consulta o ID de um jogo no BGG.
+   *
+   * @param int $id_jogo
+   * @return string
+   * @throws \Exception
+   */
+  public function fetchBggId(int $id_jogo): int|NULL {
+    $jogo = $this->getById($id_jogo);
+    $url  = self::BGG_URL . '/geeksearch.php?action=search&objecttype=boardgame&q=' . urlencode($jogo->nome);
+
+    try {
+      $dom = new Dom();
+      $dom->loadFromUrl($url);
+
+      $link = $dom->find('#collectionitems tr')[1]
+        ?->find('.collection_objectname')[0]
+        ?->find('a.primary')[0];
+
+      if ($link && trim($link->text) == $jogo->nome) {
+        if (preg_match('|/boardgame/(\d+)|', $link->getAttribute('href'), $m)) {
+          return (int) $m[1];
+        }
+      }
+    }
+    catch (\Throwable $e) {
+      throw new \Exception('Erro ao acessar o BoardGameGeek', 0, $e);
+    }
+
+    return NULL;
+  }
+
+  public function fetchBggWeight(int $bgg_id): float|NULL {
+    $url = self::BGG_API_URL . '/boardgame/' . $bgg_id . '?stats=1';
+    try {
+      $xml = new \SimpleXMLElement($url, 0, TRUE);
+      $weight = $xml->xpath('/boardgames/boardgame/statistics/ratings/averageweight')[0]->__toString();
+      if ($weight) {
+        return round((float) $weight, 2);
+      }
+    }
+    catch (\Throwable $e) {
+      throw new \Exception('Erro ao acessar o BoardGameGeek', 0, $e);
+    }
+
+    return NULL;
   }
 
 }

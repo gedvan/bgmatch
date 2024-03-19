@@ -24,13 +24,19 @@
       <router-view :key="$route.fullPath"></router-view>
     </main>
 
-    <template v-if="isLocalhost">
-      <div class="responsive-indicator d-sm-none">xs</div>
-      <div class="responsive-indicator d-none d-sm-flex d-md-none">sm</div>
-      <div class="responsive-indicator d-none d-md-flex d-lg-none">md</div>
-      <div class="responsive-indicator d-none d-lg-flex d-xl-none">lg</div>
-      <div class="responsive-indicator d-none d-xl-flex">xl</div>
-    </template>
+    <footer id="footer" role="contentinfo">
+      <div class="container">
+        Desenvolvido por <a href="mailto:gedvan@gmail.com">Gedvan Dias</a>.
+      </div>
+    </footer>
+
+    <div class="responsive-indicator" v-if="isLocalhost">
+      <span class="d-sm-none">xs</span>
+      <span class="d-none d-sm-flex d-md-none">sm</span>
+      <span class="d-none d-md-flex d-lg-none">md</span>
+      <span class="d-none d-lg-flex d-xl-none">lg</span>
+      <span class="d-none d-xl-flex">xl</span>
+    </div>
 
   </div>
 </template>
@@ -63,7 +69,7 @@
       },
 
       isLocalhost() {
-        return window.location.hostname === 'localhost';
+        return window.location.hostname === 'localhost' || window.location.port === '8080';
       },
 
       isLogged() {

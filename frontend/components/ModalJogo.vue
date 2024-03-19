@@ -5,60 +5,80 @@
         <img :src="jogo.imagem" class="imagem-jogo">
       </template>
       <div class="form-row">
-        <div class="form-group col-sm-6">
+
+        <div class="form-group col-sm-4">
           <label>Nº de jogadores</label>
           <div>{{ numJogadores }}</div>
         </div>
-        <div class="form-group col-sm-6">
+
+        <div class="form-group col-sm-4">
           <label>Cooperativo/Em grupo</label>
           <div v-if="!editando">
             {{ jogo.coop ? 'Sim' : 'Não' }}
           </div>
-          <b-form-radio-group v-if="editando" v-model="jogoEdicao.coop">
-            <b-form-radio :value="false">Não</b-form-radio>
-            <b-form-radio :value="true">Sim</b-form-radio>
-          </b-form-radio-group>
+          <b-form-checkbox v-if="editando" v-model="jogoEdicao.coop" switch></b-form-checkbox>
         </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group col-sm-6">
-          <label>Categoria</label>
-          <div>
-            <span v-if="!editando">{{ nomeCategoria(jogo.categoria) }}</span>
-            <b-form-select v-if="editando" v-model="jogoEdicao.categoria" :options="categoriasJogos" size="sm" class="w-auto"></b-form-select>
-          </div>
-        </div>
-        <div class="form-group col-sm-6">
+
+        <div class="form-group col-sm-4">
           <label>Excluído da coleção</label>
           <div v-if="!editando">
             {{ jogo.excluido ? 'Sim' : 'Não' }}
           </div>
-          <b-form-radio-group v-if="editando" v-model="jogoEdicao.excluido">
-            <b-form-radio :value="false">Não</b-form-radio>
-            <b-form-radio :value="true">Sim</b-form-radio>
-          </b-form-radio-group>
+          <b-form-checkbox v-if="editando" v-model="jogoEdicao.excluido" switch></b-form-checkbox>
         </div>
+
       </div>
-      <div v-if="jogo.expansoes.length">
+      <div class="form-row">
+
+        <div class="form-group col-sm-4">
+          <label>Categoria</label>
+          <div>
+            <span v-if="!editando">{{ nomeCategoria(jogo.categoria) }}</span>
+            <span v-if="!editando && jogo.jogo_base">
+              (<b-link @click="mudaJogo(jogo.jogo_base)">{{ jogo.jogo_base.nome }}</b-link>)
+            </span>
+            <b-form-select v-if="editando" v-model="jogoEdicao.categoria" :options="categoriasJogos" size="sm" class="w-auto"></b-form-select>
+          </div>
+        </div>
+
+        <div class="form-group col-sm-4" v-if="!editando">
+          <label>Peso (BGG)</label>
+          <span class="bgg-weight-value">{{ jogo.bgg_weight ?? '-' }}</span>
+        </div>
+
+        <div class="form-group col-sm-4" v-if="editando">
+          <label>ID BoardGameGeek</label>
+          <b-button variant="link" size="sm" @click="fetchBggUrl"><font-awesome-icon icon="search" /></b-button>
+          <b-form-input v-model="jogoEdicao.bgg_id" size="sm" ref="input_bgg_id"></b-form-input>
+        </div>
+
+        <div class="form-group col-sm-4" v-if="editando">
+          <label>Peso</label>
+          <b-form-input v-model="jogoEdicao.bgg_weight" size="sm"></b-form-input>
+        </div>
+
+      </div>
+
+      <div v-if="jogo.expansoes && jogo.expansoes.length">
         <label>Expansões</label>
         <ul v-if="jogo.expansoes.length">
-          <li v-for="exp in jogo.expansoes">
-            {{ exp.nome }}
-            <b-link :href="urlJogoLudopedia(exp)" target="_blank" class="small" title="Abrir na Ludopedia">
-              <font-awesome-icon icon="external-link-alt" />
-            </b-link>
+          <li v-for="expansao in jogo.expansoes">
+            <b-link @click="mudaJogo(expansao)">{{ expansao.nome }}</b-link>
           </li>
         </ul>
       </div>
     </b-media>
     <template #modal-footer>
-      <b-link :href="urlJogoLudopedia(jogo)" target="_blank" title="Página do jogo na Ludopedia" class="small mr-auto">
+      <b-link :href="urlLudopedia" target="_blank" title="Página do jogo na Ludopedia" class="small mr-3">
         <font-awesome-icon icon="external-link-alt" />&nbsp;Ludopedia
       </b-link>
-      <b-button v-if="!editando" variant="outline-primary" @click="iniciaEdicao">
+      <b-link :href="urlBgg" target="_blank" title="Página do jogo no BoardGameGeek" class="small" :disabled="!jogo.bgg_id">
+        <font-awesome-icon icon="external-link-alt" />&nbsp;BoardGameGeek
+      </b-link>
+      <b-button v-if="!editando" variant="outline-primary" @click="iniciaEdicao" class="ml-auto">
         <font-awesome-icon icon="edit" />&nbsp;Editar
       </b-button>
-      <b-button v-if="editando" variant="primary" @click="salvaEdicao">
+      <b-button v-if="editando" variant="primary" @click="salvaEdicao" class="ml-auto">
         <font-awesome-icon icon="check" />&nbsp;Salvar
       </b-button>
       <b-button v-if="editando" variant="secondary" @click="finalizaEdicao">
@@ -72,9 +92,9 @@
   import BGMatch from "../BGMatch";
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import { library } from '@fortawesome/fontawesome-svg-core';
-  import { faExternalLinkAlt, faEdit, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+  import {faExternalLinkAlt, faEdit, faCheck, faTimes, faSearch} from '@fortawesome/free-solid-svg-icons';
 
-  library.add(faExternalLinkAlt, faEdit, faCheck, faTimes);
+  library.add(faExternalLinkAlt, faEdit, faCheck, faTimes, faSearch);
 
   export default {
     components: {
@@ -88,7 +108,7 @@
     data() {
       return {
         editando: false,
-        jogoEdicao: {},
+        jogoEdicao: null,
       }
     },
 
@@ -98,12 +118,20 @@
         return BGMatch.categoriasJogos.map(c => ({value: c.key, text: c.label}));
       },
 
-      numJogadores: function() {
+      numJogadores() {
         if (this.jogo.min === this.jogo.max) {
           return this.jogo.min === 1 ? '1 jogador' : this.jogo.min + ' jogadores';
         } else {
           return `${this.jogo.min} a ${this.jogo.max} jogadores`;
         }
+      },
+
+      urlLudopedia() {
+        return BGMatch.urlJogoLudopedia(this.jogo);
+      },
+
+      urlBgg() {
+        return this.jogo.bgg_id ? 'https://boardgamegeek.com/boardgame/' + this.jogo.bgg_id : '#';
       }
 
     },
@@ -114,8 +142,8 @@
         return BGMatch.nomeCategoria(key)
       },
 
-      urlJogoLudopedia: function(jogo) {
-        return BGMatch.urlJogoLudopedia(jogo);
+      mudaJogo(jogo) {
+        this.jogo = jogo;
       },
 
       iniciaEdicao: function() {
@@ -125,26 +153,26 @@
 
       finalizaEdicao: function () {
         this.editando = false;
-        this.jogoEdicao = {};
+        this.jogoEdicao = null;
       },
 
       salvaEdicao: function () {
-        const url = '/jogos/salva/' + this.jogo.id;
+        const url = '/jogos/' + this.jogo.id + '/update';
+        const postKeys = ['categoria', 'coop', 'excluido', 'bgg_id', 'bgg_weight'];
+        const postData = Object.fromEntries(
+          postKeys.map(key => [key, this.jogoEdicao[key]])
+        );
         BGMatch.fetch(url, {
           method: "POST",
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            categoria: this.jogoEdicao.categoria,
-            coop: this.jogoEdicao.coop,
-            excluido: this.jogoEdicao.excluido
-          })
+          body: JSON.stringify(postData)
         })
           .then(response => response.json())
           .then(data => {
             if (data.updated === 1) {
-              this.jogo.categoria = this.jogoEdicao.categoria;
-              this.jogo.coop = this.jogoEdicao.coop;
-              this.jogo.excluido = this.jogoEdicao.excluido;
+              for (const key in postData) {
+                this.jogo[key] = postData[key];
+              }
             } else {
               throw new Error('Erro ao salvar o jogo.');
             }
@@ -158,6 +186,27 @@
           });
 
       },
+
+      fetchBggUrl: function() {
+        const url = '/jogos/' + this.jogo.id + '/bgg';
+        BGMatch.fetch(url, {
+          method: "GET"
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.bgg_id) {
+              this.jogoEdicao.bgg_id = data.bgg_id;
+              this.jogoEdicao.bgg_weight = data.bgg_weight;
+            }
+            else {
+              window.alert('Não foi possível obter os dados do jogo no BoardGameGeek. Por favor, preencha os dados manualmente.')
+            }
+          })
+          .catch(error => {
+            window.alert('Ocorreu um erro ao consultar o BoardGameGeek. Por favor, preencha os dados manualmente.');
+            console.error(error);
+          })
+      }
     },
 
     watch: {

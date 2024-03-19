@@ -4,6 +4,11 @@ a, .btn-link {
   color: darken($primary, 10%);
 }
 
+a.disabled {
+  color: $text-color-light;
+  cursor: default;
+}
+
 label {
   margin-bottom: .3rem;
   line-height: 1.1;

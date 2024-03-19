@@ -16,6 +16,7 @@ export default {
     {key: 'P', label: 'Pesado'},
     {key: 'M', label: 'Médio'},
     {key: 'L', label: 'Leve'},
+    {key: 'X', label: 'Expansão'},
     {key: 'Y', label: 'Party/Infantil'},
   ],
 

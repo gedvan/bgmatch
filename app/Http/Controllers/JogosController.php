@@ -9,15 +9,12 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class JogosController extends Controller {
 
-  protected $jogosService;
-
-  public function __construct(JogosService $jogosService)
-  {
-    $this->jogosService = $jogosService;
-  }
+  public function __construct(
+    protected JogosService $jogosService
+  ) {}
 
   /**
-   * Endpoint que retorna a lista completa dos jogos salvos no banco próprio.
+   * Endpoint que retorna a lista completa dos jogos salvos no banco.
    *
    * @return JsonResponse
    */
@@ -38,11 +35,7 @@ class JogosController extends Controller {
   public function postSalvaJogo(Request $request, string $id): JsonResponse
   {
     // Os novos dados devem vir no corpo da requisição.
-    $upd = $this->jogosService->salvaJogo($id, [
-      'categoria' => $request->input('categoria'),
-      'coop' => $request->input('coop'),
-      'excluido' => $request->input('excluido'),
-    ]);
+    $upd = $this->jogosService->salvaJogo($id, $request->input());
 
     return new JsonResponse(['updated' => $upd]);
   }
@@ -104,6 +97,22 @@ class JogosController extends Controller {
     }
 
     return new JsonResponse($jogos);
+  }
+
+  public function fetchBggInfo(int $id)
+  {
+    try {
+      $bgg_id = $this->jogosService->fetchBggId($id);
+      $bgg_weight = $bgg_id ? $this->jogosService->fetchBggWeight($bgg_id) : NULL;
+      $response = [
+        'bgg_id' => $bgg_id,
+        'bgg_weight' => $bgg_weight,
+      ];
+    } catch (\Exception $e) {
+      throw new \HttpException(500, $e->getMessage());
+    }
+
+    return new JsonResponse($response);
   }
 
 }

@@ -27,7 +27,8 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('jogos/pesquisa/{termo}', 'JogosController@pesquisarJogosLudopedia');
     $router->post('jogos/importa/{slug}', 'JogosController@importa');
     $router->post('jogos/atualiza', 'JogosController@postAtualizaJogos');
-    $router->post('jogos/salva/{id}', 'JogosController@postSalvaJogo');
+    $router->post('jogos/{id}/update', 'JogosController@postSalvaJogo');
+    $router->get('jogos/{id}/bgg', 'JogosController@fetchBggInfo');
 
     $router->get('jogadores', 'JogadoresController@getJogadores');
     $router->get('jogadores/dados', 'JogadoresController@getDadosJogadores');
@@ -47,6 +48,13 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
 //  $router->get('bruno', 'PartidasController@bruno');
 //  $router->get('rodrigo', 'PartidasController@rodrigo');
+
+//  $router->get('teste', function () {
+//    /** @var \App\Services\JogosService $jogosService */
+//    $jogosService = app(\App\Services\JogosService::class);
+//    $jogos = $jogosService->getLista();
+//    return '';
+//  });
 
 });
 

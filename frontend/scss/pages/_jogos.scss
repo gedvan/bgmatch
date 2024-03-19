@@ -73,3 +73,23 @@
     }
   }
 }
+
+#modal-jogo {
+  .bgg-weight {
+    text-align: center;
+    font-size: 85%;
+
+    label {
+      text-transform: uppercase;
+      color: $text-color-light;
+      margin-bottom: 0;
+    }
+    &-value {
+      display: block;
+      line-height: 1.15;
+    }
+    .form-control {
+      width: 5rem;
+    }
+  }
+}

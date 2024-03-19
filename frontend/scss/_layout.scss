@@ -1,7 +1,12 @@
 @use "sass:math";
 
-#header {
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 
+#header {
   > .container {
     position: relative;
   }
@@ -66,10 +71,19 @@
 }
 
 #main {
+  flex-grow: 1;
   margin-bottom: 1rem;
 
   .filter-form {
     padding-top: 1rem;
     font-size: 0.9375rem;
   }
+}
+
+#footer {
+  background-color: #eee;
+  padding-block: 1.5rem;
+  color: #6c757d;
+  text-align: center;
+  font-size: 90%;
 }

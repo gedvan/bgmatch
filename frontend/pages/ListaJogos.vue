@@ -56,16 +56,9 @@
           Exibindo {{ jogosFiltrados.length }} {{ jogosFiltrados.length | plural('jogo', 'jogos') }}
         </div>
         <div class="col text-right">
-          <b-dropdown split right variant="primary" @click="abrirModalCadastro">
-            <template #button-content>
-              <font-awesome-icon icon="plus" />&nbsp;
-              Cadastrar jogo
-            </template>
-            <b-dropdown-item-button @click="atualizaJogos" :disabled="true">
-              <font-awesome-icon icon="sync-alt" :class="{'fa-spin': atualizando}" />&nbsp;
-              Atualizar acervo
-            </b-dropdown-item-button>
-          </b-dropdown>
+          <b-button variant="primary" @click="abrirModalCadastro">
+            <font-awesome-icon icon="plus" />&nbsp;Cadastrar jogo
+          </b-button>
         </div>
       </div>
 
@@ -165,14 +158,7 @@
           .filter(jogo => this.filtros.coop_grupo || !jogo.coop)
           .filter(jogo => this.filtros.excluidos || !jogo.excluido)
           .filter(jogo => this.filtros.num === '' || (this.filtros.num >= jogo.min && this.filtros.num <= jogo.max))
-          .sort(this.sortFunction())
-          .map(jogo => {
-            if (jogo.expansoes.length > 0) {
-              const m = [jogo.max].concat(jogo.expansoes.map(e => e.max));
-              jogo.max = Math.max.apply(null, m);
-            }
-            return jogo;
-          });
+          .toSorted(this.sortFunction())
       },
 
       qtdJogosColecao: function () {
@@ -220,6 +206,21 @@
         BGMatch.fetch('/jogos')
           .then(response => response.json())
           .then(jogos => this.jogos = jogos)
+          .then(() => {
+            // Processa expansões.
+            this.jogos.forEach(jogo => {
+              if (jogo.id_base) {
+                const jogoBase = this.jogos.find(j => j.id === jogo.id_base);
+                if (jogoBase) {
+                  if (typeof jogoBase.expansoes === 'undefined') {
+                    jogoBase.expansoes = [];
+                  }
+                  jogoBase.expansoes.push(jogo);
+                  jogo.jogo_base = jogoBase;
+                }
+              }
+            })
+          })
           .catch(error => console.error(error));
       },
 
@@ -255,7 +256,7 @@
       }
     },
 
-    created: function () {
+    mounted() {
       this.inicializaJogos();
     }
   }

@@ -7,7 +7,10 @@
       <a href="#" @click.prevent="$emit('on-click', jogo)">{{ jogo.nome }}</a>
     </h3>
     <div class="info">
-      {{ numJogadores }} | {{ nomeCategoria }} {{ jogo.coop ? '| Coop/Grupo' : '' }}
+      {{ numJogadores }} |
+      {{ nomeCategoria }}
+      {{jogo.bgg_weight ? `(${jogo.bgg_weight})` : ''}}
+      {{ jogo.coop ? '| Coop/Grupo' : '' }}
       <b-badge v-if="jogo.excluido">Excluído</b-badge><br />
     </div>
     <div class="partidas">
