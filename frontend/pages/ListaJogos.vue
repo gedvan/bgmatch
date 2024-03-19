@@ -8,7 +8,9 @@
 
           <div class="col-sm-8 col-lg-4 form-group form-group-nome">
             <label for="filtro-nome">Nome</label>
-            <b-form-input id="filtro-nome" v-model="filtros.nome" />
+            <b-form-input id="filtro-nome" v-model="filtros.nome" ref="nameFilter" />
+            <b-button class="clear" variant="link" size="sm" v-if="filtros.nome !== ''"
+                      @click="clearNameFilter"><font-awesome-icon icon="times" /></b-button>
           </div>
 
           <div class="col-sm-4 col-lg-2 form-group">
@@ -82,11 +84,12 @@
   import ItemJogo from "../components/ItemJogo.vue";
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import { library } from '@fortawesome/fontawesome-svg-core';
-  import {faPlus, faSyncAlt} from '@fortawesome/free-solid-svg-icons';
+  import {faPlus, faSyncAlt, faTimes} from '@fortawesome/free-solid-svg-icons';
   import ModalCadastrarJogo from "../components/ModalCadastrarJogo";
 
   library.add(faSyncAlt);
   library.add(faPlus);
+  library.add(faTimes);
 
   export default {
     components: {
@@ -170,6 +173,11 @@
     methods: {
       abrirModalCadastro() {
         this.$bvModal.show('modal-cadastrar-jogo')
+      },
+
+      clearNameFilter() {
+        this.filtros.nome = '';
+        this.$refs['nameFilter'].focus();
       },
 
       /**

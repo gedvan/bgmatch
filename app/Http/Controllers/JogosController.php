@@ -35,7 +35,10 @@ class JogosController extends Controller {
   public function postSalvaJogo(Request $request, string $id): JsonResponse
   {
     // Os novos dados devem vir no corpo da requisição.
-    $upd = $this->jogosService->salvaJogo($id, $request->input());
+    $fields = $request->input();
+    $fields['editado'] = true;
+
+    $upd = $this->jogosService->update($id, $fields);
 
     return new JsonResponse(['updated' => $upd]);
   }

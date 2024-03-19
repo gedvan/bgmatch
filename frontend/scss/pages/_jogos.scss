@@ -2,6 +2,20 @@
 
   .filter-form {
 
+    .form-group-nome {
+      position: relative;
+      .clear {
+        position: absolute;
+        right: 0;
+        margin: -2rem 0.5rem 0 0;
+        color: inherit;
+        opacity: 0.6;
+
+        &:hover, &:focus {
+          opacity: 1;
+        }
+      }
+    }
     .form-group-categoria {
       .dropdown {
         .dropdown-toggle {

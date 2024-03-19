@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use PHPHtmlParser\Dom;
@@ -56,16 +57,37 @@ class JogosService
       ->find($id);
   }
 
-  public function salvaJogo($id, array $dados)
+  public function update($id, array $fields)
   {
-    return DB::table('jogos')->where('id', $id)->update([
-      'categoria' => $dados['categoria'],
-      'coop' => (bool) ($dados['coop'] ?? false),
-      'excluido' => (bool) ($dados['excluido'] ?? false),
-      'bgg_id' => $dados['bgg_id'] ?? null,
-      'bgg_weight' => $dados['bgg_weight'] ?? null,
-      'editado' => true,
-    ]);
+    // Basic validation.
+    if (isset($fields['categoria']) && !self::categoriaValida($fields['categoria'])) {
+      throw new \Exception('Categoria inválida: ' . $fields['categoria']);
+    }
+    foreach (['coop', 'excluido', 'editado'] as $bool_col) {
+      if (isset($fields[$bool_col])) {
+        $fields[$bool_col] = (bool) $fields[$bool_col];
+      }
+    }
+    if (isset($fields['bgg_id'])) {
+      $fields['bgg_id'] = intval($fields['bgg_id']) ?: null;
+    }
+    if (isset($fields['bgg_weight'])) {
+      $bgg_weight = $fields['bgg_weight'];
+      if (!$bgg_weight) {
+        $fields['bgg_weight'] = null;
+      } else {
+        if ($bgg_weight < 0) {
+          $bgg_weight = 0;
+        } elseif ($bgg_weight > 5) {
+          $bgg_weight = 5;
+        } else {
+          $bgg_weight = round($bgg_weight, 2);
+        }
+        $fields['bgg_weight'] = number_format($bgg_weight, 2);
+      }
+    }
+
+    return DB::table('jogos')->where('id', $id)->update($fields);
   }
 
   public function insere($jogo)
@@ -73,16 +95,16 @@ class JogosService
     DB::table('jogos')->insert($jogo);
   }
 
-  protected function categoriaValida($categoria) {
-    $categoriasValidas = [
-      self::CATEGORIA_PESADO,
-      self::CATEGORIA_MEDIO,
-      self::CATEGORIA_LEVE,
-      self::CATEGORIA_PARTY_INFANTIL,
-    ];
-    if (!in_array($categoria, $categoriasValidas)) {
-      throw new \Exception('Categoria inválida: ' . $categoria);
-    }
+  public static function categoriaValida($categoria) {
+    return in_array($categoria,
+      [
+        self::CATEGORIA_PESADO,
+        self::CATEGORIA_MEDIO,
+        self::CATEGORIA_LEVE,
+        self::CATEGORIA_EXPANSAO,
+        self::CATEGORIA_PARTY_INFANTIL,
+      ]
+    );
   }
 
   /**
@@ -298,12 +320,14 @@ class JogosService
   /**
    * Consulta o ID de um jogo no BGG.
    *
-   * @param int $id_jogo
-   * @return string
+   * @param int|object $jogo
+   * @return int|NULL
    * @throws \Exception
    */
-  public function fetchBggId(int $id_jogo): int|NULL {
-    $jogo = $this->getById($id_jogo);
+  public function fetchBggId(int|object $jogo): int|NULL {
+    if (is_int($jogo)) {
+      $jogo = $this->getById($jogo);
+    }
     $url  = self::BGG_URL . '/geeksearch.php?action=search&objecttype=boardgame&q=' . urlencode($jogo->nome);
 
     try {
@@ -314,7 +338,7 @@ class JogosService
         ?->find('.collection_objectname')[0]
         ?->find('a.primary')[0];
 
-      if ($link && trim($link->text) == $jogo->nome) {
+      if ($link && mb_strtolower(trim($link->text)) == mb_strtolower($jogo->nome)) {
         if (preg_match('|/boardgame/(\d+)|', $link->getAttribute('href'), $m)) {
           return (int) $m[1];
         }
