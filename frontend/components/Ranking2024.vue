@@ -1,14 +1,10 @@
 <script>
 import BGMatch from "../BGMatch";
-import Marcador from "./Marcador.vue";
 import Meeple from "./Meeple.vue";
-import GraficoRanking2019 from "./GraficoRanking2019.vue";
 
 export default {
   components: {
-    Marcador,
-    Meeple,
-    GraficoRanking2019
+    Meeple
   },
 
   props: {
@@ -17,30 +13,26 @@ export default {
 
   data() {
     return {
-      tabelaPontuacao: [
-        {"P": 10, "M": 7, "L": 4},  // 0: Posição 1
-        {"P": 7,  "M": 4, "L": 2},  // 1: Posição 2
-        {"P": 4,  "M": 2, "L": 1},  // 2: Posição 3
-        {"P": 2,  "M": 1, "L": 1},  // 2: Posição 4
-        {"P": 1,  "M": 1, "L": 1},  // 2: Posição 5
-        {"P": 1,  "M": 1, "L": 1}   // 2: Posição 6
-      ],
-      trilha: [],
-      partidas: [],
-      jogadoresMes: [],
-      jogadoresAno: [],
-      dataLoaded: false,
-      meses: [],
+      /**
+       * Índice do mês visualizado atualmente. 0 = Janeiro, 11 = Dezembro.
+       */
       mes: 0,
+
+      /**
+       * Lista de meses contendo seu nome, partidas e outras informações.
+       */
+      meses: [],
+
+      /**
+       * Lista de jogadores (e sua pontuação) exibidos conforme o mês atual.
+       */
+      jogadoresMes: [],
+
+      /**
+       * Lista de jogadores e sua pontuação no ano.
+       */
+      jogadoresAno: [],
     }
-  },
-
-  created() {
-    window.addEventListener('resize', this.atualizaTrilha);
-  },
-
-  destroyed() {
-    window.removeEventListener('resize', this.atualizaTrilha);
   },
 
   mounted() {
@@ -51,29 +43,35 @@ export default {
   computed: {
     categorias() {
       return BGMatch.categoriasJogos.filter(c => c.key !== 'Y');
-    }
+    },
+
+    partidasMes() {
+      return this.meses[this.mes]?.partidas ?? [];
+    },
+
+    jogadoresMesSorted() {
+      return this.jogadoresMes.toSorted((a, b) => b.pontos - a.pontos);
+    },
+
+    jogadoresAnoSorted() {
+      return this.jogadoresAno.toSorted((a, b) => {
+        if (b.pontosTotal !== a.pontosTotal) {
+          return b.pontosTotal - a.pontosTotal
+        }
+        const vitoriasA = a.pontosMeses.filter(m => m === 3).length;
+        const vitoriasB = b.pontosMeses.filter(m => m === 3).length;
+        return vitoriasB - vitoriasA;
+      });
+    },
   },
 
   methods: {
     /**
-     * Retorna a pontuação de uma determinada posição e categoria de jogos, de
-     * acordo com a tabela de pontuação do ranking.
+     * Inicializa a lista de meses.
      *
-     * @param posicao
-     * @param categoria
-     * @returns {number}
+     * Cada mês, além do nome, deve conter a lista de partidas daquele período,
+     * além de uma flag indicando se o mesmo já está concluído ou não.
      */
-    getPontuacao(posicao, categoria) {
-      if (categoria === 'F' || categoria === 'I') {
-        categoria = 'Y';
-      }
-      const p = posicao - 1;
-      if (typeof this.tabelaPontuacao[p] === 'undefined' || typeof this.tabelaPontuacao[p][categoria] === 'undefined') {
-        return 0;
-      }
-      return this.tabelaPontuacao[p][categoria];
-    },
-
     inicializaMeses() {
       const hoje = new Date();
       const anoAtual = hoje.getUTCFullYear();
@@ -104,31 +102,32 @@ export default {
         .then(() => this.fetchPartidas())
         .then(() => {
           this.atualizaPontosDoMes();
-          this.atualizaPontosDoAno();
-          //this.dataLoaded = true;
+          this.calculaPontuacaoFinal();
         })
     },
 
     /**
-     * Consulta os jogadores cadastrados no BD.
+     * Consulta os dados referentes aos jogadores.
      */
     fetchJogadores() {
       return BGMatch.fetch('/jogadores')
         .then(response => response.json())
         .then(jogadores => {
-          this.jogadoresMes = jogadores.map(j => ({
-            id: j.id,
-            nome: j.nome,
-            cor: j.cor,
-            pontos: 0,
-          }));
-          this.jogadoresAno = jogadores.map(j => ({
-            id: j.id,
-            nome: j.nome,
-            cor: j.cor,
-            pontosTotal: 0,
-            pontosMeses: new Array(12).fill(0),
-          }));
+          for (const jogador of jogadores) {
+            this.jogadoresMes = jogadores.map(jogador => ({
+              id: jogador.id,
+              nome: jogador.nome,
+              cor: jogador.cor,
+              pontos: 0,
+            }));
+            this.jogadoresAno = jogadores.map(jogador => ({
+              id: jogador.id,
+              nome: jogador.nome,
+              cor: jogador.cor,
+              pontosTotal: 0,
+              pontosMeses: new Array(12).fill(0),
+            }));
+          }
         })
         .catch(error => {
           alert('Ocorreu um erro ao obter os dados dos jogadores.');
@@ -140,6 +139,9 @@ export default {
 
     /**
      * Consulta a lista de partida no ano.
+     *
+     * As partidas têm sua pontuação processada, conforme as regras do ranking,
+     * a são separadas nos meses aos quais pertencem.
      */
     fetchPartidas() {
       return BGMatch.fetch('/partidas-periodo/' + this.ano + '?sort=asc')
@@ -147,14 +149,16 @@ export default {
         .then(partidas => {
           let mes = 0;
           for (const partida of partidas) {
-            // Data da partida no formato "MM-DD".
-            const data = partida.data.substring(5);
+            // Processa a pontuação da partida.
+            partida.jogadores.forEach(jp => {
+              jp.pontos_ranking = this.getPontosRankingPartida(partida, jp.posicao);
+            });
 
-            // Mes da partida como inteiro (0-indexed).
+            // Pôe a partida na lista de partidas do seu mês.
             mes = parseInt(partida.data.substring(5, 7)) - 1;
-
             this.meses[mes].partidas.push(partida);
           }
+          // O mês atual é o último mês processado.
           this.mes = mes;
         })
         .catch(error => {
@@ -165,6 +169,11 @@ export default {
         });
     },
 
+    /**
+     * Muda o mês sendo visualizado.
+     *
+     * @param mes
+     */
     mudaMes(mes) {
       this.mes = mes;
       this.atualizaPontosDoMes();
@@ -175,84 +184,134 @@ export default {
         jogador.pontos = 0;
       }
       for (const partida of this.meses[this.mes].partidas) {
-        for (const jogadorPartida of partida.jogadores) {
-          const pontos = this.getPontuacao(jogadorPartida.posicao, partida.jogo.categoria);
-          this.jogadoresMes.find(j => j.id === jogadorPartida.id).pontos += pontos;
+        for (const jp of partida.jogadores) {
+          this.jogadoresMes.find(j => j.id === jp.id).pontos += jp.pontos_ranking;
         }
       }
-      this.jogadoresMes.sort((a, b) => b.pontos - a.pontos);
-
-      this.atualizaTrilha();
     },
 
     /**
-     * Atualiza a posição do jogador na trilha de pontos.
+     * Faz o cálculo dos pontos de vitória dos jogadores no ranking ao longo do
+     * ano, conforme sua colocação em cada mês.
      */
-    atualizaTrilha() {
-      const trilha = this.$refs.trilha;
-      const casas = [];
-      for (const jogador of this.jogadoresMes) {
-        const numCasa = jogador.pontos % 50;
-        const casa = trilha.querySelector('.casa-' + numCasa);
-        const marcador = trilha.querySelector(`.marcadores svg[data-id-jogador="${jogador.id}"]`);
-
-        const left = casa.offsetLeft + ((casa.offsetWidth - marcador.clientWidth) / 2);
-        marcador.style.left = left + 'px';
-
-        let top = casa.offsetTop + ((casa.offsetHeight - marcador.clientHeight) / 2);
-        const rep = casas.filter(c => c === numCasa).length;
-        if (rep > 0) {
-          top -= rep * 8;
-        }
-        marcador.style.top = top + 'px';
-
-        casas.push(numCasa);
-      }
-    },
-
-    atualizaPontosDoAno() {
+    calculaPontuacaoFinal() {
       this.meses.filter(m => m.concluido).forEach((mes, m) => {
-        const jogadores = [];
+        let jogadores = new Map();
+
+        // Percorre as partidas do mês e soma os pontos que cada jogador fez.
         for (const partida of mes.partidas) {
           for (const jogadorPartida of partida.jogadores) {
-            const pontos = this.getPontuacao(jogadorPartida.posicao, partida.jogo.categoria);
-            const jogador = jogadores.find(j => j.id === jogadorPartida.id);
+            const pontos = jogadorPartida.pontos_ranking;
+            const jogador = jogadores.get(jogadorPartida.id);
             if (jogador) {
               jogador.pontos += pontos;
-              jogador.partidas++;
-              if (jogadorPartida.posicao === 1) {
-                jogador.vitorias++;
-              }
-            } else {
-              jogadores.push({id: jogadorPartida.id, pontos, vitorias: 0, partidas: 0, pv: 0});
+            }
+            else {
+              jogadores.set(jogadorPartida.id, {
+                id: jogadorPartida.id,
+                pontos,
+                pv: 0
+              });
             }
           }
         }
 
-        // Ordena a lista dos jogadores do mês pela quantidade de pontos, em
-        // seguida pelo número de vitórias e, por fim, pelo número de partidas
-        // (menos partidas é melhor).
-        jogadores.sort((a, b) => {
-          if (b.pontos !== a.pontos) {
-            return b.pontos - a.pontos;
-          }
-          if (b.vitorias !== a.vitorias) {
-            return b.vitorias - a.vitorias;
-          }
-          return a.partidas - b.partidas;
+        // Ordena a lista dos jogadores do mês pela quantidade de pontos.
+        jogadores = jogadores.values().toArray().toSorted((a, b) => {
+          return b.pontos - a.pontos;
         });
 
+        // Os três primeiros de cada mês ganham 3, 2 e 1 PVs, respectivamente.
         for (let i = 0; i < 3; i++) {
           if (jogadores[i]) {
-            const pontos = 3 - i;
+            const pontosVitoria = 3 - i;
             const jogador = this.jogadoresAno.find(j => j.id === jogadores[i].id);
-            jogador.pontosTotal += pontos;
-            jogador.pontosMeses[m] = pontos;
+            jogador.pontosTotal += pontosVitoria;
+            jogador.pontosMeses[m] = pontosVitoria;
           }
         }
-      });
 
-      this.jogadoresAno.sort((a, b) => b.pontosTotal - a.pontosTotal);
+      });
+    },
+
+    /**
+     * Retorna o valor do peso de uma partida, conforme o peso do jogo e
+     * possível expansão utilizada.
+     *
+     * @param partida
+     * @returns {number}
+     */
+    getPesoPartida(partida) {
+      return partida.expansao && partida.expansao.peso
+        ? partida.expansao.peso
+        : (partida.jogo.peso ?? 0);
+    },
+
+    /**
+     * Calcula a pontuação de ranking de uma partida, de acordo com o peso do
+     * jogo e a posição do jogador.
+     *
+     * @param partida
+     * @param posicao
+     * @returns {number}
+     */
+    getPontosRankingPartida(partida, posicao) {
+      // Posição do jogador na partida.
+      const pos = parseInt(posicao);
+      if (pos < 1 || pos > 6) {
+        return 0;
+      }
+
+      // Peso do jogo/expansão da partida.
+      const peso = this.getPesoPartida(partida);
+      if (!peso) {
+        return 0;
+      }
+      // Peso equalizado (0 a 1).
+      const pesoEq = peso / 5;
+
+      // Fator de multiplicação da posição (1º lugar, 2º lugar, 3º lugar, ...).
+      const fator = [10, 7, 4, 1, 1, 1];
+
+      return pesoEq * fator[pos - 1];
+    },
+
+    /**
+     * Retorna a pontuação de ranking de um jogador em uma partida. Esse é um
+     * valor já calculado anteriormente no método processaPontosPartida().
+     *
+     * @param idJogador
+     * @param partida
+     * @returns {number}
+     */
+    getPontuacaoJogador(idJogador, partida) {
+      const jogadorPartida = partida.jogadores.find(j => j.id === idJogador);
+      if (!jogadorPartida) {
+        return 0;
+      }
+      return jogadorPartida.pontos_ranking;
+    },
+
+    /**
+     * Método auxiliar para retornar os dados de um jogador em uma partida.
+     *
+     * @param idJogador
+     * @param partida
+     * @returns {object|null}
+     */
+    getPosicaoJogador(idJogador, partida) {
+      return partida.jogadores.find(j => j.id === idJogador)?.posicao;
+    },
+
+    /**
+     * Método auxiliar para arredondar os valores de pontuação para uma casa
+     * decimal.
+     *
+     * @param points
+     * @returns {number}
+     */
+    roundPoints(points) {
+      return Math.round((points + Number.EPSILON) * 10) / 10;
     }
   }
 }
@@ -269,104 +328,86 @@ export default {
       </b-nav-item>
     </b-nav>
 
-    <div class="trilha-pontos trilha-50" ref="trilha">
-      <div v-for="n in Array(10).keys()" :key="n" :class="['grupo', 'grupo-' + n]">
-        <div v-for="m in Array(5).keys()" :key="m" :class="['casa', `casa-${n * 5 + m}`, `und-${m}`]">
-          {{n * 5 + m}}
-        </div>
-      </div>
-      <div class="marcadores">
-        <Marcador v-for="jogador in jogadoresMes" :key="jogador.id" :class="['marcador']"
-                  :color="jogador.cor" :numero="jogador.pontos" :data-id-jogador="jogador.id"
-                  v-b-popover.hover.click.top="`${jogador.nome} (${jogador.pontos})`"></Marcador>
-      </div>
-      <div class="info">
-        <div class="row">
-          <div class="col-lg">
-
-            <table v-if="jogadoresMes.length > 0" class="table table-pontuacao">
-              <colgroup>
-                <col class="col-jogador">
-              </colgroup>
-              <thead>
-              <tr>
-                <th>Jogador</th><th class="text-center">Pontos</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="jogador in jogadoresMes" :key="jogador.id">
-                <td>
-                  <Marcador class="marcador" :color="jogador.cor"></Marcador>
-                  {{ jogador.nome }}
-                </td>
-                <td class="text-center">{{ jogador.pontos }}</td>
-              </tr>
-              </tbody>
-            </table>
-
-          </div>
-          <div class="col-lg">
-
-            <table class="table">
-              <colgroup>
-                <col class="col-posicao">
-              </colgroup>
-              <thead>
-              <tr>
-                <th scope="col">Posição / Pontuação</th>
-                <th scope="col" v-for="categoria in categorias" class="text-center">{{ categoria.label }}</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="(pontuacao, index) in tabelaPontuacao">
-                <td>{{ index + 1 }}º lugar</td>
-                <td v-for="categoria in categorias" class="text-center">{{ pontuacao[categoria.key] }}</td>
-              </tr>
-              </tbody>
-            </table>
-
-          </div>
-        </div>
-
-        <grafico-ranking2019 v-if="dataLoaded" :partidas="partidas" :jogadores="jogadoresMes" periodo="semanal"></grafico-ranking2019>
-
-      </div>
+    <div class="table-responsive mb-5">
+      <table class="table table-sm table-striped table-borderless table-pontos-mes">
+        <thead>
+        <tr>
+          <th class="text-center">Dia</th>
+          <th>Jogo</th>
+          <th class="text-center">Peso</th>
+          <th class="text-center col-jogador" v-for="jogador in jogadoresMesSorted" :key="jogador.id">
+            <Meeple class="meeple" :cor="jogador.cor"></Meeple><br>
+            <span class="nome-jogador d-none d-lg-inline">{{jogador.nome}}</span>
+          </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="partida in partidasMes">
+          <td class="text-center">
+            {{ partida.data.substring(8, 10) }}
+          </td>
+          <td>
+            {{ partida.expansao ? partida.expansao.nome : partida.jogo.nome }}
+          </td>
+          <td class="text-center text-muted">
+            {{ getPesoPartida(partida) }}
+          </td>
+          <td class="text-center col-pontos-partida" v-for="jogador in jogadoresMesSorted" :key="jogador.id">
+            <span :class="getPosicaoJogador(jogador.id, partida) ? 'posicao-' + getPosicaoJogador(jogador.id, partida) : 'ausente'">
+              {{ roundPoints(getPontuacaoJogador(jogador.id, partida)) }}
+            </span>
+          </td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+          <th colspan="3" class="text-center">
+            {{ partidasMes?.length }} partidas
+          </th>
+          <th class="text-center" v-for="jogador in jogadoresMesSorted" :key="jogador.id">
+            {{ roundPoints(jogador.pontos) }}
+          </th>
+        </tr>
+        </tfoot>
+      </table>
     </div>
 
     <h3>Pontuação Final</h3>
 
-    <table v-if="jogadoresAno.length > 0" class="table table-bordered tabela-geral">
-      <colgroup>
-        <col class="col-jogador">
-      </colgroup>
-      <thead>
-      <tr>
-        <th scope="col" class="col-jogador">
-          <span class="nome-jogador">Jogador</span>
-        </th>
-        <th scope="col" v-for="(m, i) in meses" :key="i" class="col-estrelas">
-          {{m.nome.substring(0, 1)}}<span class="three">{{m.nome.substring(1, 3)}}</span><span class="end">{{m.nome.substring(3)}}</span>
-        </th>
-        <th scope="col" class="col-total">
-          T<span class="three">otal</span>
-        </th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr v-for="jogador in jogadoresAno" :key="jogador.id">
-        <td class="col-jogador">
-          <Meeple class="meeple" :cor="jogador.cor"></Meeple>
-          <span class="nome-jogador">{{ jogador.nome }}</span>
-        </td>
-        <td v-for="(m, i) in meses" :key="i" class="col-estrelas">
-          <img v-for="(n, i) in Array(jogador.pontosMeses[i])" :key="i" src="/images/estrela.svg" class="estrela" alt="Estrela"/>
-        </td>
-        <td class="col-total">
-          {{jogador.pontosTotal}}
-        </td>
-      </tr>
-      </tbody>
-    </table>
+    <div class="table-responsive">
+      <table v-if="jogadoresAnoSorted.length > 0" class="table table-geral">
+        <colgroup>
+          <col class="col-jogador">
+        </colgroup>
+        <thead>
+        <tr>
+          <th scope="col" class="col-jogador">
+            <span class="nome-jogador">Jogador</span>
+          </th>
+          <th scope="col" v-for="(m, i) in meses" :key="i" class="col-estrelas">
+            {{m.nome.substring(0, 1)}}<span class="three">{{m.nome.substring(1, 3)}}</span><span class="end">{{m.nome.substring(3)}}</span>
+          </th>
+          <th scope="col" class="col-total">
+            T<span class="three">otal</span>
+          </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="jogador in jogadoresAnoSorted" :key="jogador.id">
+          <td class="col-jogador">
+            <Meeple class="meeple" :cor="jogador.cor"></Meeple>
+            <span class="nome-jogador">{{ jogador.nome }}</span>
+          </td>
+          <td v-for="(m, i) in meses" :key="i" class="col-estrelas">
+            <img v-for="(n, i) in Array(jogador.pontosMeses[i])" :key="i" src="/images/estrela.svg" class="estrela" alt="Estrela"/>
+          </td>
+          <td class="col-total">
+            {{jogador.pontosTotal}}
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
 
   </div>
 </template>

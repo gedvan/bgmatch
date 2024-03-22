@@ -389,15 +389,54 @@
       }
     }
 
-    .tabela-geral {
+    .table-pontos-mes {
+      thead th {
+        border-top: 0;
+      }
+      th.col-jogador {
+        .meeple {
+          width: 24px;
+        }
+      }
+      .col-pontos-partida {
+        .ausente {
+          color: $text-muted;
+        }
+        .posicao-1, .posicao-2, .posicao-3 {
+          display: inline-block;
+          color: white;
+          padding-inline: 5px;
+          border-radius: 5px;
+          font-weight: 600;
+          border-bottom: 2px solid white;
+        }
+        .posicao-1 {
+          background-color: $color-1st;
+        }
+        .posicao-2 {
+          background-color: $color-2nd;
+        }
+        .posicao-3 {
+          background-color: $color-3rd;
+        }
+      }
+    }
+
+    .table-geral {
       margin-bottom: 3rem;
 
       th, td {
         padding-inline: 0.25rem;
         vertical-align: middle;
+
+        &:nth-child(2n) {
+          background-color: #f6f6f6;
+        }
       }
 
       th {
+        border-top: 0;
+
         .three, .end {
           display: none;
         }
@@ -439,7 +478,7 @@
 
       .col-estrelas {
         padding-inline: 0.25rem;
-        border-left: 1px solid #dee2e6;
+        text-align: center;
 
         .estrela {
           width: 18px;
@@ -450,7 +489,6 @@
 
         @include media-breakpoint-up(lg) {
           white-space: nowrap;
-          text-align: center;
 
           .estrela {
             display: inline-block;
@@ -466,6 +504,7 @@
 
       .col-total {
         text-align: center;
+        font-weight: 600;
       }
       td.col-total {
         font-size: 110%;

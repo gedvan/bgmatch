@@ -29,7 +29,7 @@ export default {
 
   computed: {
     categorias() {
-      return BGMatch.categoriasJogos;
+      return BGMatch.categoriasJogos.filter(c => c.key !== 'X');
     },
 
     jogadoresOrdenadorPorPontos() {

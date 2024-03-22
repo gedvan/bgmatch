@@ -44,8 +44,6 @@
 <script>
   import Logo from './assets/images/logo.svg?inline';
   import Titulo from './assets/images/titulo.svg?inline';
-  import router from "./router";
-  import BGMatch from "./BGMatch";
   import MainNav from "./components/MainNav";
 
   export default {

@@ -58,11 +58,6 @@
               </a>
             </th>
             <th>
-              <a href="#" @click="ordenarPor('peso')">
-                Peso <font-awesome-icon v-if="ordenacao.campo == 'peso'" :icon="sortIcon" />
-              </a>
-            </th>
-            <th>
               <a href="#" @click="ordenarPor('local')">
                 Local <font-awesome-icon v-if="ordenacao.campo == 'local'" :icon="sortIcon" />
               </a>
@@ -78,9 +73,6 @@
             </td>
             <td>
               {{ partida.expansao ? partida.expansao.nome : partida.jogo.nome }}
-            </td>
-            <td class="text-muted small align-middle">
-              {{ getPesoPartida(partida) }}
             </td>
             <td>
               {{ partida.local }}
@@ -278,12 +270,6 @@
         }
       },
 
-      getPesoPartida(partida) {
-        return partida.expansao && partida.expansao.peso
-          ? partida.expansao.peso
-          : partida.jogo.peso;
-      },
-
       sortFunction(p1, p2) {
         let fieldFn;
         let inv = this.ordenacao.inverter;
@@ -297,11 +283,6 @@
 
           case 'jogo':
             fieldFn = (p) => p.jogo.nome.toLocaleLowerCase();
-            break;
-
-          case 'peso':
-            fieldFn = this.getPesoPartida;
-            sortFn = (a, b) => inv ? a - b : b - a;
             break;
 
           case 'local':

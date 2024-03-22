@@ -23,16 +23,16 @@
   .jogador {
     white-space: nowrap;
     &.posicao-1 {
-      font-weight: bold;
+      font-weight: 600;
       .fa-medal {
-        color: goldenrod;
+        color: $color-1st;
       }
     }
     &.posicao-2 .fa-medal {
-      color: silver;
+      color: $color-2nd;
     }
     &.posicao-3 .fa-medal {
-      color: chocolate;
+      color: $color-3rd;
     }
   }
 
