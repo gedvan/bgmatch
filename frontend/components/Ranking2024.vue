@@ -144,7 +144,7 @@ export default {
      * a são separadas nos meses aos quais pertencem.
      */
     fetchPartidas() {
-      return BGMatch.fetch('/partidas-periodo/' + this.ano + '?sort=asc')
+      return BGMatch.fetch('/partidas/lista/' + this.ano + '?sort=asc&ranking=1')
         .then(response => response.json())
         .then(partidas => {
           let mes = 0;

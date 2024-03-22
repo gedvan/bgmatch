@@ -116,7 +116,7 @@ export default {
      * Consulta a lista de partida no ano.
      */
     fetchPartidas() {
-      return BGMatch.fetch('/partidas-periodo/' + this.ano + '?sort=asc')
+      return BGMatch.fetch('/partidas/lista/' + this.ano + '?sort=asc&ranking=1')
         .then(response => response.json())
         .then(partidas => {
           this.partidas = partidas;

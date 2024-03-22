@@ -86,8 +86,9 @@ class PartidasService
    * @param string $sort
    * @return array
    */
-  public function getPartidasPorPeriodo(string $inicio = '', string $fim = '', $sort = 'asc'): array
+  public function getPartidasPorPeriodo(string $inicio = '', string $fim = '', $options = []): array
   {
+    $sort = $options['sort'] ?? 'asc';
     $query = $this->getBaseQuery($sort);
 
     if ($inicio) {
@@ -95,6 +96,9 @@ class PartidasService
     }
     if ($fim) {
       $query->where('p.data', '<=', $fim);
+    }
+    if (isset($options['ranking'])) {
+      $query->where('p.ranking', '=', (bool) $options['ranking']);
     }
 
     return $this->agrupaPartidas($query->get());

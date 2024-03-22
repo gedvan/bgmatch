@@ -314,7 +314,7 @@
        * Atualiza a lista de partidas com base nos dados do servidor.
        */
       fetchPartidas: function () {
-        let path = '/partidas-periodo';
+        let path = '/partidas/lista';
         if (this.filtros.data_inicial || this.filtros.data_final) {
           path += '/' + this.filtros.data_inicial + ':' + this.filtros.data_final;
         }

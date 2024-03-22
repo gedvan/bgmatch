@@ -33,10 +33,8 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('jogadores', 'JogadoresController@getJogadores');
     $router->get('jogadores/dados', 'JogadoresController@getDadosJogadores');
 
-    $router->get('partidas', 'PartidasController@getLista');
-    $router->get('partidas-periodo[/{periodo}]', 'PartidasController@lista');
+    $router->get('partidas/lista[/{periodo}]', 'PartidasController@lista');
     $router->get('partidas/locais', 'PartidasController@getLocais');
-    $router->get('partidas/importa', 'PartidasController@importa');
     $router->post('partidas/new', 'PartidasController@postNovaPartida');
     $router->get('partidas/{id}', 'PartidasController@getPartida');
     $router->post('partidas/{id}/update', 'PartidasController@postAtualizaPartida');
@@ -45,9 +43,6 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('ranking/{ano}', 'RankingController@getPontuacao');
     $router->get('ranking/{ano}/pontuacao', 'RankingController@getTabelaPontuacao');
   });
-
-//  $router->get('bruno', 'PartidasController@bruno');
-//  $router->get('rodrigo', 'PartidasController@rodrigo');
 
 //  $router->get('teste', function () {
 //    /** @var \App\Services\JogosService $jogosService */
