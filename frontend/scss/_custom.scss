@@ -22,6 +22,10 @@ label {
   line-height: $btn-line-height;
 }
 
+.btn-primary.disabled {
+  filter: saturate(0.5);
+}
+
 .form-control:focus {
   border-color: white;
   outline: $alternate solid 2px;

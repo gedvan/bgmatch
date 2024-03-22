@@ -37,10 +37,10 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('partidas-periodo[/{periodo}]', 'PartidasController@lista');
     $router->get('partidas/locais', 'PartidasController@getLocais');
     $router->get('partidas/importa', 'PartidasController@importa');
-    $router->post('partidas/nova', 'PartidasController@postNovaPartida');
-    $router->get('partida/{id}', 'PartidasController@getPartida');
-    $router->post('partida/{id}/update', 'PartidasController@postAtualizaPartida');
-    $router->post('partida/{id}/delete', 'PartidasController@postExcluirPartida');
+    $router->post('partidas/new', 'PartidasController@postNovaPartida');
+    $router->get('partidas/{id}', 'PartidasController@getPartida');
+    $router->post('partidas/{id}/update', 'PartidasController@postAtualizaPartida');
+    $router->post('partidas/{id}/delete', 'PartidasController@postExcluirPartida');
 
     $router->get('ranking/{ano}', 'RankingController@getPontuacao');
     $router->get('ranking/{ano}/pontuacao', 'RankingController@getTabelaPontuacao');

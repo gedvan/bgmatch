@@ -78,7 +78,6 @@
     },
 
     methods: {
-
       logout() {
         this.usuario = {
           id: 0,
@@ -86,23 +85,16 @@
         };
         localStorage.removeItem('token');
         this.$router.push({name: 'login'});
-      },
-
-      fetchUserInfo() {
-        const token = window.localStorage.getItem('token');
-        if (token) {
-          BGMatch.fetch('/userinfo')
-            .then(response => response.json())
-            .then(usuario => this.usuario = usuario)
-            .catch(error => console.error(error));
-        }
       }
     },
 
     mounted() {
-      this.$router.app.$on('check-user', user => {
-        if (user) {
-          this.usuario = user;
+      this.$router.app.$on('check-user', data => {
+        if (data) {
+          this.usuario = data.user;
+          if (data.token) {
+            window.localStorage.setItem('token', data.token);
+          }
         }
         else {
           this.logout();

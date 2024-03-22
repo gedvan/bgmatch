@@ -31,10 +31,10 @@
 
       <div class="row my-3">
         <div class="col">
-          Total de partidas cadastradas: {{ partidas.length }}
-        </div>
-        <div class="col text-center">
-          Exibindo {{ partidasFiltradas.length }} partida(s)
+          Total de partidas no período: {{ partidas.length }}
+          <template v-if="partidas.length !== partidasFiltradas.length">
+            (exibindo {{ partidasFiltradas.length }})
+          </template>
         </div>
         <div class="col text-right">
           <b-button @click="abrirFormPartida(null)" class="ml-auto" variant="primary">
@@ -49,17 +49,22 @@
           <tr>
             <th>
               <a href="#" @click="ordenarPor('data')">
-                Data <font-awesome-icon v-if="ordenacao.campo == 'data'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
+                Data <font-awesome-icon v-if="ordenacao.campo == 'data'" :icon="sortIcon" />
               </a>
             </th>
             <th>
-              <a href="#" @click="ordenarPor('nome_jogo')">
-                Jogo <font-awesome-icon v-if="ordenacao.campo == 'nome_jogo'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
+              <a href="#" @click="ordenarPor('jogo')">
+                Jogo <font-awesome-icon v-if="ordenacao.campo == 'jogo'" :icon="sortIcon" />
+              </a>
+            </th>
+            <th>
+              <a href="#" @click="ordenarPor('peso')">
+                Peso <font-awesome-icon v-if="ordenacao.campo == 'peso'" :icon="sortIcon" />
               </a>
             </th>
             <th>
               <a href="#" @click="ordenarPor('local')">
-                Local <font-awesome-icon v-if="ordenacao.campo == 'local'" :icon="ordenacao.inverter ? 'sort-up' : 'sort-down'" />
+                Local <font-awesome-icon v-if="ordenacao.campo == 'local'" :icon="sortIcon" />
               </a>
             </th>
             <th>Jogadores</th>
@@ -68,9 +73,18 @@
           </thead>
           <tbody>
           <tr v-for="(partida, index) in partidasFiltradas">
-            <td>{{ partida.data | data_br }}</td>
-            <td>{{ partida.nome_jogo }}</td>
-            <td>{{ partida.local }}</td>
+            <td>
+              {{ partida.data | data_br }}
+            </td>
+            <td>
+              {{ partida.expansao ? partida.expansao.nome : partida.jogo.nome }}
+            </td>
+            <td class="text-muted small align-middle">
+              {{ getPesoPartida(partida) }}
+            </td>
+            <td>
+              {{ partida.local }}
+            </td>
             <td>
               <template v-for="(jogador, i) in partida.jogadores">
                 <span :class="['jogador', 'posicao-' + jogador.posicao]">
@@ -94,7 +108,7 @@
 
     </div>
 
-    <form-partida :partida="edicaoPartida" @updated="atualizaPartidas" />
+    <form-partida :partida="partidaEdicao" @updated="fetchPartidas" />
   </div>
 </template>
 
@@ -138,30 +152,100 @@
         periodos: [],
 
         // Partida sendo editada
-        edicaoPartida: null
+        partidaEdicao: null,
+
+        // Flag de controle para evitar requisição dupla ao clicar nos anos.
+        preventFetchPartidas: false,
       }
     },
 
     computed: {
-      partidasFiltradas: function() {
+      partidasFiltradas() {
         return this.partidas
-          .filter(partida => this.filtros.data_inicial ? partida.data >= this.filtros.data_inicial : true)
-          .filter(partida => this.filtros.data_final ? partida.data <= this.filtros.data_final : true)
-          .filter(partida => this.filtros.jogo ? partida.id_jogo === this.filtros.jogo.code : true)
+          .filter(partida => {
+            if (this.filtros.jogo) {
+              return partida.jogo.id === this.filtros.jogo.code
+                || (partida.expansao && partida.expansao.id == this.filtros.jogo.code);
+            }
+            return true
+          })
           .filter(partida => {
             if (this.filtros.jogador > 0) {
-              return partida.jogadores.find(j => j.id === this.filtros.jogador) ? true : false;
+              return !!partida.jogadores.find(j => j.id === this.filtros.jogador);
             }
             return true;
           })
-          .sort(this.sortFunction());
+          .toSorted(this.sortFunction);
+      },
+
+      filtroDataInicial() {
+        return this.filtros.data_inicial;
+      },
+
+      filtroDataFinal() {
+        return this.filtros.data_final;
+      },
+
+      sortIcon() {
+        return this.ordenacao.inverter ? 'sort-up' : 'sort-down'
+      }
+    },
+
+    created() {
+      this.initPeriodos();
+      this.fetchJogos();
+      this.fetchJogadores();
+      this.fetchPartidas();
+    },
+
+    watch: {
+      filtroDataInicial(val, old) {
+        if (!this.preventFetchPartidas) {
+          this.fetchPartidas();
+        }
+      },
+
+      filtroDataFinal(val, old) {
+        if (!this.preventFetchPartidas) {
+          this.fetchPartidas();
+        }
       }
     },
 
     methods: {
+      /**
+       * Inicializa lista de períodos pré-definidos (anos) e os valores
+       * iniciais das datas.
+       */
+      initPeriodos() {
+        const anoInicial = 2018;
+        const anoAtual = new Date().getFullYear();
+        for (let ano = anoAtual; ano >= anoInicial; ano--) {
+          this.periodos.push({
+            key: ano,
+            label: ano,
+            inicial: `${ano}-01-01`,
+            final: `${ano}-12-31`
+          })
+        }
+        this.periodos.push({
+          key: 'all',
+          label: 'Tudo',
+          inicial: '',
+          final: ''
+        });
+
+        this.filtros.data_inicial = `${anoAtual}-01-01`;
+        this.filtros.data_final = `${anoAtual}-12-31`;
+      },
+
       filtroPeriodo(inicial, final) {
-        this.filtros.data_inicial = inicial
-        this.filtros.data_final = final
+        this.preventFetchPartidas = true;
+        this.filtros.data_inicial = inicial;
+        this.filtros.data_final = final;
+        this.fetchPartidas().then(() => {
+          this.preventFetchPartidas = false;
+        });
       },
 
       /**
@@ -170,7 +254,7 @@
        * @param partida
        */
       abrirFormPartida: function (partida) {
-        this.edicaoPartida = partida;
+        this.partidaEdicao = partida;
         this.$bvModal.show('modal-partida');
       },
 
@@ -194,20 +278,49 @@
         }
       },
 
-      sortFunction: function () {
-        const campo = this.ordenacao.campo;
-        const inverter = campo === "data" ? !this.ordenacao.inverter : this.ordenacao.inverter;
-        return (a, b) => inverter ?
-          b[campo].toLocaleLowerCase().localeCompare(a[campo].toLocaleLowerCase()) :
-          a[campo].toLocaleLowerCase().localeCompare(b[campo].toLocaleLowerCase());
+      getPesoPartida(partida) {
+        return partida.expansao && partida.expansao.peso
+          ? partida.expansao.peso
+          : partida.jogo.peso;
+      },
+
+      sortFunction(p1, p2) {
+        let fieldFn;
+        let inv = this.ordenacao.inverter;
+        let sortFn = (a, b) => inv ? b.localeCompare(a) : a.localeCompare(b);
+
+        switch(this.ordenacao.campo) {
+          case 'data':
+            fieldFn = (p) => p.data;
+            inv = !inv;
+            break;
+
+          case 'jogo':
+            fieldFn = (p) => p.jogo.nome.toLocaleLowerCase();
+            break;
+
+          case 'peso':
+            fieldFn = this.getPesoPartida;
+            sortFn = (a, b) => inv ? a - b : b - a;
+            break;
+
+          case 'local':
+            fieldFn = (p) => p.local;
+            break;
+
+          default:
+            return null;
+        }
+
+        return sortFn(fieldFn(p1), fieldFn(p2));
       },
 
       excluirPartida: function (partida) {
         if (window.confirm(`Deseja realmente excluir a partida de ${partida.nome_jogo} de ${partida.data}?`)) {
-          BGMatch.fetch(`/partida/${partida.id}/delete`, {method: 'POST'})
+          BGMatch.fetch(`/partidas/${partida.id}/delete`, {method: 'POST'})
             .then(response => response.json())
             .then(data => {
-              this.atualizaPartidas();
+              this.fetchPartidas();
             })
             .catch(error => {
               window.alert('Ocorreu um erro ao excluir a partida.');
@@ -219,8 +332,12 @@
       /**
        * Atualiza a lista de partidas com base nos dados do servidor.
        */
-      atualizaPartidas: function () {
-        BGMatch.fetch('/partidas')
+      fetchPartidas: function () {
+        let path = '/partidas-periodo';
+        if (this.filtros.data_inicial || this.filtros.data_final) {
+          path += '/' + this.filtros.data_inicial + ':' + this.filtros.data_final;
+        }
+        return BGMatch.fetch(path)
           .then(response => response.json())
           .then(partidas => this.partidas = partidas)
           .catch(error => console.error(error));
@@ -244,33 +361,5 @@
           .catch(error => console.error(error));
       },
     },
-
-    created() {
-      this.periodos.push({
-        key: 'all',
-        label: 'Tudo',
-        inicial: '',
-        final: ''
-      });
-      const anoInicial = 2018;
-      const anoAtual = new Date().getFullYear();
-      for (let ano = anoAtual; ano >= anoInicial; ano--) {
-        this.periodos.push({
-          key: ano,
-          label: ano,
-          inicial: `${ano}-01-01`,
-          final: `${ano}-12-31`
-        })
-      }
-
-      this.filtros.data_inicial = `${anoAtual}-01-01`;
-      this.filtros.data_final = `${anoAtual}-12-31`;
-    },
-
-    mounted() {
-      this.fetchJogos();
-      this.fetchJogadores();
-      this.atualizaPartidas();
-    }
   }
 </script>

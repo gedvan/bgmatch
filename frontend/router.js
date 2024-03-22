@@ -26,8 +26,13 @@ router.beforeEach((to, from, next) => {
     if (token) {
       BGMatch.fetch('/userinfo')
         .then(response => response.json())
-        .then(user => router.app.$emit('check-user', user))
-        .catch(error => router.app.$emit('check-user', null));
+        .then(data => {
+          router.app.$emit('check-user', data)
+        })
+        .catch(error => {
+          console.error(error)
+          router.app.$emit('check-user', null)
+        });
     }
     else {
       next({name: 'login'});

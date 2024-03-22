@@ -1,10 +1,14 @@
 <template>
-  <b-modal id="modal-partida" title="Cadastrar Partida" @ok="handleSubmit">
+  <b-modal id="modal-partida" title="Cadastrar Partida" @hidden="resetForm()" @shown="atualizaForm()">
 
     <b-form @submit="handleSubmit">
 
       <b-form-group label="Jogo" label-for="input-jogo">
-        <v-select id="input-jogo" v-model="form.jogo" required :options="listaJogos" />
+        <v-select id="input-jogo" v-model="form.jogo" required :options="jogosSelect" />
+      </b-form-group>
+
+      <b-form-group label="Expansão" label-for="input-expansao" :class="{'d-none_': expansoesSelect.length === 0}">
+        <v-select id="input-expansao" v-model="form.expansao" required :options="expansoesSelect" />
       </b-form-group>
 
       <b-row>
@@ -46,6 +50,12 @@
 
     </b-form>
 
+    <template #modal-footer="{ ok, cancel }">
+      <b-form-checkbox class="mr-auto" v-model="form.ranking">Ranking</b-form-checkbox>
+      <b-button @click="cancel()">Cancelar</b-button>
+      <b-button variant="primary" @click="handleSubmit" :disabled="!isFormValid">Ok</b-button>
+    </template>
+
   </b-modal>
 </template>
 
@@ -57,6 +67,9 @@
 
     data() {
       return {
+        // Lista geral de jogos
+        jogos: [],
+
         // Lista de jogos para o select
         listaJogos: [],
 
@@ -82,7 +95,9 @@
         form: {
           data: '',
           jogo: '',
+          expansao: '',
           local: '',
+          ranking: true,
           jogadores: []
         },
 
@@ -97,11 +112,49 @@
       this.fetchJogadores();
     },
 
+    computed: {
+      jogosSelect() {
+        return this.jogos
+          .filter(jogo => !jogo.id_base)
+          .map(jogo => ({
+            code: jogo.id,
+            label: jogo.nome
+          }))
+      },
+
+      expansoesSelect() {
+        const id_base = this.form.jogo?.code;
+        return id_base ? this.jogos
+          .filter(jogo => jogo.id_base === id_base)
+          .map(jogo => ({
+            code: jogo.id,
+            label: jogo.nome
+          })) : []
+      },
+
+      jogoSelecionado() {
+        return this.form.jogo;
+      },
+
+      isFormValid() {
+        return this.form.jogo
+          && this.form.data
+          && this.form.local
+          && this.form.jogadores.filter(j => j.id).length > 1;
+      }
+    },
+
     watch: {
-      partida: function (newVal, oldVal) {
-        this.resetPartida();
-        if (newVal) {
-          this.fetchPartida(newVal.id);
+      jogoSelecionado(val, old) {
+        if (this.form.expansao) {
+          if (!val) {
+            this.form.expansao = '';
+            return
+          }
+          const exp = this.jogos.find(j => j.id === this.form.expansao.code);
+          if (exp && exp.id_base !== val.code) {
+            this.form.expansao = '';
+          }
         }
       }
     },
@@ -127,31 +180,19 @@
       },
 
       /**
-       * Zera as informações da partida.
-       */
-      resetPartida: function() {
-        this.form.data = '';
-        this.form.jogo = '';
-        this.form.local = '';
-        this.form.jogadores.forEach((jogador, i) => {
-          jogador.id = null;
-          jogador.posicao = i + 1;
-          jogador.pontuacao = null;
-        });
-      },
-
-      /**
        * Consulta a lista de jogos para o select.
        */
       fetchJogos: function () {
         BGMatch.fetch('/jogos')
           .then(response => response.json())
-          .then(jogos => jogos.map(jogo => ({
-            code: jogo.id,
-            label: jogo.nome
-          })))
           .then(jogos => {
-            this.listaJogos = jogos;
+            this.jogos = jogos;
+            this.listaJogos = jogos
+              .filter(jogo => !jogo.id_base)
+              .map(jogo => ({
+                code: jogo.id,
+                label: jogo.nome
+              }))
           })
           .catch(error => console.error(error));
       },
@@ -181,21 +222,43 @@
           .catch(error => console.error(error));
       },
 
-      fetchPartida: function(id) {
-        BGMatch.fetch('/partida/' + id)
-          .then(response => response.json())
-          .then(partida => {
-            this.form.data = partida.data;
-            this.form.jogo = this.listaJogos.find(j => j.code == partida.id_jogo);
-            this.form.local = partida.local;
-            partida.jogadores.sort((a, b) => a.posicao - b.posicao);
-            partida.jogadores.forEach((jogadorPartida, i) => {
-              this.form.jogadores[i].id = jogadorPartida.id;
-              this.form.jogadores[i].posicao = jogadorPartida.posicao;
-              this.form.jogadores[i].pontuacao = jogadorPartida.pontuacao;
-            });
-          })
-          .catch(error => console.error(error));
+      /**
+       * Atualiza os campos do formulário com os dados da partida selecionada.
+       */
+      atualizaForm() {
+        if (this.partida) {
+          this.form.data = this.partida.data;
+          this.form.jogo = this.jogosSelect.find(item => item.code == this.partida.jogo.id);
+          this.form.expansao = this.partida.expansao
+            ? this.expansoesSelect.find(item => item.code == this.partida.expansao.id)
+            : '';
+          this.form.local = this.partida.local;
+          this.form.ranking = this.partida.ranking;
+          this.partida.jogadores.forEach((jogador, i) => {
+            this.form.jogadores[i].id = jogador.id;
+            this.form.jogadores[i].posicao = jogador.posicao;
+            this.form.jogadores[i].pontuacao = jogador.pontuacao;
+          });
+        }
+        else {
+          this.resetForm();
+        }
+      },
+
+      /**
+       * Limpa os campos do formulário.
+       */
+      resetForm: function() {
+        this.form.data = '';
+        this.form.jogo = '';
+        this.form.expansao = '';
+        this.form.local = '';
+        this.form.ranking = true;
+        this.form.jogadores.forEach((jogador, i) => {
+          jogador.id = null;
+          jogador.posicao = i + 1;
+          jogador.pontuacao = null;
+        });
       },
 
       /**
@@ -205,20 +268,22 @@
         evt.preventDefault();
 
         const data = {
-          id_jogo:   this.form.jogo.code,
-          data:      this.form.data,
-          local:     this.form.local,
+          id_jogo: this.form.jogo.code,
+          id_expansao: this.form.expansao?.code ?? null,
+          data: this.form.data,
+          local: this.form.local,
+          ranking: this.form.ranking,
           jogadores: this.form.jogadores.filter(j => j.id)
         };
 
-        const path = this.partida ? `/partida/${this.partida.id}/update` : '/partidas/nova';
+        const path = this.partida ? `/partidas/${this.partida.id}/update` : '/partidas/new';
         BGMatch.fetch(path, {
           method: 'POST',
           headers: new Headers({"Content-Type": "application/json"}),
           body: JSON.stringify(data)
         }).then(response => response.json())
           .then(response => {
-            this.resetPartida();
+            this.resetForm();
             this.$bvModal.hide('modal-partida');
             this.$emit('updated', true);
             // TODO: Show toast

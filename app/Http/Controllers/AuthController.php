@@ -41,6 +41,17 @@ class AuthController extends Controller
   public function userInfo(Request $request)
   {
     $user = $request->get('user');
-    return new JsonResponse($user);
+
+    // Se faltar menos de 30 minutos para o JWT expirar, gera um novo.
+    $jwt = $request->get('jwt');
+    $timeToExpire = $jwt->exp - time();
+    if ($timeToExpire < (30 * 60)) {
+      $token = $this->generateJwt($user);
+    }
+
+    return new JsonResponse([
+      'user' => $user,
+      'token' => $token ?? '',
+    ]);
   }
 }

@@ -6,12 +6,12 @@
       </template>
       <div class="form-row">
 
-        <div class="form-group col-sm-4">
+        <div class="form-group col-lg-4">
           <label>Nº de jogadores</label>
           <div>{{ numJogadores }}</div>
         </div>
 
-        <div class="form-group col-sm-4">
+        <div class="form-group col-lg-4">
           <label>Cooperativo/Em grupo</label>
           <div v-if="!editando">
             {{ jogo.coop ? 'Sim' : 'Não' }}
@@ -19,7 +19,7 @@
           <b-form-checkbox v-if="editando" v-model="jogoEdicao.coop" switch></b-form-checkbox>
         </div>
 
-        <div class="form-group col-sm-4">
+        <div class="form-group col-lg-4">
           <label>Excluído da coleção</label>
           <div v-if="!editando">
             {{ jogo.excluido ? 'Sim' : 'Não' }}
@@ -30,31 +30,27 @@
       </div>
       <div class="form-row">
 
-        <div class="form-group col-sm-4">
+        <div class="form-group col-lg-4">
           <label>Categoria</label>
           <div>
             <span v-if="!editando">{{ nomeCategoria(jogo.categoria) }}</span>
             <span v-if="!editando && jogo.jogo_base">
               (<b-link @click="mudaJogo(jogo.jogo_base)">{{ jogo.jogo_base.nome }}</b-link>)
             </span>
-            <b-form-select v-if="editando" v-model="jogoEdicao.categoria" :options="categoriasJogos" size="sm" class="w-auto"></b-form-select>
+            <b-form-select v-if="editando" v-model="jogoEdicao.categoria" :options="categoriasJogos" size="sm"></b-form-select>
           </div>
         </div>
 
-        <div class="form-group col-sm-4" v-if="!editando">
-          <label>Peso (BGG)</label>
-          <span class="bgg-weight-value">{{ jogo.bgg_weight ?? '-' }}</span>
-        </div>
-
-        <div class="form-group col-sm-4" v-if="editando">
-          <label>ID BoardGameGeek</label>
+        <div class="form-group col-lg-4" v-if="editando">
+          <label>ID BGG</label>
           <b-button variant="link" size="sm" @click="fetchBggUrl"><font-awesome-icon icon="search" /></b-button>
           <b-form-input v-model="jogoEdicao.bgg_id" size="sm" ref="input_bgg_id"></b-form-input>
         </div>
 
-        <div class="form-group col-sm-4" v-if="editando">
-          <label>Peso</label>
-          <b-form-input v-model="jogoEdicao.bgg_weight" size="sm"></b-form-input>
+        <div class="form-group col-lg-4">
+          <label>Peso BGG</label>
+          <span class="bgg-weight-value" v-if="!editando">{{ jogo.bgg_weight ?? '-' }}</span>
+          <b-form-input v-model="jogoEdicao.bgg_weight" size="sm" v-if="editando"></b-form-input>
         </div>
 
       </div>

@@ -29,6 +29,9 @@ class Authenticate {
         if ($name == 'Bearer' && $token) {
           $key = new Key(env('JWT_SECRET'), env('JWT_ALG'));
           $jwt = JWT::decode($token, $key);
+          if ($jwt->exp < time()) {
+            throw new \Exception('Autorização expirada');
+          }
           $user = DB::table('usuarios')->find($jwt->sub);
           if (!$user) {
             throw new \Exception('Usuário não encontrado');
@@ -48,6 +51,7 @@ class Authenticate {
 
     unset($user->senha);
     $request->attributes->add(['user' => $user]);
+    $request->attributes->add(['jwt' => $jwt]);
     return $next($request);
   }
 }

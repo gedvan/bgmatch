@@ -13,12 +13,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class PartidasController extends Controller {
 
-  protected PartidasService $partidasService;
-
-  public function __construct(PartidasService $partidasService)
-  {
-    $this->partidasService = $partidasService;
-  }
+  public function __construct(
+    protected PartidasService $partidasService)
+  { }
 
   public function lista(Request $request, string $periodo = ''): HttpResponse
   {
@@ -29,59 +26,74 @@ class PartidasController extends Controller {
       throw new HttpException(500, 'Invalid sort parameter.');
     }
 
+    $data_inicio = '';
+    $data_fim = '';
+
     if ($periodo) {
-      // Apenas ano: [AAAA] ou [AAAA:AAAA] (início:fim).
-      if (preg_match('/^(\d{4})(?::(\d{4}))?$/', $periodo, $m)) {
-        $ano_inicio = $m[1];
-        $mes_inicio = '01';
-        $dia_inicio = '01';
-        $ano_fim = $m[2] ?? $ano_inicio;
-        $mes_fim = '12';
-        $dia_fim = '31';
-      }
-      // Ano e mês: [AAAA-MM] ou [AAAA-MM:AAAA-MM] (início:fim).
-      elseif (preg_match('/^(\d{4})-(\d{2})(?::(\d{4})-(\d{2}))?$/', $periodo, $m)) {
-        $ano_inicio = $m[1];
-        $mes_inicio = $m[2];
-        $dia_inicio = '01';
-        $ano_fim = $m[3] ?? $ano_inicio;
-        $mes_fim = $m[4] ?? $mes_inicio;
-        $dia_fim = (new \DateTime("$ano_fim-$mes_fim-01"))->format('t');
-      }
-      // Ano, mês e dia: [AAAA-MM-DD] ou [AAAA-MM-DD:AAAA-MM-DD] (início:fim).
-      elseif (preg_match('/^(\d{4})-(\d{2})-(\d{2})(?::(\d{4})-(\d{2})-(\d{2}))?$/', $periodo, $m)) {
-        $ano_inicio = $m[1];
-        $mes_inicio = $m[2];
-        $dia_inicio = $m[3];
-        $ano_fim = $m[4] ?? $ano_inicio;
-        $mes_fim = $m[5] ?? $mes_inicio;
-        $dia_fim = $m[6] ?? $dia_inicio;
+      if (str_contains($periodo, ':')) {
+        [$inicio, $fim] = explode(':', $periodo);
+
+        if ($inicio) {
+          if (!preg_match('/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$/', $inicio, $m)) {
+            throw new HttpException(500, 'Formato de data inválido (data inicial).');
+          }
+          $ano_inicio = $m[1];
+          $mes_inicio = $m[2] ?? '01';
+          $dia_inicio = $m[3] ?? '01';
+
+          if (!checkdate($mes_inicio, $dia_inicio, $ano_inicio)) {
+            throw new HttpException(500, 'Data inválida (data inicial).');
+          }
+          $data_inicio = "$ano_inicio-$mes_inicio-$dia_inicio";
+        }
+
+        if ($fim) {
+          if (!preg_match('/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$/', $fim, $m)) {
+            throw new HttpException(500, 'Formato de data inválido (data final).');
+          }
+          $ano_fim = $m[1];
+          $mes_fim = $m[2] ?? '12';
+          $dia_fim = $m[3] ?? (new \DateTime("$ano_fim-$mes_fim-01"))->format('t');
+
+          if (!checkdate($mes_fim, $dia_fim, $ano_fim)) {
+            throw new HttpException(500, 'Data inválida (data final).');
+          }
+          $data_fim = "$ano_fim-$mes_fim-$dia_fim";
+        }
       }
       else {
-        throw new HttpException(500, 'Invalid date period.');
-      }
+        if (!preg_match('/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$/', $periodo, $m)) {
+          throw new HttpException(500, 'Formato de data inválido.');
+        }
+        $ano_inicio = $m[1];
+        $mes_inicio = $m[2] ?? '01';
+        $dia_inicio = $m[3] ?? '01';
 
-      // Valida as datas.
-      if (!checkdate($mes_inicio, $dia_inicio, $ano_inicio) || !checkdate($mes_fim, $dia_fim, $ano_fim)) {
-        throw new HttpException(500, 'Invalid date period.');
-      }
+        if (!checkdate($mes_inicio, $dia_inicio, $ano_inicio)) {
+          throw new HttpException(500, 'Data inválida.');
+        }
 
-      $inicio = "$ano_inicio-$mes_inicio-$dia_inicio";
-      $fim = "$ano_fim-$mes_fim-$dia_fim";
-      $partidas = $this->partidasService->getPartidasPorPeriodo($inicio, $fim, $sort);
+        $ano_fim = $ano_inicio;
+        $mes_fim = $m[2] ?? '12';
+        $dia_fim = $m[3] ?? (new \DateTime("$ano_fim-$mes_fim-01"))->format('t');
+
+        $data_inicio = "$ano_inicio-$mes_inicio-$dia_inicio";
+        $data_fim = "$ano_fim-$mes_fim-$dia_fim";
+      }
     }
-    else {
-      $partidas = $this->partidasService->getPartidasPorPeriodo('', '', $sort);
-    }
+    $partidas = $this->partidasService->getPartidasPorPeriodo($data_inicio, $data_fim, $sort);
+
     return new JsonResponse($partidas);
   }
 
   public function getLista() {
     $result = DB::table('partidas AS p')
       ->join('jogos AS g', 'p.id_jogo', '=', 'g.id')
+      ->leftJoin('jogos AS e', 'p.id_expansao', '=', 'e.id')
       ->join('jogadores_partidas AS jp', 'jp.id_partida', '=', 'p.id')
       ->join('jogadores AS j', 'jp.id_jogador', '=', 'j.id')
-      ->select('p.*', 'g.nome AS nome_jogo', 'j.id AS id_jogador', 'j.nome AS nome_jogador', 'jp.posicao')
+      ->select('p.*', 'g.nome AS nome_jogo', 'e.nome AS nome_expansao',
+        'j.id AS id_jogador', 'j.nome AS nome_jogador', 'jp.posicao')
       ->orderBy('p.data', 'desc')
       ->orderBy('g.nome', 'asc')
       ->orderBy('jp.posicao', 'asc')
@@ -95,8 +107,10 @@ class PartidasController extends Controller {
           'id'    => $row->id,
           'data'  => $row->data,
           'local' => $row->local,
-          'id_jogo'   => $row->id_jogo,
+          'id_jogo'     => $row->id_jogo,
           'nome_jogo' => $row->nome_jogo,
+          'id_expansao' => $row->id_expansao,
+          'nome_expansao' => $row->nome_expansao,
           'jogadores' => [],
         ];
       }
@@ -110,43 +124,19 @@ class PartidasController extends Controller {
     return new JsonResponse(array_values($partidas));
   }
 
-  public function getPartida(Request $request, $id) {
+  public function getPartida($id)
+  {
+    $partida = $this->partidasService->getPartida($id);
 
-    $result = DB::table('partidas AS p')
-      ->join('jogadores_partidas AS jp', 'jp.id_partida', '=', 'p.id')
-      ->select('p.*', 'jp.id_jogador', 'jp.pontuacao', 'jp.posicao')
-      ->where('p.id', $id)
-      ->orderBy('jp.posicao')
-      ->get();
-
-    if ($result->count() == 0) {
+    if (empty($partida)) {
       throw new NotFoundHttpException();
-    }
-
-    $partida = [];
-
-    foreach ($result as $row) {
-      if (!$partida) {
-        $partida = [
-          'id'      => $row->id,
-          'id_jogo' => $row->id_jogo,
-          'data'    => $row->data,
-          'local'   => $row->local,
-          'jogadores' => [],
-        ];
-      }
-      $partida['jogadores'][] = [
-        'id'        => $row->id_jogador,
-        'pontuacao' => $row->pontuacao,
-        'posicao'   => $row->posicao,
-      ];
     }
 
     return new JsonResponse($partida);
   }
 
   public function getLocais() {
-    $locais = DB::table('partidas')->distinct()->pluck('local');
+    $locais = $this->partidasService->getLocaisPartidas();
     return new JsonResponse($locais);
   }
 
@@ -154,30 +144,10 @@ class PartidasController extends Controller {
     $response = ['ok' => FALSE];
 
     try {
-      DB::beginTransaction();
-
-      $partida = [
-        'id_jogo' => $request->input('id_jogo'),
-        'data'    => $request->input('data'),
-        'local'   => $request->input('local'),
-      ];
-      $partida['id'] = DB::table('partidas')->insertGetId($partida);
-
-      foreach ($request->input('jogadores') as $jogador) {
-        $jogador_partida = [
-          'id_partida'  => $partida['id'],
-          'id_jogador'  => $jogador['id'],
-          'pontuacao'   => $jogador['pontuacao'],
-          'posicao'     => $jogador['posicao'],
-        ];
-        DB::table('jogadores_partidas')->insert($jogador_partida);
-      }
-
-      DB::commit();
+      $this->partidasService->salvaPartida($request->input());
       $response['ok'] = TRUE;
     }
     catch (\Exception $e) {
-      DB::rollBack();
       throw new HttpException(500, $e->getMessage(), $e);
     }
 
@@ -188,40 +158,20 @@ class PartidasController extends Controller {
     $response = ['ok' => FALSE];
 
     try {
-      DB::beginTransaction();
-
-      $partida = [
-        'id_jogo' => $request->input('id_jogo'),
-        'data'    => $request->input('data'),
-        'local'   => $request->input('local'),
-      ];
-      DB::table('partidas')->where('id', $id)->update($partida);
-      DB::table('jogadores_partidas')->where('id_partida', $id)->delete();
-
-      foreach ($request->input('jogadores') as $jogador) {
-        $jogador_partida = [
-          'id_partida'  => $id,
-          'id_jogador'  => $jogador['id'],
-          'pontuacao'   => $jogador['pontuacao'],
-          'posicao'     => $jogador['posicao'],
-        ];
-        DB::table('jogadores_partidas')->insert($jogador_partida);
-      }
-
-      DB::commit();
+      $partida = $request->input() + ['id' => $id];
+      $this->partidasService->salvaPartida($partida);
       $response['ok'] = TRUE;
     }
     catch (\Exception $e) {
-      DB::rollBack();
       throw new HttpException(500, $e->getMessage(), $e);
     }
 
     return new JsonResponse($response);
   }
 
-  public function postExcluirPartida(Request $request, $id) {
+  public function postExcluirPartida(int $id) {
     try {
-      $delete = DB::table('partidas')->where('id', $id)->delete();
+      $delete = $this->partidasService->excluiPartida($id);
     }
     catch (\Exception $e) {
       throw new HttpException(500, $e->getMessage(), $e);
