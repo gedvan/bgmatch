@@ -1,0 +1,8 @@
+.ddev
+database/dumps
+node_modules
+scripts
+storage
+vendor
+psql
+.env
