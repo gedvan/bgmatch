@@ -24,7 +24,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: rodrigor
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GHCR_TOKEN }}
 
       # Etapa 4: Construir e enviar a imagem Docker para o GHCR
