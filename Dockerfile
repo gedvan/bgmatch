@@ -43,15 +43,15 @@ RUN apt-get update \
     && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 # Setup DB connection and other env vars.
-# COPY .env.example $APP_ROOT/.env
-# ENV APP_ENV=prod
-# ENV APP_DEBUG=false
-# ENV APP_URL=http://localhost:8000
-# ENV JWT_SECRET=qwertyuiopasdfghjklzxcvbnm
-# ENV DB_HOST=db
-# ENV DB_DATABASE=bgmatch
-# ENV DB_USERNAME=bgmatch
-# ENV DB_PASSWORD=bgpass
+COPY .env.example $APP_ROOT/.env
+ENV APP_ENV=prod
+ENV APP_DEBUG=false
+ENV APP_URL=http://localhost:8000
+ENV JWT_SECRET=qwertyuiopasdfghjklzxcvbnm
+ENV DB_HOST=db
+ENV DB_DATABASE=bgmatch
+ENV DB_USERNAME=bgmatch
+ENV DB_PASSWORD=bgpass
 
 # Run migrations.
 # RUN php artisan migrate
