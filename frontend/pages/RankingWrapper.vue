@@ -1,11 +1,10 @@
 <script>
-import Ranking2019 from '../components/Ranking2019.vue';
-import Ranking2022 from '../components/Ranking2022.vue';
+import BGMatch from "../BGMatch";
+import RankingTrilha from '../components/RankingTrilha.vue';
 import Ranking2024 from "../components/Ranking2024.vue";
 export default {
   components: {
-    Ranking2019,
-    Ranking2022,
+    RankingTrilha,
     Ranking2024
   },
 
@@ -17,12 +16,34 @@ export default {
       anoAtual: anoAtual,
       anosAnteriores: anosAnteriores,
       anoSelecionado: anoAtual,
+      ranking: null,
+      erro: '',
     }
   },
 
   created() {
     if (this.$route.params.hasOwnProperty('ano') && /^\d{4}$/.test(this.$route.params.ano)) {
       this.anoSelecionado = parseInt(this.$route.params.ano);
+    }
+    this.fetchRanking();
+  },
+
+  methods: {
+    /**
+     * Busca o ranking do ano, já calculado pelo backend com a regra da época.
+     */
+    fetchRanking() {
+      BGMatch.fetch('/ranking/' + this.anoSelecionado)
+        .then(response => response.json())
+        .then(ranking => {
+          this.ranking = ranking;
+        })
+        .catch(error => {
+          this.erro = 'Não foi possível carregar o ranking.';
+          if (process.env.NODE_ENV === 'development') {
+            console.error(error);
+          }
+        });
     }
   }
 }
@@ -43,9 +64,9 @@ export default {
     </header>
 
     <div class="container">
-      <Ranking2019 v-if="anoSelecionado >= 2019 && anoSelecionado <= 2021" :ano="anoSelecionado"></Ranking2019>
-      <Ranking2022 v-if="anoSelecionado >= 2022 && anoSelecionado <= 2023" :ano="anoSelecionado"></Ranking2022>
-      <Ranking2024 v-if="anoSelecionado >= 2024" :ano="anoSelecionado"></Ranking2024>
+      <b-alert v-if="erro" show variant="danger">{{ erro }}</b-alert>
+      <RankingTrilha v-if="ranking && (ranking.regra === '2019' || ranking.regra === '2022')" :ranking="ranking"></RankingTrilha>
+      <Ranking2024 v-if="ranking && ranking.regra === '2024'" :ranking="ranking"></Ranking2024>
     </div>
 
   </div>

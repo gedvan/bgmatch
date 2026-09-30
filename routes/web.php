@@ -40,8 +40,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->post('partidas/{id}/update', 'PartidasController@postAtualizaPartida');
     $router->post('partidas/{id}/delete', 'PartidasController@postExcluirPartida');
 
-    $router->get('ranking/{ano}', 'RankingController@getPontuacao');
-    $router->get('ranking/{ano}/pontuacao', 'RankingController@getTabelaPontuacao');
+    $router->get('ranking/{ano}', 'RankingController@getRanking');
   });
 
 //  $router->get('teste', function () {
