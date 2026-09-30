@@ -26,6 +26,25 @@ class JogosController extends Controller {
   }
 
   /**
+   * Cadastra um jogo com dados do BGG, para quando ele não pode vir da
+   * Ludopedia. Dado inválido ou jogo já cadastrado responde 422.
+   *
+   * @param Request $request
+   * @return JsonResponse
+   */
+  public function postCadastraDoBgg(Request $request): JsonResponse
+  {
+    try {
+      $jogo = $this->jogosService->cadastraDoBgg($request->input());
+    }
+    catch (\InvalidArgumentException $e) {
+      return new JsonResponse(['erro' => $e->getMessage()], 422);
+    }
+
+    return new JsonResponse(['sucesso' => true, 'jogo' => $jogo]);
+  }
+
+  /**
    * Endpoint para atualizar os dados de um jogo específico.
    *
    * @param Request $request

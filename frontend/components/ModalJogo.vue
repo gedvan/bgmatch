@@ -65,7 +65,7 @@
       </div>
     </b-media>
     <template #modal-footer>
-      <b-link :href="urlLudopedia" target="_blank" title="Página do jogo na Ludopedia" class="small mr-3">
+      <b-link :href="urlLudopedia" target="_blank" title="Página do jogo na Ludopedia" class="small mr-3" :disabled="!urlLudopedia">
         <font-awesome-icon icon="external-link-alt" />&nbsp;Ludopedia
       </b-link>
       <b-link :href="urlBgg" target="_blank" title="Página do jogo no BoardGameGeek" class="small" :disabled="!jogo.bgg_id">
@@ -123,7 +123,8 @@
       },
 
       urlLudopedia() {
-        return BGMatch.urlJogoLudopedia(this.jogo);
+        // Jogo cadastrado pelo BGG não tem página na Ludopedia.
+        return this.jogo.slug.startsWith('bgg-') ? '' : BGMatch.urlJogoLudopedia(this.jogo);
       },
 
       urlBgg() {

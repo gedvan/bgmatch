@@ -27,6 +27,13 @@ class JogosService
   const CATEGORIA_INFANTIL  = 'I';
 
   /**
+   * Jogos cadastrados a partir do BGG, fora da Ludopedia, têm slug "bgg-<id>"
+   * e id 10.000.000 + id no BGG, acima dos ids da Ludopedia.
+   */
+  const PREFIXO_SLUG_BGG = 'bgg-';
+  const OFFSET_ID_BGG = 10000000;
+
+  /**
    * @return array
    */
   public function getLista(): array
@@ -72,22 +79,75 @@ class JogosService
       $fields['bgg_id'] = intval($fields['bgg_id']) ?: null;
     }
     if (isset($fields['bgg_weight'])) {
-      $bgg_weight = $fields['bgg_weight'];
-      if (!$bgg_weight) {
-        $fields['bgg_weight'] = null;
-      } else {
-        if ($bgg_weight < 0) {
-          $bgg_weight = 0;
-        } elseif ($bgg_weight > 5) {
-          $bgg_weight = 5;
-        } else {
-          $bgg_weight = round($bgg_weight, 2);
-        }
-        $fields['bgg_weight'] = number_format($bgg_weight, 2);
-      }
+      $fields['bgg_weight'] = self::normalizaPeso($fields['bgg_weight']);
     }
 
     return DB::table('jogos')->where('id', $id)->update($fields);
+  }
+
+  /**
+   * Peso do BGG limitado a 0..5 com duas casas; vazio ou zero vira null.
+   */
+  protected static function normalizaPeso($peso): ?string
+  {
+    if (!$peso) {
+      return null;
+    }
+    return number_format(min(5, max(0, round((float) $peso, 2))), 2);
+  }
+
+  /**
+   * Cadastra um jogo com dados do BGG, para quando ele não pode vir da
+   * Ludopedia.
+   *
+   * @param array $dados nome, categoria e bgg_id obrigatórios; min, max,
+   *   imagem, id_base, coop e bgg_weight opcionais.
+   *
+   * @return object O jogo cadastrado.
+   *
+   * @throws \InvalidArgumentException Dado inválido ou jogo já cadastrado.
+   */
+  public function cadastraDoBgg(array $dados): object
+  {
+    $bggId = intval($dados['bgg_id'] ?? 0);
+    if ($bggId <= 0) {
+      throw new \InvalidArgumentException('Informe o bgg_id.');
+    }
+    $nome = trim((string) ($dados['nome'] ?? ''));
+    if ($nome === '') {
+      throw new \InvalidArgumentException('Informe o nome do jogo.');
+    }
+    $categoria = $dados['categoria'] ?? '';
+    if (!self::categoriaValida($categoria)) {
+      throw new \InvalidArgumentException('Categoria inválida: ' . $categoria);
+    }
+    $existente = DB::table('jogos')->where('bgg_id', $bggId)->first(['id', 'nome']);
+    if ($existente) {
+      throw new \InvalidArgumentException("{$existente->nome} já está cadastrado com o bgg_id $bggId (id {$existente->id}).");
+    }
+    $idBase = isset($dados['id_base']) ? intval($dados['id_base']) : null;
+    if ($idBase && !DB::table('jogos')->where('id', $idBase)->exists()) {
+      throw new \InvalidArgumentException("Jogo base $idBase não encontrado.");
+    }
+
+    $id = self::OFFSET_ID_BGG + $bggId;
+    $this->insere([
+      'id' => $id,
+      'nome' => $nome,
+      'categoria' => $categoria,
+      'min' => isset($dados['min']) ? intval($dados['min']) : null,
+      'max' => isset($dados['max']) ? intval($dados['max']) : null,
+      'imagem' => (string) ($dados['imagem'] ?? ''),
+      'slug' => self::PREFIXO_SLUG_BGG . $bggId,
+      'id_base' => $idBase ?: null,
+      'coop' => (bool) ($dados['coop'] ?? false),
+      'editado' => true,
+      'excluido' => false,
+      'bgg_id' => $bggId,
+      'bgg_weight' => self::normalizaPeso($dados['bgg_weight'] ?? null),
+    ]);
+
+    return $this->getById($id);
   }
 
   public function insere($jogo)
@@ -284,7 +344,12 @@ class JogosService
    */
   public function atualizaDaLudopedia()
   {
-    $jogosLocal = DB::table('jogos')->orderBy('slug')->pluck('slug')->toArray();
+    // Jogos cadastrados pelo BGG não estão na Ludopedia e ficam fora da sincronização.
+    $jogosLocal = DB::table('jogos')
+      ->where('slug', 'not like', self::PREFIXO_SLUG_BGG . '%')
+      ->orderBy('slug')
+      ->pluck('slug')
+      ->toArray();
 
     $jogosLudopedia = $this->getListaJogosLudopedia();
 
