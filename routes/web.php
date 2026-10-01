@@ -27,6 +27,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('jogos/pesquisa/{termo}', 'JogosController@pesquisarJogosLudopedia');
     $router->post('jogos/importa/{slug}', 'JogosController@importa');
     $router->post('jogos/atualiza', 'JogosController@postAtualizaJogos');
+    $router->post('jogos/novo', 'JogosController@postCadastraDoBgg');
     $router->post('jogos/{id}/update', 'JogosController@postSalvaJogo');
     $router->get('jogos/{id}/bgg', 'JogosController@fetchBggInfo');
 
