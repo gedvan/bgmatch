@@ -4,77 +4,32 @@ namespace App\Http\Controllers;
 
 use App\Services\RankingService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class RankingController extends Controller {
 
-  /**
-   * @var RankingService
-   */
-  protected RankingService $rankingService;
-
-  public function __construct(RankingService $rankingService)
-  {
-    $this->rankingService = $rankingService;
-  }
+  public function __construct(
+    protected RankingService $rankingService
+  ) {}
 
   /**
-   * Valida o ano e retorna o valor default (ano atual) caso esteja vazio.
+   * Ranking de um ano, calculado com a regra em vigor naquele ano.
    *
    * @param string $ano
-   * @return string
+   * @return JsonResponse
    */
-  protected function getAnoDefault(string $ano = ''): string
+  public function getRanking(string $ano): JsonResponse
   {
-    if (empty($ano)) {
-      $ano = date('Y');
-    }
-    if (!$ano || !preg_match('/^\d{4}$/', $ano)) {
+    if (!preg_match('/^\d{4}$/', $ano)) {
       throw new NotFoundHttpException('Ano inválido');
     }
-    return $ano;
-  }
 
-  /**
-   * @param string $ano
-   * @return JsonResponse
-   */
-  public function getPontuacao(string $ano = '')
-  {
-    $ano = $this->getAnoDefault($ano);
-    $pontuacao = $this->rankingService->getPontuacaoJogadores($ano);
-
-    return response()->json(array_values($pontuacao));
-  }
-
-  /**
-   * @param string $ano
-   * @return JsonResponse
-   */
-  public function getTabelaPontuacao(string $ano = '')
-  {
-    $ano = $this->getAnoDefault($ano);
-
-    $tabela = $this->rankingService->getTabelaPontuacao($ano);
-    $pontuacao = array();
-
-    // Transpõe a tabela de pontuação de [peso][posicao] para [posicao][peso]
-    foreach($tabela as $peso => $pontosPeso) {
-      foreach ($pontosPeso as $posicao => $pontos) {
-        $index = $posicao - 1;
-        if (!isset($pontuacao[$index])) {
-          $pontuacao[$index] = [
-            'posicao' => $posicao,
-            'pontuacao' => [],
-          ];
-        }
-        $pontuacao[$index]['pontuacao'][$peso] = $pontos;
-      }
+    $ranking = $this->rankingService->getRanking((int) $ano);
+    if ($ranking === null) {
+      throw new NotFoundHttpException('Não há ranking para este ano');
     }
 
-    return response()->json($pontuacao);
+    return new JsonResponse($ranking);
   }
 
 }

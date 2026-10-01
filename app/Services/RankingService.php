@@ -2,91 +2,63 @@
 
 namespace App\Services;
 
-use App\Services\JogosService;
+use App\Services\Ranking\Ranking2019;
+use App\Services\Ranking\Ranking2022;
+use App\Services\Ranking\Ranking2024;
+use App\Services\Ranking\RegraRanking;
 use Illuminate\Support\Facades\DB;
 
 class RankingService
 {
-  public function getTabelaPontuacao(string $ano): array
+  /**
+   * Primeiro ano com ranking.
+   */
+  const ANO_INICIAL = 2019;
+
+  public function __construct(
+    protected PartidasService $partidasService
+  ) {}
+
+  /**
+   * Regra de pontuação em vigor num ano, ou null se o ano não tem ranking.
+   */
+  public function getRegra(int $ano): ?RegraRanking
   {
-    if ($ano < '2022') {
-      return [
-        JogosService::CATEGORIA_PESADO  => [1 => 10, 2 => 7, 3 => 4],
-        JogosService::CATEGORIA_MEDIO   => [1 => 7,  2 => 4, 3 => 2],
-        JogosService::CATEGORIA_LEVE    => [1 => 4,  2 => 2, 3 => 1],
-        JogosService::CATEGORIA_PARTY_INFANTIL => [1 => 2,  2 => 1, 3 => 0],
-      ];
+    if ($ano >= 2024) {
+      return new Ranking2024();
     }
-    else {
-      return [
-        JogosService::CATEGORIA_PESADO  => [1 => 10, 2 => 7, 3 => 4, 4 => 2, 5 => 1, 6 => 1],
-        JogosService::CATEGORIA_MEDIO   => [1 => 7,  2 => 4, 3 => 2, 4 => 1, 5 => 1, 6 => 1],
-        JogosService::CATEGORIA_LEVE    => [1 => 4,  2 => 2, 3 => 1, 4 => 1, 5 => 1, 6 => 1],
-      ];
+    if ($ano >= 2022) {
+      return new Ranking2022();
     }
+    if ($ano >= self::ANO_INICIAL) {
+      return new Ranking2019();
+    }
+    return null;
   }
 
-  public function getPontuacaoJogadores(string $ano): array
+  /**
+   * Calcula o ranking de um ano com a regra da época.
+   *
+   * @return array|null null se o ano não tem ranking.
+   */
+  public function getRanking(int $ano, ?\DateTimeImmutable $hoje = null): ?array
   {
-    $pontuacao = [];
-
-    $result = DB::table('jogadores')->orderBy('nome')->get(['id', 'nome', 'cor']);
-    foreach ($result as $row) {
-      $pontuacao[$row->id] = [
-        'id' => $row->id,
-        'nome' => $row->nome,
-        'cor' => $row->cor,
-        'total' => 0,
-        'semanal' => ["01-01" => 0],
-        'mensal' => [],
-      ];
+    $regra = $this->getRegra($ano);
+    if (!$regra) {
+      return null;
     }
 
-    $result = DB::table('partidas AS p')
-      ->join('jogos AS g', 'p.id_jogo', '=', 'g.id')
-      ->join('jogadores_partidas AS jp', 'jp.id_partida', '=', 'p.id')
-      ->join('jogadores AS j', 'jp.id_jogador', '=', 'j.id')
-      ->select('p.data', 'g.categoria', 'j.id', 'jp.posicao')
-      ->where('data', '>=', "$ano-01-01")
-      ->where('data', '<=', "$ano-12-31")
-      ->orderBy('p.data', 'asc')
-      ->orderBy('g.nome', 'asc')
-      ->orderBy('jp.posicao', 'asc')
-      ->get();
+    $jogadores = DB::table('jogadores')
+      ->orderBy('nome')
+      ->get(['id', 'nome', 'cor'])
+      ->map(fn($jogador) => (array) $jogador)
+      ->all();
 
-    $tabela_pontuacao = $this->getTabelaPontuacao($ano);
+    $partidas = $this->partidasService->getPartidasPorPeriodo("$ano-01-01", "$ano-12-31", [
+      'sort' => 'asc',
+      'ranking' => true,
+    ]);
 
-    $dia_anterior = false;
-    $mes_anterior = false;
-    foreach ($result as $row) {
-      $dia_jogo = date('m-d', strtotime("{$row->data} 12:00:00"));
-      if ($dia_anterior && $dia_jogo != $dia_anterior) {
-        foreach ($pontuacao as &$jogador) {
-          $jogador['semanal'][$dia_anterior] = $jogador['total'];
-        }
-      }
-      $dia_anterior = $dia_jogo;
-
-      $mes_jogo = strftime('%b', strtotime("{$row->data} 12:00:00"));
-      if ($mes_anterior && $mes_jogo != $mes_anterior) {
-        foreach ($pontuacao as &$jogador) {
-          $jogador['mensal'][$mes_anterior] = $jogador['total'];
-        }
-      }
-      $mes_anterior = $mes_jogo;
-
-      $pontos = $tabela_pontuacao[$row->categoria][$row->posicao] ?? 0;
-      $pontuacao[$row->id]['total'] += $pontos;
-    }
-    foreach ($pontuacao as &$jogador) {
-      $jogador['semanal'][$dia_anterior] = $jogador['total'];
-      $jogador['mensal'][$mes_anterior] = $jogador['total'];
-    }
-
-    usort($pontuacao, function ($a, $b) {
-      return $b['total'] - $a['total'];
-    });
-
-    return $pontuacao;
+    return ['ano' => $ano] + $regra->calcula($ano, $jogadores, $partidas, $hoje ?? new \DateTimeImmutable());
   }
 }

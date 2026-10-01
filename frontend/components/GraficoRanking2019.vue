@@ -4,7 +4,7 @@
   export default {
     extends: Line,
 
-    props: ['partidas', 'jogadores', 'periodo'],
+    props: ['datas', 'jogadores'],
 
     data() {
       return {
@@ -25,14 +25,6 @@
         if (!this.jogadores) {
           return;
         }
-
-        // if (this.periodo === 'semanal') {
-        //   this.labels = this.partidas.map(partida => partida.data.substring(5))
-        //     .sort().map(d => d.split('-').reverse().join('/'));
-        // }
-        // else {
-        //   this.labels = Object.keys(this.jogadores[0].mensal);
-        // }
 
         const datasetDefaults = {
           borderColor: '',
@@ -55,16 +47,8 @@
           return dataset;
         });
 
-        // Pega todas as datas em que houve partidas (sem duplicatas).
-        const datas = ['01-01'];
-        this.partidas.forEach(partida => {
-          const data = partida.data.substring(5);
-          if (datas.indexOf(data) === -1) {
-            datas.push(data);
-          }
-        });
-
-        datas.forEach((data, d) => {
+        // Dias com partida, calculados pelo backend ("01-01" e depois cada dia).
+        this.datas.forEach((data, d) => {
           this.labels.push(data.split('-').reverse().join('/'));
           this.datasets.forEach((dataset, i) => {
             const pontosAnterior = d > 0 ? dataset.data[d - 1] : 0;
